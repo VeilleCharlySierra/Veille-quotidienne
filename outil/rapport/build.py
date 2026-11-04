@@ -36,7 +36,8 @@ for r in RAW:
                   theme=r.get('theme') or 'Non classé', lieu=r.get('lieu') or 'Non localisé', sentiment=r.get('sentiment') or 'Neutre',
                   jaime=r.get('jaime'), com=r.get('com'), part=r.get('part'), pf=r.get('pf') or r.get('plateforme') or '',
                   pub=r.get('pub'), rem=r.get('rem'), lien=r.get('lien') or '', pa=r.get('pa'),
-                  origine='remontée humaine' if r.get('origine') == 'humaine' else 'remontée automatisée'))
+                  origine='remontée humaine' if r.get('origine') == 'humaine' else 'remontée automatisée',
+                  img=os.path.join(WD, r['img']) if r.get('img') else None))
 JOUR = S['jour']                     # AAAA-MM-JJ
 JFR = '/'.join(JOUR.split('-')[::-1])
 PERIODE = S['periode']               # ex. "du 04/11/2026 à 06h00 au 05/11/2026 à 06h00 UTC"
@@ -227,10 +228,17 @@ def brand_pages(b, col, logo, attention):
             if (p['com'] or 0) >= 150:
                 c.setFillColor(RED); c.rect(fx + 3, top - 11, 110, 10, stroke=0, fill=1)
                 c.setFillColor(white); c.setFont('CB', 6.5); c.drawString(fx + 6, top - 8.5, 'PLUS DE 150 COMMENTAIRES'); top -= 12
-            # texte de la publication (pas de capture d'écran dans le rapport automatique)
-            c.setFillColor(HexColor('#F7F7F7')); c.rect(fx + 4, fy + 74, fw - 8, top - (fy + 74) - 2, stroke=0, fill=1)
+            if p.get('img') and os.path.exists(p['img']):
+                # capture d'écran de la publication
+                img(p['img'], fx + 4, fy + 74, fw - 8, top - (fy + 74) - 2)
+                lines = []
+            else:
+                lines = None
+            # sinon : texte de la publication
+            if lines is None:
+              c.setFillColor(HexColor('#F7F7F7')); c.rect(fx + 4, fy + 74, fw - 8, top - (fy + 74) - 2, stroke=0, fill=1)
             yy = top - 14; c.setFillColor(black)
-            lines = wrap(p['texte'] or '(texte non disponible)', 'C', 9, fw - 20)
+            lines = [] if lines == [] else wrap(p['texte'] or '(texte non disponible)', 'C', 9, fw - 20)
             maxl = int((top - (fy + 80)) // 11.5)
             if len(lines) > maxl: lines = lines[:maxl]; lines[-1] = lines[-1][:-1] + '…'
             c.setFont('C', 9)
