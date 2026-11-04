@@ -37,7 +37,7 @@ for r in RAW:
                   jaime=r.get('jaime'), com=r.get('com'), part=r.get('part'), pf=r.get('pf') or r.get('plateforme') or '',
                   pub=r.get('pub'), rem=r.get('rem'), lien=r.get('lien') or '', pa=r.get('pa'),
                   origine='remontée humaine' if r.get('origine') == 'humaine' else 'remontée automatisée',
-                  img=os.path.join(WD, r['img']) if r.get('img') else None))
+                  img=os.path.join(WD, r['img']) if r.get('img') else os.path.join(WD, 'captures', str(r.get('id')) + '.jpg')))
 JOUR = S['jour']                     # AAAA-MM-JJ
 JFR = '/'.join(JOUR.split('-')[::-1])
 PERIODE = S['periode']               # ex. "du 04/11/2026 à 06h00 au 05/11/2026 à 06h00 UTC"

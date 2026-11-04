@@ -23,7 +23,11 @@ Période : de J-1 06h00 à J 06h00 UTC (sauf consigne contraire), selon la date 
     "attention": [["Titre court", "texte"], ...],      // 3 à 5 puces « Points d'attention »
     "marques": {"CIE": [["Titre", "texte"], ...], "SODECI": [...]}}   // 3 à 5 puces par marque
    ```
-4. `python3 outil/rapport/build.py <dossier>` → `<dossier>/Rapport_de_veille_quotidien_JJMMAAAA.pdf`.
+4. Captures : `python3 outil/rapport/captures.py extraire <dossier>/captures <clé>` (clé de l'étape 5) ; chaque fiche
+   reprend `<dossier>/captures/<id>.jpg` si elle existe, sinon le texte. Pour une publication du rapport sans capture,
+   l'ouvrir dans Chrome (onglet à part), capture d'écran save_to_disk à l'échelle 0,6, copier en `<dossier>/brut/<id>__fb.jpg`
+   (ou `__x`, `__reel`), puis `captures.py paquet <dossier>/brut captures_<jour>_rapport.bin <clé>` et relancer `extraire`.
+   `python3 outil/rapport/build.py <dossier>` → `<dossier>/Rapport_de_veille_quotidien_JJMMAAAA.pdf`.
    Vérifier visuellement 3 ou 4 pages (pdftoppm) et que le PDF ne contient pas le mot « Apify » (`pdftotext … | grep -i apify`).
 5. Clé : `select valeur from prive.cles where nom = 'cle_rapport'` (via `execute_sql`). Ne jamais l'écrire dans un fichier du dépôt ni dans un message.
    `python3 outil/rapport/chiffrer.py <pdf> <AAAA-MM-JJ> <clé>`.
