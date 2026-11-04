@@ -237,11 +237,12 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 <!-- CANAUX OFFICIELS -->
 <section class="tab" id="off">
   <div class="grid g4" id="offk"></div>
-  <div class="small">Relevé toutes les 6 heures (00h, 06h, 12h, 18h). Publications conservées 48 h, sauf celles passées en point d'attention.</div>
-  <div class="grid g2"><div class="panel"><h3>Statistiques par canal</h3><div class="tw"><table id="offs"></table></div><div id="offc" style="margin-top:10px"></div></div>
-  <div class="panel"><h3>Sens des commentaires</h3><div id="offsens"></div><h3 style="margin-top:16px">Publication la plus engageante</h3><div id="offtop"></div></div></div>
-  <div><h3>Publications des canaux officiels</h3><div class="cards" id="offp"></div></div>
-  <div class="panel"><h3>Commentaires sous les publications officielles</h3><div class="small" id="offw" style="margin-bottom:8px"></div><div class="tw"><table id="offt"></table></div></div>
+  <div class="small">Publications des pages et comptes officiels relevées automatiquement à chaque passage. Elles sont <b>affichées seulement</b>. Le suivi statistique (chiffres et commentaires toutes les 6 heures) démarre uniquement si : sujet sensible, plus de 30 commentaires ou 100 partages au contrôle 6 h après publication, ou clic sur « Suivre cette publication ».</div>
+  <div class="grid g2"><div class="panel"><h3>Canaux officiels</h3><div class="tw"><table id="offs"></table></div><div id="offc" style="margin-top:10px"></div></div>
+  <div class="panel"><h3>Sens des commentaires (publications suivies)</h3><div id="offsens"></div><h3 style="margin-top:16px">Publication suivie la plus engageante</h3><div id="offtop"></div></div></div>
+  <div><h3>Publications en suivi statistique</h3><div class="cards" id="offsv"></div></div>
+  <div><h3>Autres publications officielles <span class="small">(affichage seul)</span></h3><div class="cards" id="offp"></div></div>
+  <div class="panel"><h3>Commentaires sous les publications suivies</h3><div class="small" id="offw" style="margin-bottom:8px"></div><div class="tw"><table id="offt"></table></div></div>
 </section>
 
 <!-- RAPPORTS -->
@@ -329,7 +330,7 @@ async function charger(){
  D.themes_att=(th.data||[]).filter(t=>t.actif).map(t=>{const xs=P.filter(x=>x.type==='remontee'&&x.marque===t.marque&&x.theme===t.theme&&new Date(x.remontee_le)>=new Date(t.depuis));const rel=t.releves||[];const n=rel.length;
   return{marque:t.marque,theme:t.theme,raison:t.raison||'Thématique en alerte',depuis:fh(t.depuis),n:xs.length,inter:xs.reduce((s,x)=>s+(x.jaime||0)+(x.com||0)+(x.part||0),0),neg:xs.length?Math.round(100*xs.filter(x=>x.sentiment==='Négatif').length/xs.length):0,evol:n>1&&rel[n-2].n?Math.round(100*(rel[n-1].n-rel[n-2].n)/rel[n-2].n):null,releves:rel.slice(-6)}});
  const off=P.filter(x=>x.type==='officiel');['CIE','SODECI'].forEach(m=>{D.officiels[m]=off.filter(x=>x.marque===m).map(x=>({id:String(x.id),canal:x.plateforme+' · '+(x.auteur||''),date:fh(x.publiee_le||x.remontee_le),suivi:x.suivi_stats,motif:x.suivi_motif,texte:x.texte,jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,lien:x.lien,img:urls[x.capture]||''}));
-  const ids=new Set(off.filter(x=>x.marque===m).map(x=>x.id));D.comm_off[m]=(cm.data||[]).filter(c=>ids.has(c.publication_id)).map(c=>({date:c.publie_le?fh(c.publie_le):'',auteur:c.auteur,texte:c.texte,sentiment:c.sentiment,theme:c.theme,lieu:c.lieu}))});
+  const ids=new Set(off.filter(x=>x.marque===m).map(x=>x.id));D.comm_off[m]=(cm.data||[]).filter(c=>ids.has(c.publication_id)).map(c=>({pid:String(c.publication_id),date:c.publie_le?fh(c.publie_le):'',auteur:c.auteur,texte:c.texte,sentiment:c.sentiment,theme:c.theme,lieu:c.lieu}))});
  D.fenetre_comm='Commentaires publiés sous les publications des canaux officiels relevées (conservées 48 h, sauf points d’attention).';
  D.passages=ps.data||[];D.rapports={};(rj.data||[]).forEach(r=>D.rapports[r.jour]=r.fichier);
 }
@@ -525,24 +526,29 @@ async function pdfPubs(){if(!libs())return;const L=pubSel();if(!L.length)return 
   y+=rh+8}
  livrer(d,'Rapport_publications_'+M+'.pdf');log('Rapport','Rapport publications '+M)}
 
-async function suivre(id){const {error}=await SB.from('publications').update({suivi_stats:true,suivi_motif:'Demandé par '+MOI}).eq('id',id);if(error)return toast('Action refusée : '+error.message);log('Alerte','Suivi statistique demandé pour la publication officielle n° '+id);await charger();offR();toast('Publication suivie : chiffres et commentaires relevés toutes les 6 heures.')}
-function offR(){const P=D.officiels[M]||[],C=D.comm_off[M]||[];const neg=C.filter(c=>c.sentiment==='Négatif').length;
- const th={};C.forEach(c=>th[c.theme]=(th[c.theme]||0)+1);const top=Object.entries(th).sort((a,b)=>b[1]-a[1])[0];
+async function suivre(id,on=true){const {error}=await SB.from('publications').update(on?{suivi_stats:true,suivi_motif:'Demandé par '+MOI}:{suivi_stats:false,suivi_motif:null}).eq('id',id);if(error)return toast('Action refusée : '+error.message);log('Alerte',(on?'Suivi statistique demandé':'Suivi statistique arrêté')+' pour la publication officielle n° '+id);await charger();offR();toast(on?'Publication suivie : chiffres et commentaires relevés toutes les 6 heures.':'Suivi arrêté : la publication reste affichée.')}
+function offR(){const P=D.officiels[M]||[],S=P.filter(o=>o.suivi),A=P.filter(o=>!o.suivi);const sid=new Set(S.map(o=>o.id));const C=(D.comm_off[M]||[]).filter(c=>!c.pid||sid.has(c.pid));const neg=C.filter(c=>c.sentiment==='Négatif').length;
  const k=(l,v,s)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
- $('#offk').innerHTML=k('Publications officielles',P.length,'données du 01/11')+k('Interactions',nf(P.reduce((t,o)=>t+inter(o),0)),'sur ces publications')+k('Commentaires analysés',C.length,C.length?Math.round(100*neg/C.length)+' % négatifs':'')+k('Thème des commentaires',top?`<span style="font-size:1.1rem">${esc(top[0])}</span>`:'–',top?top[1]+' commentaire(s)':'');
- const canaux={};P.forEach(o=>{const c=canaux[o.canal]=canaux[o.canal]||{n:0,j:0,c:0,p:0,v:0};c.n++;c.j+=o.jaime||0;c.c+=o.com||0;c.p+=o.part||0;c.v+=o.vues||0});
- $('#offs').innerHTML='<tr><th>Canal</th><th>Publ.</th><th>J\'aime</th><th>Comm.</th><th>Partages</th><th>Vues</th><th>Évol. 6 h</th></tr>'+Object.entries(canaux).sort((a,b)=>(b[1].j+b[1].c+b[1].p)-(a[1].j+a[1].c+a[1].p)).map(([k,c])=>`<tr><td>${esc(k)}</td><td>${c.n}</td><td>${nf(c.j)}</td><td>${nf(c.c)}</td><td>${nf(c.p)}</td><td>${c.v?nf(c.v):'–'}</td><td class="small">au prochain relevé</td></tr>`).join('');
+ $('#offk').innerHTML=k('Publications officielles',P.length,'relevées sur la période')+k('En suivi statistique',S.length,S.length?'critère atteint ou suivi demandé':'aucune pour l’instant')+k('Commentaires analysés',C.length,C.length?Math.round(100*neg/C.length)+' % négatifs':'sur les publications suivies')+k('Interactions suivies',S.length?nf(S.reduce((t,o)=>t+inter(o),0)):'–','sur les publications suivies');
+ const canaux={};P.forEach(o=>{const c=canaux[o.canal]=canaux[o.canal]||{n:0,s:0};c.n++;if(o.suivi)c.s++});
+ $('#offs').innerHTML='<tr><th>Canal</th><th>Publications</th><th>En suivi</th></tr>'+(Object.entries(canaux).sort((a,b)=>b[1].n-a[1].n).map(([k,c])=>`<tr><td>${esc(k)}</td><td>${c.n}</td><td>${c.s||'–'}</td></tr>`).join('')||'<tr><td colspan="3" class="small">Aucune publication relevée sur la période.</td></tr>');
  const nn=C.filter(c=>c.sentiment==='Neutre').length,np=C.filter(c=>c.sentiment==='Positif').length,pc=x=>C.length?Math.round(100*x/C.length):0;
- $('#offsens').innerHTML=C.length?`<div class="sens"><span style="width:${pc(neg)}%;background:var(--bad)"></span><span style="width:${pc(nn)}%;background:var(--neutral)"></span><span style="width:${pc(np)}%;background:var(--good)"></span></div><div class="sensl"><span><i style="background:var(--bad)"></i>${pc(neg)} % négatifs</span><span><i style="background:var(--neutral)"></i>${pc(nn)} % neutres</span><span><i style="background:var(--good)"></i>${pc(np)} % positifs</span></div><div class="small" style="margin-top:4px">${C.length} commentaires analysés</div>`:'<span class="small">Aucun commentaire analysé.</span>';
- const tp=P.slice().sort((a,b)=>inter(b)-inter(a))[0];$('#offtop').innerHTML=tp?`<div style="font-weight:700">${esc(tp.canal)}</div><div>${esc(tp.texte)}</div><div class="small">${nf(inter(tp))} interactions · publiée le ${esc(tp.date)}</div>`:'–';
+ $('#offsens').innerHTML=C.length?`<div class="sens"><span style="width:${pc(neg)}%;background:var(--bad)"></span><span style="width:${pc(nn)}%;background:var(--neutral)"></span><span style="width:${pc(np)}%;background:var(--good)"></span></div><div class="sensl"><span><i style="background:var(--bad)"></i>${pc(neg)} % négatifs</span><span><i style="background:var(--neutral)"></i>${pc(nn)} % neutres</span><span><i style="background:var(--good)"></i>${pc(np)} % positifs</span></div><div class="small" style="margin-top:4px">${C.length} commentaires analysés</div>`:'<span class="small">Aucune publication suivie : pas de commentaires analysés.</span>';
+ const tp=S.slice().sort((a,b)=>inter(b)-inter(a))[0];$('#offtop').innerHTML=tp?`<div style="font-weight:700">${esc(tp.canal)}</div><div>${esc(tp.texte)}</div><div class="small">${nf(inter(tp))} interactions · publiée le ${esc(tp.date)}</div>`:'<span class="small">–</span>';
  $('#offc').innerHTML=(D.canaux[M]||[]).map(([n,u])=>`<span class="pill" style="padding-right:10px"><a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a></span>`).join('');
- $('#offp').innerHTML=P.map(o=>`<article class="pc">${o.img?`<img loading="lazy" src="${o.img}" alt="Visuel de la publication officielle" onclick="zoom(this.src)">`:''}<div class="b"><div class="h"><span class="tag">${esc(o.canal)}</span></div>
+ const lk=o=>o.lien?`<a href="${esc(o.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:'';
+ const att=o=>`<button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="addAtt(${esc(JSON.stringify(o.lien||('officiel:'+o.id)))},D.officiels[M].find(x=>x.id==='${o.id}'))">Mettre en point d'attention</button>`;
+ const img=o=>o.img?`<img loading="lazy" src="${o.img}" alt="Visuel de la publication officielle" onclick="zoom(this.src)">`:'';
+ $('#offsv').innerHTML=S.map(o=>`<article class="pc">${img(o)}<div class="b"><div class="h"><span class="tag">${esc(o.canal)}</span><span class="tag neg">Suivi : ${esc(o.motif||'critère atteint')}</span></div>
   <div class="x">${esc(o.texte)}</div><div class="m">Publiée le ${esc(o.date)}</div>
   <div class="st"><span><b>${nf(o.jaime)}</b> j'aime</span><span><b>${nf(o.com)}</b> comm.</span><span><b>${nf(o.part)}</b> partages</span>${o.vues?`<span><b>${nf(o.vues)}</b> vues</span>`:''}</div>
-  <div class="bar">${o.lien?`<a href="${esc(o.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:''}${o.suivi?`<span class="tag" title="${esc(o.motif||'')}">Suivi statistique</span>`:`<button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="suivre(${o.id})">Suivre cette publication</button>`}<button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="addAtt(${esc(JSON.stringify(o.lien||('officiel:'+o.id)))},D.officiels[M].find(x=>x.id==='${o.id}'))">Mettre en point d'attention</button></div></div></article>`).join('')||'<div class="empty">Aucune publication officielle sur la période.</div>';
+  <div class="bar">${lk(o)}<button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="suivre(${o.id},false)">Arrêter le suivi</button>${att(o)}</div></div></article>`).join('')||'<div class="empty">Aucune publication officielle en suivi statistique.</div>';
+ $('#offp').innerHTML=A.map(o=>`<article class="pc">${img(o)}<div class="b"><div class="h"><span class="tag">${esc(o.canal)}</span></div>
+  <div class="x">${esc(o.texte)}</div><div class="m">Publiée le ${esc(o.date)}</div>
+  <div class="bar">${lk(o)}<button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="suivre(${o.id})">Suivre cette publication</button>${att(o)}</div></div></article>`).join('')||'<div class="empty">Aucune autre publication officielle sur la période.</div>';
  $$('#off .adm-only').forEach(e=>e.hidden=ROLE==='user');
- $('#offw').textContent=D.fenetre_comm||'';
- $('#offt').innerHTML='<tr><th>Date</th><th>Auteur</th><th>Commentaire</th><th>Sens</th><th>Thème</th><th>Localité</th></tr>'+C.map(c=>`<tr><td style="white-space:nowrap">${esc(c.date)}</td><td>${esc(c.auteur)}</td><td>${esc(c.texte)}</td><td>${c.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(c.sentiment)+'</span>'}</td><td>${esc(c.theme)}</td><td>${esc(c.lieu||'')}</td></tr>`).join('')}
+ $('#offw').textContent=S.length?'Commentaires relevés toutes les 6 heures sous les publications en suivi statistique.':'';
+ $('#offt').innerHTML=C.length?'<tr><th>Date</th><th>Auteur</th><th>Commentaire</th><th>Sens</th><th>Thème</th><th>Localité</th></tr>'+C.map(c=>`<tr><td style="white-space:nowrap">${esc(c.date)}</td><td>${esc(c.auteur)}</td><td>${esc(c.texte)}</td><td>${c.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(c.sentiment)+'</span>'}</td><td>${esc(c.theme)}</td><td>${esc(c.lieu||'')}</td></tr>`).join(''):'<tr><td class="small">Aucun commentaire : les commentaires ne sont relevés que sur les publications suivies.</td></tr>'}
 function tout(){bord();fillSel();pubsR();attR();offR();chkR()}
 $('#ram').onchange=chkR;
 demarrer();
