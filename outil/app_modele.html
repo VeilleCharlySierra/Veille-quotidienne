@@ -291,7 +291,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 
 <script>
 const STATIC=/*DATA*/null;
-const SB=supabase.createClient('https://vtpfgzrlyqdjrulotxni.supabase.co','sb_publishable_iV-Z2ES2S-gP9x-Wx6j1Yg_7gvkSJEt',{auth:{storage:window.sessionStorage,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const SB=supabase.createClient('https://vtpfgzrlyqdjrulotxni.supabase.co','sb_publishable_iV-Z2ES2S-gP9x-Wx6j1Yg_7gvkSJEt',{auth:{storage:window.localStorage,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const now0=new Date();const isoD=d=>d.toISOString().slice(0,10);
 let D={pubs:[],p01:[],serie:[],att:[],themes_att:[],officiels:{CIE:[],SODECI:[]},comm_off:{CIE:[],SODECI:[]},canaux:STATIC.canaux,geo:STATIC.geo,rapports:{},jour:isoD(now0),jour_fr:isoD(now0).split('-').reverse().join('/'),fenetre_comm:'',passages:[]};
 let ROLE=null,MOI=null,REF=new Date(),U=[],H=[],Z=[],J=[],SRC=[];
@@ -305,7 +305,7 @@ function toast(t){try{if(WIN&&!/Génération/.test(t)){WIN.close();WIN=null}}cat
 const RL={user:'Utilisateur',admin:'Admin',super:'Super admin'};
 async function envoyerLien(){const e=$('#lemail').value.trim().toLowerCase();$('#lmsg').textContent='Envoi du lien…';
  const {error}=await SB.auth.signInWithOtp({email:e,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
- $('#lmsg').textContent=error?(/autoris|Database error/i.test(error.message)?'Cette adresse n’est pas autorisée. Contactez un administrateur.':'Envoi impossible : '+error.message):'Lien envoyé : ouvrez l’e-mail reçu à '+e+' et cliquez sur le lien.'}
+ $('#lmsg').textContent=error?(/autoris|Database error/i.test(error.message)?'Cette adresse n’est pas autorisée. Contactez un administrateur.':/rate|limit|seconds/i.test(error.message)?'Trop de liens demandés : la limite d’envoi d’e-mails est atteinte. Réessayez dans une heure et utilisez le dernier lien déjà reçu s’il date de moins d’une heure.':'Envoi impossible : '+error.message):'Lien envoyé : ouvrez l’e-mail reçu à '+e+' et cliquez sur le lien.'}
 async function sortir(){await SB.auth.signOut();location.reload()}
 const fh=d=>{d=new Date(d);return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+' '+String(d.getUTCHours()).padStart(2,'0')+'h'+String(d.getUTCMinutes()).padStart(2,'0')};
 async function signer(paths){const out={};paths=[...new Set(paths.filter(Boolean))];paths.filter(x=>/^https?:/.test(x)).forEach(x=>out[x]=x);paths=paths.filter(x=>!/^https?:/.test(x));for(let i=0;i<paths.length;i+=100){const {data}=await SB.storage.from('captures').createSignedUrls(paths.slice(i,i+100),43200);(data||[]).forEach(x=>{if(x.signedUrl)out[x.path]=x.signedUrl})}return out}
