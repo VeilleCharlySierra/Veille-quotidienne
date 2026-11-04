@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Dépôt veille</title>
+<style>
+  :root { --fond:#f6f6f4; --texte:#1d1d1b; --ok:#0a7d3b; --ko:#b00020; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --fond:#1b1b1a; --texte:#eee; --ok:#5fd18b; --ko:#ff7b8a; } }
+  :root[data-theme="dark"] { --fond:#1b1b1a; --texte:#eee; --ok:#5fd18b; --ko:#ff7b8a; }
+  body { background:var(--fond); color:var(--texte); font:15px/1.5 system-ui, sans-serif; margin:0; padding:24px 16px; }
+  #etat { font-weight:600; margin-top:12px; }
+  .ok { color:var(--ok); } .ko { color:var(--ko); }
+  img { max-width:100%; margin-top:12px; border:1px solid #8884; }
+</style>
+</head>
+<body>
+<h1>Dépôt de la veille (usage interne)</h1>
+<p>Page utilisée par les tâches automatiques pour ranger une capture d'écran ou le rapport du jour. Elle ne fait rien sans jeton.</p>
+<input type="file" id="fichier" accept="image/*,application/pdf">
+<div id="etat">En attente d'un fichier.</div>
+<img id="apercu" alt="" hidden>
+<script>
+// Paramètres : ?mode=capture&id=<id publication>&jour=AAAA-MM-JJ&type=fb|x|reel|aucun  ou  ?mode=rapport&jour=AAAA-MM-JJ
+// Le jeton n'est jamais dans l'adresse : la tâche le place dans window.JETON (javascript_tool) avant le dépôt.
+const P = new URLSearchParams(location.search);
+const FONCTION = 'https://vtpfgzrlyqdjrulotxni.supabase.co/functions/v1/deposer';
+// cadres en fraction de la capture (écran du navigateur) : fenêtre de publication Facebook, publication X, reel
+const CADRES = { fb:[0.239,0.145,0.751,0.852], x:[0.232,0.078,0.668,0.597], reel:[0.359,0.109,0.588,0.974], aucun:[0,0,1,1] };
+const etat = (t, c) => { const e = document.getElementById('etat'); e.textContent = t; e.className = c || ''; window.RESULTAT = t; };
+
+async function recadrer(f, type) {
+  const img = await createImageBitmap(f);
+  const [x0, y0, x1, y1] = CADRES[type] || CADRES.fb;
+  const w = Math.round((x1 - x0) * img.width), h = Math.round((y1 - y0) * img.height);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  c.getContext('2d').drawImage(img, Math.round(x0 * img.width), Math.round(y0 * img.height), w, h, 0, 0, w, h);
+  return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88));
+}
+
+document.getElementById('fichier').addEventListener('change', async (ev) => {
+  const f = ev.target.files[0]; if (!f) return;
+  try {
+    if (!window.JETON) return etat('ÉCHEC : jeton absent', 'ko');
+    const mode = P.get('mode'), jour = P.get('jour') || '';
+    let corps = f;
+    if (mode === 'capture') {
+      corps = await recadrer(f, P.get('type') || 'fb');
+      const a = document.getElementById('apercu'); a.src = URL.createObjectURL(corps); a.hidden = false;
+    }
+    etat('Envoi en cours…');
+    const r = await fetch(FONCTION, { method: 'POST', body: corps, headers: {
+      'x-jeton': window.JETON, 'x-mode': mode || '', 'x-id': P.get('id') || '', 'x-jour': jour,
+      'content-type': mode === 'rapport' ? 'application/pdf' : 'image/jpeg' } });
+    const j = await r.json().catch(() => ({}));
+    if (j.ok) etat('OK : ' + (j.chemin || j.fichier), 'ok'); else etat('ÉCHEC : ' + (j.erreur || r.status), 'ko');
+  } catch (e) { etat('ÉCHEC : ' + e.message, 'ko'); }
+});
+</script>
+</body>
+</html>
