@@ -430,8 +430,8 @@ function attCard(a){const last=a.releves[a.releves.length-1];const S=a.sens||nul
  <div class="top"><span style="font-weight:700">${esc(a.auteur)} – ${esc(a.titre)}</span>${a.lien?`<a class="noprint small" href="${esc(a.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:''}</div>
  <div class="small">${a.pub?'Publiée le '+esc(a.pub)+' · ':''}en point d’attention depuis le ${esc(a.depuis)} · dernier relevé ${esc(last.h)} : <b>${nf(last.jaime)}</b> j'aime, <b>${nf(last.com)}</b> commentaires, <b>${nf(last.part)}</b> partages</div>
  <div class="viz"><div class="col"><div><div class="k">Sens des commentaires</div>${S?`<div class="sens"><span style="width:${S.neg}%;background:var(--bad)"></span><span style="width:${S.neu}%;background:var(--neutral)"></span><span style="width:${S.pos}%;background:var(--good)"></span></div>
-   <div class="sensl"><span><i style="background:var(--bad)"></i>${S.neg} % négatifs</span><span><i style="background:var(--neutral)"></i>${S.neu} % neutres</span><span><i style="background:var(--good)"></i>${S.pos} % positifs</span></div>`:'<span class="small">Calculé dès que les commentaires sont collectés.</span>'}</div>
-  <div><div class="k">Mots des commentaires</div><div class="cloud">${cloudHTML(Object.entries(a.mots||{}).sort((x,y)=>y[1]-x[1]).slice(0,10),11,19)}</div></div></div>
+   <div class="sensl"><span><i style="background:var(--bad)"></i>${S.neg} % négatifs</span><span><i style="background:var(--neutral)"></i>${S.neu} % neutres</span><span><i style="background:var(--good)"></i>${S.pos} % positifs</span></div>${S.base?`<div class="small" style="margin-top:4px">Sur ${S.base} commentaires lus · sens envers la marque</div>`:''}`:'<span class="small">Commentaires pas encore collectés pour cette publication.</span>'}</div>
+</div>
   <div><div class="k">Interactions par relevé</div>${evoInter(a.releves)}</div></div>
  </div></article>`}
 function thCard(t){const ev=t.evol;return`<div class="thc" data-k="${esc(t.theme)}"><div style="font-weight:700">${esc(t.theme)}</div><div class="h"><span class="tag alerte">${esc(t.raison)}</span></div>
