@@ -1,4 +1,4 @@
-// Fonction « alertes-zones » : après chaque passage, envoie à chaque responsable de zone les nouveaux signalements
+// Fonction « alertes-zones » : après chaque passage, envoie (1) les détections de termes surveillés aux destinataires du rapport et (2) à chaque responsable de zone les nouveaux signalements
 // de coupure de sa zone (publications remontées + commentaires des points d'attention et publications suivies),
 // avec le lien de la publication (publication commentée pour un commentaire). Rien n'est envoyé s'il n'y a rien de nouveau.
 import postgres from "npm:postgres@3.4.4";
@@ -53,10 +53,29 @@ Deno.serve(async (req) => {
         } catch (e) { bilan.push(`${zone} : échec e-mail (${(e as Error).message})`); }
       } else bilan.push(`${zone} : ${ls.length} signalement(s) (essai, sans e-mail)`);
     }
+    // Termes surveillés : un e-mail groupé aux destinataires du rapport pour les détections pas encore envoyées
+    const at = await sql`select * from public.alertes_termes where mail_envoye_le is null order by marque, terme, trouve_le`;
+    if (at.length) {
+      const [{ valeur: dj }] = await sql`select coalesce((select valeur from public.parametres where cle = 'destinataires_rapport'), '[]') as valeur`;
+      const dest: string[] = JSON.parse(dj);
+      const termes = [...new Set(at.map((a) => `« ${String(a.terme).replace(/\*$/, "")} » (${a.marque})`))].join(", ");
+      const texte = `Bonjour,\n\nTerme(s) surveillé(s) détecté(s) depuis le dernier passage de veille : ${termes}.\n\n` +
+        at.map((a, i) => `${i + 1}. ${a.marque} · terme « ${a.terme} » · ${a.source === "commentaire" ? "commentaire" : "publication"} · ${fmt(new Date(a.trouve_le))} UTC\n` +
+          `   Extrait : « ${String(a.extrait || "").slice(0, 220)} »\n` +
+          `   Lien${a.source === "commentaire" ? " (publication commentée)" : ""} : ${a.lien || "non disponible"}`).join("\n\n") +
+        `\n\nPlateforme de veille : https://veillecharlysierra.github.io/Veille-quotidienne/\n\nViral SARL – document confidentiel`;
+      if (envoyer && dest.length) {
+        try {
+          await courriel(dest, `Veille CIE / SODECI – terme surveillé détecté (${at.length})`, texte);
+          await sql`update public.alertes_termes set mail_envoye_le = now() where id in ${sql(at.map((a) => a.id))}`;
+          bilan.push(`termes surveillés : ${at.length} détection(s) envoyées à ${dest.join(", ")}`);
+        } catch (e) { bilan.push(`termes surveillés : échec e-mail (${(e as Error).message})`); }
+      } else bilan.push(`termes surveillés : ${at.length} détection(s) (essai, sans e-mail)`);
+    }
     if (envoyer) {
       await sql`insert into public.parametres(cle, valeur) values ('dernier_envoi_zones', ${new Date().toISOString()})
                 on conflict (cle) do update set valeur = excluded.valeur`;
-      if (bilan.length) await journal("Alerte", "E-mails responsables de zone : " + bilan.join(" ; "));
+      if (bilan.length) await journal("Alerte", "E-mails automatiques : " + bilan.join(" ; "));
     }
     return Response.json({ ok: true, depuis, n: lignes.length, bilan, apercu: envoyer ? undefined : lignes.slice(0, 3) });
   } catch (e) {
