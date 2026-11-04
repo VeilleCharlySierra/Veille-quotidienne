@@ -308,7 +308,7 @@ async function envoyerLien(){const e=$('#lemail').value.trim().toLowerCase();$('
  $('#lmsg').textContent=error?(/autoris|Database error/i.test(error.message)?'Cette adresse n’est pas autorisée. Contactez un administrateur.':'Envoi impossible : '+error.message):'Lien envoyé : ouvrez l’e-mail reçu à '+e+' et cliquez sur le lien.'}
 async function sortir(){await SB.auth.signOut();location.reload()}
 const fh=d=>{d=new Date(d);return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+' '+String(d.getUTCHours()).padStart(2,'0')+'h'+String(d.getUTCMinutes()).padStart(2,'0')};
-async function signer(paths){const out={};paths=[...new Set(paths.filter(Boolean))];for(let i=0;i<paths.length;i+=100){const {data}=await SB.storage.from('captures').createSignedUrls(paths.slice(i,i+100),43200);(data||[]).forEach(x=>{if(x.signedUrl)out[x.path]=x.signedUrl})}return out}
+async function signer(paths){const out={};paths=[...new Set(paths.filter(Boolean))];paths.filter(x=>/^https?:/.test(x)).forEach(x=>out[x]=x);paths=paths.filter(x=>!/^https?:/.test(x));for(let i=0;i<paths.length;i+=100){const {data}=await SB.storage.from('captures').createSignedUrls(paths.slice(i,i+100),43200);(data||[]).forEach(x=>{if(x.signedUrl)out[x.path]=x.signedUrl})}return out}
 async function charger(){
  const depuis=new Date(Date.now()-400*86400000).toISOString();
  const [p,st,rl,th,cm,ps,rj]=await Promise.all([
