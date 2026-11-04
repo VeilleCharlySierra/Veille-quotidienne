@@ -1,7 +1,8 @@
 // Fonction « envoyer-rapport » : récupère le rapport quotidien chiffré déposé dans le dépôt,
-// le range dans le stockage « rapports » (onglet Rapports de la page) et l'envoie par e-mail (Gmail SMTP).
+// le range dans le stockage « rapports » (onglet Rapports de la page) et l'envoie par e-mail (Resend, ou Gmail SMTP en secours).
 import postgres from "npm:postgres@3.4.4";
 import nodemailer from "npm:nodemailer@6.9.14";
+import { encodeBase64 } from "jsr:@std/encoding@1.0.5/base64";
 
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 1 });
 const DEPOT = "https://raw.githubusercontent.com/VeilleCharlySierra/Veille-quotidienne/main/envoi/";
@@ -11,8 +12,19 @@ const journal = (type: string, detail: string) =>
   sql`insert into public.journal(le, type, par, detail) values (now(), ${type}, 'envoi automatique', ${detail})`;
 
 async function courriel(dest: string[], sujet: string, texte: string, pj?: { filename: string; content: Uint8Array }) {
+  const rk = Deno.env.get("RESEND_API_KEY");
+  if (rk) {
+    // Resend (offre gratuite) : expéditeur sur le domaine vérifié, défini par le secret RESEND_FROM
+    const from = Deno.env.get("RESEND_FROM") || "Veille e-réputation Viral <onboarding@resend.dev>";
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST", headers: { Authorization: "Bearer " + rk, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: dest, subject: sujet, text: texte,
+        attachments: pj ? [{ filename: pj.filename, content: encodeBase64(pj.content) }] : undefined }) });
+    if (!r.ok) throw new Error("Resend " + r.status + " : " + (await r.text()).slice(0, 200));
+    return "e-mail envoyé à " + dest.join(", ");
+  }
   const user = Deno.env.get("GMAIL_USER"), pass = Deno.env.get("GMAIL_APP_PASSWORD");
-  if (!user || !pass) return "envoi e-mail non configuré (mot de passe d'application Gmail absent)";
+  if (!user || !pass) return "envoi e-mail non configuré (clé Resend absente)";
   const t = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user, pass: pass.replace(/\s/g, "") } });
   await t.sendMail({ from: `Veille e-réputation Viral <${user}>`, to: dest.join(", "), subject: sujet, text: texte,
     attachments: pj ? [{ filename: pj.filename, content: pj.content, contentType: "application/pdf" }] : [] });

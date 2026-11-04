@@ -4,7 +4,7 @@ Chaîne :
 1. **05h07 UTC** – tâche planifiée « Rapport quotidien 06h CIE SODECI » : extrait les publications, rédige la synthèse,
    construit le PDF (`build.py`), le chiffre (`chiffrer.py`) et le pousse dans `envoi/rapport_<AAAA-MM-JJ>.bin`.
 2. **06h00 UTC** – tâche `envoi_rapport_06h` de la base : appelle la fonction `envoyer-rapport`, qui déchiffre le PDF,
-   le range dans l'onglet Rapports de la page et l'envoie par e-mail (Gmail) aux adresses de
+   le range dans l'onglet Rapports de la page et l'envoie par e-mail (Resend) aux adresses de
    `parametres.destinataires_rapport` (liste JSON). Si le fichier manque, un e-mail « non disponible » part et un incident est journalisé.
 
 ## Procédure de la tâche de 05h07 (jour J = date UTC du jour)
