@@ -9,7 +9,7 @@ Chaîne :
 
 ## Procédure de la tâche de 05h07 (jour J = date UTC du jour)
 
-Période : de J-1 06h00 à J 06h00 UTC (sauf consigne contraire).
+Période : de J-1 06h00 à J 06h00 UTC (sauf consigne contraire), selon la date de publication (voir extraire.sql).
 
 1. `cd` dans le dépôt, `git pull`.
 2. Extraire les données avec l'outil Supabase `execute_sql` (projet `vtpfgzrlyqdjrulotxni`) : requête de `extraire.sql`,
