@@ -47,8 +47,14 @@ Deno.serve(async (req) => {
     const cle_srv = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const up = await fetch(Deno.env.get("SUPABASE_URL") + "/storage/v1/object/rapports/" + fichier, {
       method: "POST", body: pdf,
-      headers: { Authorization: "Bearer " + cle_srv, apikey: cle_srv, "Content-Type": "application/pdf", "x-upsert": "true" } });
-    if (!up.ok) throw new Error("stockage " + up.status + " : " + (await up.text()).slice(0, 200));
+      headers: { Authorization: "Bearer " + cle_srv, apikey: cle_srv, "Content-Type": "application/pdf", "x-upsert": "true" },
+      signal: AbortSignal.timeout(15000) }).catch(() => null);
+    // la réponse du stockage peut tarder alors que le fichier est déjà enregistré : on vérifie dans la base
+    if (!up || !up.ok) {
+      const ok = await sql`select 1 from storage.objects where bucket_id = 'rapports' and name = ${fichier}
+                           and coalesce(updated_at, created_at) > now() - interval '3 minutes'`;
+      if (!ok.length) throw new Error("stockage : " + (up ? up.status + " " + (await up.text()).slice(0, 120) : "pas de réponse"));
+    }
     await sql`delete from public.rapports_journaliers where jour = ${jour}`;
     await sql`insert into public.rapports_journaliers(jour, fichier, cree_le) values (${jour}, ${fichier}, now())`;
 
