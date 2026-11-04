@@ -6,7 +6,7 @@ import nodemailer from "npm:nodemailer@6.9.14";
 
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 1 });
 const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-const DEPOT = "https://raw.githubusercontent.com/VeilleCharlySierra/veille-quotidienne/main/envoi/";
+const DEPOT = "https://raw.githubusercontent.com/VeilleCharlySierra/Veille-quotidienne/main/envoi/";
 
 const hex = (h: string) => new Uint8Array(h.match(/../g)!.map((b) => parseInt(b, 16)));
 const journal = (type: string, detail: string) =>
