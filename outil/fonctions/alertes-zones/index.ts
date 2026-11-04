@@ -1,0 +1,66 @@
+// Fonction « alertes-zones » : après chaque passage, envoie à chaque responsable de zone les nouveaux signalements
+// de coupure de sa zone (publications remontées + commentaires des points d'attention et publications suivies),
+// avec le lien de la publication (publication commentée pour un commentaire). Rien n'est envoyé s'il n'y a rien de nouveau.
+import postgres from "npm:postgres@3.4.4";
+
+const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 1 });
+const journal = (type: string, detail: string) =>
+  sql`insert into public.journal(le, type, par, detail) values (now(), ${type}, 'alertes zones', ${detail})`;
+const fmt = (d: Date) => d.toISOString().slice(8, 10) + "/" + d.toISOString().slice(5, 7) + " " +
+  d.toISOString().slice(11, 13) + "h" + d.toISOString().slice(14, 16);
+
+async function courriel(dest: string[], sujet: string, texte: string) {
+  const gs = await sql`select (select valeur from prive.cles where nom = 'url_gmail_script') as url, (select valeur from prive.cles where nom = 'jeton_gmail') as jeton`;
+  if (!gs[0].url) throw new Error("script Gmail non configuré");
+  const r = await fetch(gs[0].url, { method: "POST", headers: { "Content-Type": "application/json" }, redirect: "follow",
+    body: JSON.stringify({ jeton: gs[0].jeton, to: dest, subject: sujet, text: texte }) });
+  const t = (await r.text()).trim();
+  if (t !== "ok") throw new Error("script Gmail : " + r.status + " " + t.slice(0, 150));
+}
+
+Deno.serve(async (req) => {
+  try {
+    const [{ valeur: jeton }] = await sql`select valeur from prive.cles where nom = 'jeton_envoi'`;
+    if (req.headers.get("x-jeton") !== jeton) return new Response("refusé", { status: 403 });
+    const corps = await req.json().catch(() => ({}));
+    const envoyer = corps.envoyer !== false;
+    const [{ depuis }] = await sql`select coalesce((select valeur::timestamptz from public.parametres where cle = 'dernier_envoi_zones'), now() - interval '3 hours') as depuis`;
+    const lignes = await sql`
+      select p.*, z.email_responsable from public.pannes p
+      join public.zones z on z.marque = p.marque and z.nom = p.zone
+      where p.releve_le > ${depuis} and z.email_responsable is not null
+      order by p.zone, p.le desc`;
+    const parZone = new Map<string, typeof lignes>();
+    for (const l of lignes) {
+      const k = l.marque + "|" + l.zone + "|" + l.email_responsable;
+      if (!parZone.has(k)) parZone.set(k, [] as unknown as typeof lignes);
+      parZone.get(k)!.push(l);
+    }
+    const bilan: string[] = [];
+    for (const [k, ls] of parZone) {
+      const [marque, zone, email] = k.split("|");
+      const nbC = ls.filter((l) => l.source === "commentaire").length;
+      const texte = `Bonjour,\n\nNouveaux signalements de coupure dans la zone ${zone} (${marque}) depuis le dernier passage de veille :\n` +
+        `${ls.length} signalement(s), dont ${nbC} en commentaire.\n\n` +
+        ls.map((l, i) => `${i + 1}. ${l.commune} – ${l.detail}\n   Date : ${fmt(new Date(l.le))} UTC · ${l.source === "commentaire" ? "Commentaire" : "Publication"} · ${l.plateforme}\n` +
+          `   Extrait : « ${String(l.texte || "").replace(/\s+/g, " ").slice(0, 220)} »\n` +
+          `   Lien${l.source === "commentaire" ? " (publication commentée)" : ""} : ${l.lien || "non disponible"}`).join("\n\n") +
+        `\n\nTous les signalements et la carte : plateforme de veille, onglet Pannes\nhttps://veillecharlysierra.github.io/Veille-quotidienne/\n\nViral SARL – document confidentiel`;
+      if (envoyer) {
+        try {
+          await courriel([email], `Veille ${marque} – coupures signalées zone ${zone} (${ls.length})`, texte);
+          bilan.push(`${zone} : ${ls.length} signalement(s) envoyés à ${email}`);
+        } catch (e) { bilan.push(`${zone} : échec e-mail (${(e as Error).message})`); }
+      } else bilan.push(`${zone} : ${ls.length} signalement(s) (essai, sans e-mail)`);
+    }
+    if (envoyer) {
+      await sql`insert into public.parametres(cle, valeur) values ('dernier_envoi_zones', ${new Date().toISOString()})
+                on conflict (cle) do update set valeur = excluded.valeur`;
+      if (bilan.length) await journal("Alerte", "E-mails responsables de zone : " + bilan.join(" ; "));
+    }
+    return Response.json({ ok: true, depuis, n: lignes.length, bilan, apercu: envoyer ? undefined : lignes.slice(0, 3) });
+  } catch (e) {
+    await journal("Incident", "Alertes zones : " + (e as Error).message).catch(() => {});
+    return Response.json({ ok: false, erreur: (e as Error).message }, { status: 500 });
+  }
+});
