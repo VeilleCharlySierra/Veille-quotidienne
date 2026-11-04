@@ -156,7 +156,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 </style>
 </head>
 <body class="CIE">
-<div class="demo" id="demo">Semaine de test : passages automatiques toutes les 3 heures (envoi des rapports par e-mail pas encore actif).</div>
+<div class="demo" id="demo">Semaine de test : passages automatiques toutes les 3 heures, rapport quotidien par e-mail à 06h00 UTC.</div>
 
 <div id="login">
   <form class="card-login" onsubmit="event.preventDefault();envoyerLien()">
@@ -182,6 +182,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
   <button class="t" data-t="pubs">Publications</button>
   <button class="t" data-t="att">Points d'attention <span class="badge" id="nbatt"></span></button>
   <button class="t" data-t="suiv">Publications suivies <span class="badge" id="nbsuiv"></span></button>
+  <button class="t" data-t="pan">Pannes <span class="badge" id="nbpan"></span></button>
   <button class="t" data-t="off">Canaux officiels</button>
   <button class="t" data-t="rap">Rapports</button>
   <button class="t" data-t="adm" id="tadm">Administration</button>
@@ -238,11 +239,28 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 
 <!-- PUBLICATIONS SUIVIES -->
 <section class="tab" id="suiv">
-  <div class="small">Publications remontées mises en suivi par un administrateur (15 au maximum). Leurs chiffres sont relus à chaque passage. Une publication suivie peut aussi être mise en point d'attention.</div>
+  <div class="small">Publications remontées et des canaux officiels mises en suivi (20 au maximum par marque). Leurs chiffres sont relus à chaque passage. Une publication suivie peut aussi être mise en point d'attention.</div>
   <h3>À décider <span class="small">(suivi automatique : contenu non vérifiable, 15 au maximum, retiré automatiquement après 24 h sans décision)</span></h3>
   <div class="cards" id="suiva"></div>
   <h3>Suivies</h3>
   <div class="cards" id="suivc"></div>
+</section>
+
+<!-- PANNES -->
+<section class="tab" id="pan">
+  <div class="small">Coupures signalées avec une localité, dans les publications remontées et dans les commentaires des points d'attention et des publications suivies. Pour un commentaire, le lien mène à la publication commentée.</div>
+  <div class="bar noprint" style="margin:10px 0;flex-wrap:wrap;gap:8px">
+    <label>Période <select id="panp"><option value="1">24 heures</option><option value="7" selected>7 jours</option><option value="30">30 jours</option><option value="90">3 mois</option></select></label>
+    <label>Source <select id="pans"><option value="">Toutes</option><option value="publication">Publications</option><option value="commentaire">Commentaires</option></select></label>
+    <label>Zone <select id="panz"><option value="">Toutes</option></select></label>
+    <button class="ghostb" onclick="panImprimer()">Imprimer les zones de coupure</button>
+  </div>
+  <div class="kpis" id="pank"></div>
+  <div class="grid2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+    <div class="panel"><h3>Carte des zones de coupure</h3><div id="pancarte"></div></div>
+    <div class="panel"><h3>Grand Abidjan</h3><div id="panabj"></div></div>
+  </div>
+  <div class="panel"><h3>Signalements</h3><div class="tw"><table id="pant"></table></div></div>
 </section>
 
 <!-- CANAUX OFFICIELS -->
@@ -322,16 +340,18 @@ const fh=d=>{d=new Date(d);return String(d.getUTCDate()).padStart(2,'0')+'/'+Str
 async function signer(paths){const out={};paths=[...new Set(paths.filter(Boolean))];paths.filter(x=>/^https?:/.test(x)).forEach(x=>out[x]=x);paths=paths.filter(x=>!/^https?:/.test(x));for(let i=0;i<paths.length;i+=100){const {data}=await SB.storage.from('captures').createSignedUrls(paths.slice(i,i+100),43200);(data||[]).forEach(x=>{if(x.signedUrl)out[x.path]=x.signedUrl})}return out}
 async function charger(){
  const depuis=new Date(Date.now()-400*86400000).toISOString();
- const [p,st,rl,th,cm,ps,rj]=await Promise.all([
+ const [p,st,rl,th,cm,ps,rj,pn]=await Promise.all([
   SB.from('publications').select('*').gte('remontee_le',depuis).order('remontee_le',{ascending:false}).limit(20000),
   SB.from('stats_jour').select('*').order('jour'),
   SB.from('releves').select('*').order('releve_le'),
   SB.from('themes_alerte').select('*').order('depuis',{ascending:false}),
   SB.from('commentaires').select('*').order('publie_le',{ascending:false}),
   SB.from('passages').select('*').order('debut',{ascending:false}).limit(20),
-  SB.from('rapports_journaliers').select('*')]);
+  SB.from('rapports_journaliers').select('*'),
+  SB.from('pannes').select('*').gte('le',new Date(Date.now()-92*86400000).toISOString()).order('le',{ascending:false}).limit(20000)]);
  const P=p.data||[];const urls=await signer(P.map(x=>x.capture));DERP=(ps.data||[]).length?new Date(ps.data[0].debut):null;
  const row=x=>({id:x.id,sauto:x.suivi_auto,sautoM:x.suivi_auto_motif||'',sautoFin:x.suivi_auto_depuis?fh(new Date(new Date(x.suivi_auto_depuis).getTime()+86400000).toISOString()):'',suivi:x.suivi_stats,pa:x.point_attention,neuf:!!(DERP&&new Date(x.remontee_le)>=DERP),jour:isoD(new Date(x.publiee_le||x.remontee_le)),t:new Date(x.publiee_le||x.remontee_le),pub:x.publiee_le?fh(x.publiee_le):'',marque:x.marque,pf:x.plateforme,auteur:x.auteur||'',texte:x.texte||'',theme:x.theme||'Non classé',lieu:x.lieu||'Non localisé',sentiment:x.sentiment||'Neutre',jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,remontee:fh(x.remontee_le),lien:x.lien,img:urls[x.capture]||''});
+ D.pannes=(pn&&pn.data)||[];
  D.pubs=P.filter(x=>x.type==='remontee').map(row);
  D.suivies=P.filter(x=>x.suivi_stats).map(x=>Object.assign(row(x),{officiel:x.type==='officiel'}));
  const maxT=D.pubs.reduce((m,r)=>r.t>m?r.t:m,new Date(0));REF=(Date.now()-maxT>72*3600000&&D.pubs.length)?new Date(maxT.getTime()+60000):new Date();
@@ -403,11 +423,11 @@ function bord(){
  const nl=rows.filter(r=>r.lieu==='Non localisé').length;
  $('#lieux').innerHTML=ls.slice(0,10).map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/lm}%"></span></span><span class="n">${v}</span>`).join('')+(nl?`<span class="small" style="grid-column:1/-1">${nl} publication(s) sans localité.</span>`:'');
  carte(ls)}
-function carte(ls){const G=D.geo;let abj=0,pts=[];ls.forEach(([t,n])=>{const L=G.lieux[t];if(t==='Abidjan'||(L&&L.abj))abj+=n;else if(L)pts.push([L.xy,n,t])});
+function carte(ls,el){el=el||'#carte';const G=D.geo;let abj=0,pts=[];ls.forEach(([t,n])=>{const L=G.lieux[t];if(t==='Abidjan'||(L&&L.abj))abj+=n;else if(L)pts.push([L.xy,n,t])});
  const r=n=>8+Math.sqrt(n)*8,col=BC[M];let s=`<svg viewBox="0 0 622 653" width="100%" style="max-height:300px" role="img" aria-label="Carte des localités citées"><path d="${G.path}" fill="var(--soft)" stroke="var(--line)" stroke-width="2"/>`;
  pts.forEach(([xy,n,t])=>s+=`<circle cx="${xy[0]}" cy="${xy[1]}" r="${r(n)}" fill="${col}" fill-opacity=".55" stroke="${col}"><title>${esc(t)} : ${n}</title></circle>`);
  if(abj){const[x,y]=G.abidjan;s+=`<circle cx="${x}" cy="${y}" r="${r(abj)}" fill="${col}" fill-opacity=".55" stroke="${col}"><title>Grand Abidjan : ${abj}</title></circle><text x="${x+r(abj)+6}" y="${y+6}" font-size="22" font-weight="700">Grand Abidjan · ${abj}</text>`}
- $('#carte').innerHTML=s+'</svg>'}
+ $(el).innerHTML=s+'</svg>'}
 $$('#per button').forEach(b=>b.onclick=()=>{P=b.dataset.p;$$('#per button').forEach(x=>x.classList.toggle('on',x===b));$('#perc').hidden=P!=='c';bord()});
 $('#d1').onchange=$('#d2').onchange=bord;
 
@@ -584,7 +604,28 @@ function offR(){const P=D.officiels[M]||[],S=P.filter(o=>o.suivi),A=P.filter(o=>
  $$('#off .adm-only').forEach(e=>e.hidden=ROLE==='user');
  $('#offw').textContent=S.length?'Commentaires relevés toutes les 6 heures sous les publications en suivi statistique.':'';
  $('#offt').innerHTML=C.length?'<tr><th>Date</th><th>Auteur</th><th>Commentaire</th><th>Sens</th><th>Thème</th><th>Localité</th></tr>'+C.map(c=>`<tr><td style="white-space:nowrap">${esc(c.date)}</td><td>${esc(c.auteur)}</td><td>${esc(c.texte)}</td><td>${c.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(c.sentiment)+'</span>'}</td><td>${esc(c.theme)}</td><td>${esc(c.lieu||'')}</td></tr>`).join(''):'<tr><td class="small">Aucun commentaire : les commentaires ne sont relevés que sur les publications suivies.</td></tr>'}
-function tout(){bord();fillSel();pubsR();attR();suivR();offR();chkR()}
+function panSel(){const d=+($('#panp').value||7),src=$('#pans').value,z=$('#panz').value,lim=Date.now()-d*86400000;
+ return (D.pannes||[]).filter(x=>x.marque===M&&new Date(x.le)>=lim&&(!src||x.source===src)&&(!z||(x.zone||'Sans zone')===z))}
+function panAbj(L){const G=D.geo,pts=L.filter(([t])=>G.lieux[t]&&G.lieux[t].abj);if(!pts.length)return'<div class="empty">Aucune coupure signalée à Abidjan sur la période.</div>';
+ const xs=pts.map(([t])=>G.lieux[t].xy),x0=Math.min(...xs.map(a=>a[0]))-6,x1=Math.max(...xs.map(a=>a[0]))+6,y0=Math.min(...xs.map(a=>a[1]))-6,y1=Math.max(...xs.map(a=>a[1]))+6;
+ const W=420,H=300,sx=W/Math.max(x1-x0,1),sy=H/Math.max(y1-y0,1),k=Math.min(sx,sy),col=BC[M];
+ let s=`<svg viewBox="0 0 ${W} ${H+20}" width="100%" style="max-height:300px" role="img" aria-label="Communes d'Abidjan">`;
+ pts.forEach(([t,n])=>{const [x,y]=G.lieux[t].xy,cx=(x-x0)*k,cy=(y-y0)*k+10,r=6+Math.sqrt(n)*6;s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}" fill-opacity=".5" stroke="${col}"><title>${esc(t)} : ${n}</title></circle><text x="${cx}" y="${cy-r-3}" text-anchor="middle" font-size="12" font-weight="700">${esc(t)} · ${n}</text>`});
+ return s+'</svg>'}
+function panR(){const zs=[...new Set((D.pannes||[]).filter(x=>x.marque===M).map(x=>x.zone||'Sans zone'))].sort(),zv=$('#panz').value;
+ $('#panz').innerHTML='<option value="">Toutes</option>'+zs.map(z=>`<option${z===zv?' selected':''}>${esc(z)}</option>`).join('');
+ const X=panSel(),cnt={};X.forEach(x=>{const c=x.commune||x.detail;cnt[c]=(cnt[c]||0)+1});const L=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+ $('#nbpan').textContent=(D.pannes||[]).filter(x=>x.marque===M&&new Date(x.le)>=Date.now()-86400000).length||'';
+ const k=(l,v,t)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${t}</span></div>`;
+ $('#pank').innerHTML=k('Signalements',X.length,'sur la période')+k('Localités',L.length,'touchées')+k('Zones',new Set(X.map(x=>x.zone).filter(Boolean)).size,'concernées')+k('Commentaires',X.filter(x=>x.source==='commentaire').length,'signalant une coupure');
+ carte(L,'#pancarte');$('#panabj').innerHTML=panAbj(L);
+ $('#pant').innerHTML='<tr><th>Zone</th><th>Localité</th><th>Détail</th><th>Date</th><th>Source</th><th>Extrait</th><th>Lien</th></tr>'+(X.map(x=>`<tr><td>${esc(x.zone||'Sans zone')}</td><td>${esc(x.commune||'')}</td><td>${esc(x.detail||'')}</td><td>${fh(x.le)}</td><td>${x.source==='commentaire'?'Commentaire':'Publication'} · ${esc(x.plateforme||'')}</td><td>${esc((x.texte||'').slice(0,140))}</td><td>${x.lien?`<a href="${esc(x.lien)}" target="_blank" rel="noopener">${x.source==='commentaire'?'Publication commentée':'Voir la publication'}</a>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Aucune coupure signalée sur la période.</td></tr>')}
+function panImprimer(){const X=panSel(),per=$('#panp').selectedOptions[0].textContent,w=window.open('','_blank');if(!w)return;
+ const css='body{font:12px/1.4 system-ui,sans-serif;color:#111;margin:20px}h1{font-size:18px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:4px 6px;text-align:left;vertical-align:top}th{background:#f0efec}.cartes{display:flex;gap:12px}.cartes>div{flex:1}';
+ w.document.write(`<!doctype html><meta charset="utf-8"><title>Zones de coupure ${M}</title><style>${css}</style><h1>Zones de coupure – ${M} – ${esc(per)}</h1><div>Généré le ${fh(new Date())} UTC · ${X.length} signalements</div><div class="cartes"><div>${$('#pancarte').innerHTML}</div><div>${$('#panabj').innerHTML}</div></div>${$('#pant').outerHTML}`);
+ w.document.close();setTimeout(()=>w.print(),400)}
+['panp','pans','panz'].forEach(i=>document.addEventListener('change',e=>{if(e.target&&e.target.id===i)panR()}));
+function tout(){bord();fillSel();pubsR();attR();suivR();panR();offR();chkR()}
 $('#ram').onchange=chkR;
 demarrer();
 </script>
