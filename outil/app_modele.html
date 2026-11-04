@@ -254,8 +254,8 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
     <label>Source <select id="pans"><option value="">Toutes</option><option value="publication">Publications</option><option value="commentaire">Commentaires</option></select></label>
     <label>Zone <select id="panz"><option value="">Toutes</option></select></label>
     <button class="ghostb" onclick="panImprimer()">Imprimer les zones de coupure</button>
+    <span id="pank" style="display:flex;gap:8px;flex-wrap:wrap"></span>
   </div>
-  <div class="grid g4" id="pank"></div>
   <div class="grid2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
     <div class="panel"><h3>Carte des zones de coupure</h3><div id="pancarte"></div></div>
     <div class="panel"><h3>Grand Abidjan</h3><div id="panabj"></div></div>
@@ -623,8 +623,8 @@ function panR(){const zs=[...new Set((D.pannes||[]).filter(x=>x.marque===M).map(
  $('#panz').innerHTML='<option value="">Toutes</option>'+zs.map(z=>`<option${z===zv?' selected':''}>${esc(z)}</option>`).join('');
  const X=panSel(),cnt={};X.forEach(x=>{const c=x.commune||x.detail;cnt[c]=(cnt[c]||0)+1});const L=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
  $('#nbpan').textContent=(D.pannes||[]).filter(x=>x.marque===M&&new Date(x.le)>=Date.now()-86400000).length||'';
- const k=(l,v,t)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${t}</span></div>`;
- $('#pank').innerHTML=k('Signalements',X.length,'sur la période')+k('Localités',L.length,'touchées')+k('Zones',new Set(X.map(x=>x.zone).filter(Boolean)).size,'concernées')+k('Commentaires',X.filter(x=>x.source==='commentaire').length,'signalant une coupure');
+ const k=(l,v)=>`<span style="border:1px solid var(--line,#ddd);border-top:3px solid var(--brand);border-radius:8px;padding:4px 12px;background:var(--card,#fff);white-space:nowrap"><b style="font-size:17px">${v}</b> <span class="small">${l}</span></span>`;
+ $('#pank').innerHTML=k('signalements',X.length)+k('localités',L.length);
  carte(L,'#pancarte');$('#panabj').innerHTML=panAbj(L);
  $('#pant').innerHTML='<tr><th>Zone</th><th>Localité</th><th>Détail</th><th>Date</th><th>Source</th><th>Extrait</th><th>Lien</th></tr>'+(X.map(x=>`<tr><td>${esc(x.zone||'Sans zone')}</td><td>${esc(x.commune||'')}</td><td>${esc(x.detail||'')}</td><td>${fh(x.le)}</td><td>${x.source==='commentaire'?'Commentaire':'Publication'} · ${esc(x.plateforme||'')}</td><td>${esc((x.texte||'').slice(0,140))}</td><td>${x.lien?`<a href="${esc(x.lien)}" target="_blank" rel="noopener">${x.source==='commentaire'?'Publication commentée':'Voir la publication'}</a>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Aucune coupure signalée sur la période.</td></tr>')}
 function panImprimer(){const X=panSel(),per=$('#panp').selectedOptions[0].textContent,w=window.open('','_blank');if(!w)return;
