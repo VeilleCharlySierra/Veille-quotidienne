@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Plateforme de Veille Réputation Numérique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#F4F5F3;--panel:#fff;--fg:#1B1F1C;--muted:#5E6A62;--line:#DFE4E0;--soft:#EEF1EC;--red:#C00000;--sodeci:#00A04A;--cie:#E87400;--blue:#1F6FB2;--bad:#C62828;--neutral:#9AA49E;--good:#2E7D32;
+--sans:"Source Sans 3","Segoe UI",Roboto,Arial,sans-serif;--serif:"Source Serif 4",Georgia,serif;--brand:var(--cie);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--panel:#1B201D;--fg:#E9EEEA;--muted:#A3AFA7;--line:#2E3631;--soft:#242B26;--neutral:#6F7A73;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121614;--panel:#1B201D;--fg:#E9EEEA;--muted:#A3AFA7;--line:#2E3631;--soft:#242B26;--neutral:#6F7A73;color-scheme:dark}
+body.SODECI{--brand:var(--sodeci)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.45}
+a{color:var(--blue)}
+.wrap{max-width:80rem;margin-inline:auto;padding-inline:16px}
+button,input,select{font:inherit;color:inherit}
+.demo{background:#FFF4D6;color:#5A3B00;font-size:.85rem;text-align:center;padding:6px 16px;border-bottom:1px solid #F0D690}
+
+#login{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,var(--red) 0 38%,var(--bg) 38%)}
+.card-login{background:var(--panel);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.15);padding:28px;width:min(420px,100%);display:grid;gap:14px}
+.card-login img{height:56px;width:auto;justify-self:start;border-radius:6px}
+.card-login h1{font-family:var(--serif);font-size:1.5rem;margin:0}
+.card-login p{margin:0;color:var(--muted)}
+.card-login input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.primary{background:var(--red);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
+.ghostb{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600}
+.small{font-size:.82rem;color:var(--muted)}
+
+header.top{background:var(--red);color:#fff}
+header.top .wrap{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:space-between;padding-block:12px}
+.brand{display:flex;gap:12px;align-items:center}
+.brand img{height:42px;border-radius:5px;background:#fff;padding:3px 6px}
+.brand .sub{font-size:.9rem;font-weight:700;letter-spacing:.04em;opacity:.95}
+.brand h1{font-family:var(--serif);font-size:clamp(1.15rem,3vw,1.5rem);margin:0;line-height:1.15}
+.brand .sub{font-size:.82rem;opacity:.92}
+.user{display:flex;gap:8px;align-items:center;font-size:.85rem;flex-wrap:wrap}
+.user select{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.6);border-radius:6px;padding:4px 6px}
+.user select option{color:#000}
+.user button{background:#fff;color:var(--red);border:0;border-radius:6px;padding:5px 10px;font-weight:700;cursor:pointer}
+.passes{background:#9E0000;color:#fff;font-size:.8rem}
+.passes .wrap{display:flex;gap:6px 14px;align-items:center;flex-wrap:wrap;padding-block:6px}
+.pass{display:inline-flex;gap:4px;align-items:center;opacity:.65}
+.pass i{width:9px;height:9px;border-radius:50%;border:1.5px solid #fff;display:inline-block}
+.pass.ok{opacity:1}.pass.ok i{background:#fff}
+.pass.next{opacity:1;font-weight:700}.pass.next i{background:#FFC857;border-color:#FFC857}
+nav.tabs{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav.tabs .wrap{display:flex;gap:2px;overflow-x:auto;align-items:center}
+nav.tabs button.t{background:none;border:0;border-bottom:3px solid transparent;padding:12px 14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav.tabs button.t.on{color:var(--fg);border-color:var(--red)}
+nav.tabs .badge{background:var(--red);color:#fff;border-radius:10px;font-size:.72rem;padding:0 6px;margin-left:4px}
+.mtabs{display:flex;gap:8px;margin-left:auto;padding-left:12px}
+.mtabs button{border:2px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 14px;font-weight:700;cursor:pointer;color:var(--muted)}
+.mtabs button.on[data-m=CIE]{background:var(--cie);border-color:var(--cie);color:#fff}
+.mtabs button.on[data-m=SODECI]{background:var(--sodeci);border-color:var(--sodeci);color:#fff}
+main{padding-block:18px 48px}
+section.tab{display:none;gap:16px}
+section.tab.on{display:grid}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:none;padding:6px 11px;cursor:pointer;font-weight:600;color:var(--muted);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--fg);color:var(--panel)}
+.bar input,.bar select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--panel)}
+h3{font-size:1rem;margin:0 0 8px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.kpi{display:grid;gap:2px;border-top:4px solid var(--brand)}
+.kpi .l{font-size:.8rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:1.9rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.82rem;color:var(--muted)}
+.hb{display:grid;grid-template-columns:minmax(90px,38%) 1fr auto;gap:6px 10px;align-items:center;font-size:.88rem}
+.hb .t{height:14px;background:var(--soft);border-radius:3px;overflow:hidden}
+.hb .t span{display:block;height:100%;background:var(--brand)}
+.hb .n{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
+svg text{fill:var(--muted);font-family:var(--sans)}
+.note{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.cloud{display:flex;flex-wrap:wrap;gap:2px 10px;justify-content:center;align-items:baseline;line-height:1.1;padding:6px 0}
+.cloud span{font-weight:700;color:var(--brand)}
+.cloud span.alt{color:var(--fg);opacity:.75}
+
+.cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.pc{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;border-top:4px solid var(--brand)}
+.pc img{width:100%;height:190px;object-fit:cover;object-position:top;background:var(--soft);display:block;cursor:zoom-in}
+.pc .b{padding:12px;display:grid;gap:6px;flex:1;align-content:start}
+.h{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:.78rem}
+.tag{border-radius:4px;padding:1px 6px;font-weight:700;font-size:.74rem;background:var(--soft);color:var(--muted)}
+.tag.CIE{background:var(--cie);color:#fff}.tag.SODECI{background:var(--sodeci);color:#fff}
+.tag.neg{background:#FDE7E7;color:var(--bad)}
+.tag.alerte{background:var(--red);color:#fff}
+.pc .a{font-weight:700}.pc .x{font-size:.92rem}.pc .m{font-size:.8rem;color:var(--muted)}
+.pc .st{display:flex;gap:10px;font-size:.82rem;font-variant-numeric:tabular-nums;color:var(--muted);flex-wrap:wrap}
+.pc .st b{color:var(--fg)}
+.empty{color:var(--muted);padding:20px;text-align:center;background:var(--panel);border:1px dashed var(--line);border-radius:12px}
+
+.attwrap{display:grid;gap:14px;grid-template-columns:minmax(0,1fr) 300px;align-items:start}
+aside.side{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow:auto}
+@media (max-width:900px){.attwrap{grid-template-columns:1fr}.attwrap aside{order:-1}aside.side{position:static;max-height:none}}
+.att{display:grid;gap:14px;grid-template-columns:150px minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--red);border-radius:12px;padding:14px}
+.att.off{border-left-color:var(--neutral)}
+.att img,.att .ph{width:150px;height:100%;min-height:170px;max-height:230px;object-fit:cover;object-position:top;border-radius:8px;background:var(--soft)}
+.att .ph{display:grid;place-items:center;color:var(--muted);font-size:.8rem}
+.att .viz{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:10px 22px;margin-top:2px}
+.att .viz .col{display:grid;gap:10px;align-content:start}
+.ib{display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;font-size:.8rem;font-variant-numeric:tabular-nums}
+.ib .t{height:12px;background:var(--soft);border-radius:2px;overflow:hidden}
+.ib .t span{display:block;height:100%;background:var(--brand)}
+.ib .t span.last{background:var(--red)}
+.ib .n{font-weight:700;text-align:right}
+.ib .d{grid-column:1/-1;font-size:.72rem;color:var(--muted)}
+.att .top{display:flex;gap:10px;justify-content:space-between;align-items:baseline;flex-wrap:wrap}
+.att .viz>div{min-width:0}
+.att .viz .k{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px}
+@media (max-width:700px){.att{grid-template-columns:1fr}.att img,.att .ph{width:100%;height:170px}.att .viz{grid-template-columns:1fr}}
+.sens{display:flex;height:14px;border-radius:3px;overflow:hidden}
+.sens span{display:block}
+.sensl{display:flex;gap:8px;font-size:.78rem;color:var(--muted);margin-top:4px;flex-wrap:wrap}
+.sensl i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:3px}
+.att .cloud{justify-content:flex-start;padding:0}
+.statut{font-weight:700;font-size:.8rem}.statut.on{color:var(--red)}
+.ex{font-size:.75rem;color:var(--muted);font-style:italic}
+.thc{border-top:1px solid var(--line);padding-top:10px;margin-top:10px;display:grid;gap:4px}
+.thc:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.thc .row{display:flex;justify-content:space-between;font-size:.88rem}
+.thc .row b{font-variant-numeric:tabular-nums}
+.up{color:var(--bad)}.down{color:var(--good)}
+
+.rep{display:grid;gap:10px;align-content:start}
+.rep .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rep input,.rep select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg)}
+.chk{display:grid;gap:4px;max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:.88rem}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700}
+.tw{overflow-x:auto}
+.inl{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.inl input,.inl select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);min-width:0}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:14px;padding:2px 4px 2px 10px;margin:3px 4px 3px 0;font-size:.85rem}
+.pill button{background:none;border:0;color:var(--muted);cursor:pointer}
+#zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;place-items:center;z-index:20;padding:16px;cursor:zoom-out}
+#zoom img{max-width:100%;max-height:100%;border-radius:6px}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--panel);padding:10px 16px;border-radius:8px;font-size:.9rem;display:none;z-index:30;max-width:calc(100% - 32px)}
+@media (max-width:700px){nav.tabs .wrap{flex-wrap:wrap}.mtabs{margin-left:0;padding:0 0 8px;width:100%}.mtabs button{flex:1}}
+.capture .bar,.capture .noprint{display:none!important}
+</style>
+</head>
+<body class="CIE">
+<div class="demo" id="demo">Phase de test : les passages automatiques et les envois ne sont pas encore actifs.</div>
+
+<div id="login">
+  <form class="card-login" onsubmit="event.preventDefault();envoyerLien()">
+    <img src="img/logo-viral.jpg" alt="Viral">
+    <h1>Plateforme de Veille<br>Réputation Numérique</h1>
+    <p>Accès réservé. Saisissez votre adresse e-mail autorisée : vous recevrez un lien de connexion.</p>
+    <input type="email" id="lemail" required placeholder="prenom.nom@exemple.ci" aria-label="Adresse e-mail">
+    <button class="primary" type="submit">Recevoir le lien de connexion</button>
+    <p class="small" id="lmsg" role="status"></p>
+  </form>
+</div>
+
+<div id="app" hidden>
+<header class="top"><div class="wrap">
+  <div class="brand"><img src="img/logo-viral.jpg" alt="Viral"><div><h1>Plateforme de Veille Réputation Numérique</h1><div class="sub">CIE - SODECI</div></div></div>
+  <div class="user"><span>Connecté en tant que</span>
+    <b id="moi"></b>
+    <button onclick="sortir()">Déconnexion</button></div>
+</div></header>
+<div class="passes"><div class="wrap" id="passes"></div></div>
+<nav class="tabs"><div class="wrap">
+  <button class="t on" data-t="bord">Tableau de bord</button>
+  <button class="t" data-t="pubs">Publications</button>
+  <button class="t" data-t="att">Points d'attention de la semaine <span class="badge" id="nbatt"></span></button>
+  <button class="t" data-t="off">Canaux officiels</button>
+  <button class="t" data-t="rap">Rapports</button>
+  <button class="t" data-t="adm" id="tadm">Administration</button>
+  <button class="t" data-t="jour" id="tjour">Journal d'activité</button>
+  <div class="mtabs" id="mtabs"><button data-m="CIE" class="on">CIE</button><button data-m="SODECI">SODECI</button></div>
+</div></nav>
+
+<main class="wrap">
+<!-- TABLEAU DE BORD -->
+<section class="tab on" id="bord">
+  <div class="bar">
+    <div class="seg" id="per"><button data-p="1" class="on">Aujourd'hui</button><button data-p="7">7 jours</button><button data-p="30">30 jours</button><button data-p="90">3 mois</button><button data-p="365">1 an</button><button data-p="c">Personnalisée</button></div>
+    <span id="perc" hidden><input type="date" id="d1"> → <input type="date" id="d2"></span>
+  </div>
+  <div id="bordc" class="grid">
+    <div class="small" id="pertxt"></div>
+    <div class="grid g4" id="kpis"></div>
+    <div class="panel" id="evo"><h3>Évolution sur la période</h3><div id="evosvg"></div><p class="note">Publications par jour. Les jours sans veille apparaissent vides.</p></div>
+    <div class="grid g2">
+      <div class="grid" style="align-content:start">
+        <div class="panel"><h3>Thématiques</h3><div class="hb" id="themes"></div></div>
+        <div class="panel"><h3>Nuage de mots</h3><div class="cloud" id="nuage"></div></div>
+      </div>
+      <div class="panel"><h3>Localités citées</h3><div id="carte"></div><div class="hb" id="lieux" style="margin-top:8px"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PUBLICATIONS -->
+<section class="tab" id="pubs">
+  <div class="bar">
+    <div class="seg" id="tr"><button data-r="0" class="on">24 h</button><button data-r="1">48 h</button><button data-r="2">72 h</button></div>
+    <select id="ft"><option value="">Toutes thématiques</option></select>
+    <select id="fl"><option value="">Toutes localités</option></select>
+    <select id="fp"><option value="">Toutes plateformes</option><option>Facebook</option><option>TikTok</option><option>X</option></select>
+    <select id="fi"><option value="0">Toutes interactions</option><option value="100">Plus de 100 interactions</option><option value="500">Plus de 500 interactions</option><option value="1000">Plus de 1 000 interactions</option><option value="5000">Plus de 5 000 interactions</option></select>
+    <select id="fs"><option value="i">Tri : interactions</option><option value="d">Tri : plus récentes</option></select>
+    <input type="search" id="q" placeholder="Rechercher un mot, un auteur">
+    <button class="primary" onclick="preOuvrir();pdfPubs()">Imprimer le rapport</button>
+  </div>
+  <div class="small" id="pubtxt"></div>
+  <div class="cards" id="cards"></div>
+</section>
+
+<!-- POINTS D'ATTENTION -->
+<section class="tab" id="att">
+  <form class="panel inl adm-only" style="margin:0;align-items:center" onsubmit="event.preventDefault();addAtt($('#au').value)"><b>Ajouter un point d'attention</b><input type="url" id="au" placeholder="Adresse (URL) de la publication Facebook, TikTok ou X" required style="flex:1;min-width:220px"><button class="primary">Ajouter</button><span class="small" style="width:100%">Réservé aux admins. La publication est ensuite suivie comme les autres points d'attention.</span></form>
+  <div class="grid g4" id="attk"></div>
+  <div class="attwrap">
+    <div class="grid" id="attl"></div>
+    <aside class="panel side"><h3>Thématiques en point d'attention</h3><div id="thl"></div><p class="note">5 thématiques au plus. Évolution : variation du nombre de publications entre les deux derniers relevés.</p></aside>
+  </div>
+</section>
+
+<!-- CANAUX OFFICIELS -->
+<section class="tab" id="off">
+  <div class="grid g4" id="offk"></div>
+  <div class="small">Relevé toutes les 6 heures (00h, 06h, 12h, 18h). Publications conservées 48 h, sauf celles passées en point d'attention.</div>
+  <div class="grid g2"><div class="panel"><h3>Statistiques par canal</h3><div class="tw"><table id="offs"></table></div><div id="offc" style="margin-top:10px"></div></div>
+  <div class="panel"><h3>Sens des commentaires</h3><div id="offsens"></div><h3 style="margin-top:16px">Publication la plus engageante</h3><div id="offtop"></div></div></div>
+  <div><h3>Publications des canaux officiels</h3><div class="cards" id="offp"></div></div>
+  <div class="panel"><h3>Commentaires sous les publications officielles</h3><div class="small" id="offw" style="margin-bottom:8px"></div><div class="tw"><table id="offt"></table></div></div>
+</section>
+
+<!-- RAPPORTS -->
+<section class="tab" id="rap">
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(290px,1fr))">
+    <div class="panel rep"><h3>Rapport journalier</h3><p class="small" style="margin:0">Même présentation que le rapport actuel. De 06h la veille à 03h le jour choisi ; envoyé automatiquement par e-mail à 06h UTC.</p>
+      <div class="row"><input type="date" id="rj"><button class="primary" onclick="pdfJour()">Télécharger le PDF</button></div></div>
+    <div class="panel rep"><h3>Rapport personnalisé</h3><p class="small" style="margin:0">Copie du tableau de bord pour la période et la marque choisies.</p>
+      <div class="row"><input type="date" id="rp1"> → <input type="date" id="rp2"></div>
+      <div class="row"><select id="rpm"><option>CIE</option><option>SODECI</option></select><button class="primary" onclick="preOuvrir();pdfPerso()">Générer le PDF</button></div></div>
+    <div class="panel rep"><h3>Rapport points d'attention</h3><p class="small" style="margin:0">Choisissez les thématiques et publications ; le rapport reprend leurs fiches telles qu'affichées.</p>
+      <div class="row"><select id="ram" onchange="chkR()"><option>CIE</option><option>SODECI</option></select></div>
+      <div class="chk" id="rachk"></div>
+      <div class="row"><button class="primary" onclick="preOuvrir();pdfAtt()">Générer le PDF</button></div></div>
+  </div>
+</section>
+
+<!-- ADMINISTRATION -->
+<section class="tab" id="adm">
+  <div class="grid g2">
+    <div class="panel"><h3>Utilisateurs <span class="small" id="ucount"></span></h3><div class="tw"><table id="users"></table></div>
+      <form class="inl" onsubmit="event.preventDefault();addUser()"><input type="email" id="ue" placeholder="Adresse e-mail" required style="flex:1"><select id="ur"><option value="user">Utilisateur</option><option value="admin">Admin</option><option value="super" class="so">Super admin</option></select><button class="primary">Ajouter</button></form></div>
+    <div class="panel"><h3>Liste des haters</h3><div id="haters"></div>
+      <form class="inl" onsubmit="event.preventDefault();addHater()"><input id="he" placeholder="Nom du compte ou lien du profil" required style="flex:1"><button class="primary">Ajouter</button></form></div>
+  </div>
+  <div class="panel"><h3>Zones et responsables (alertes localités)</h3><p class="small" style="margin:0 0 8px">À chaque passage, le responsable reçoit par e-mail les liens des nouvelles publications observées sur ses localités.</p><div class="tw"><table id="zones"></table></div>
+    <form class="inl" onsubmit="event.preventDefault();addZone()"><select id="zm"><option>CIE</option><option>SODECI</option></select><input id="zn" placeholder="Zone" required><input id="zl" placeholder="Localités (séparées par des virgules)" required style="flex:2"><input type="email" id="zr" placeholder="E-mail du responsable" required style="flex:1"><button class="primary">Ajouter</button></form></div>
+  <div class="panel"><h3>Destinataires des e-mails</h3><div class="tw"><table><tr><th>Destinataire</th><th>Rapport 06h</th><th>Incidents</th><th>Dispositif RAS</th></tr>
+    <tr><td>Kks</td><td>Oui</td><td>WhatsApp + e-mail</td><td>WhatsApp + e-mail</td></tr>
+    <tr><td>Kouadio</td><td>Oui</td><td>WhatsApp + e-mail</td><td>WhatsApp + e-mail</td></tr>
+    <tr><td>Fatou</td><td>Oui</td><td>E-mail</td><td>E-mail</td></tr></table></div><p class="note">Adresses à fournir.</p></div>
+  <div class="panel"><h3>Sources suivies (collecte automatisée)</h3><div class="tw"><table id="sources"></table></div>
+    <form class="inl" onsubmit="event.preventDefault();addSource()"><select id="sp"><option>Facebook</option><option>TikTok</option><option>X</option><option>Média en ligne</option></select><input id="sn" placeholder="Nom de la page, du groupe ou du compte" required style="flex:1"><input id="su" placeholder="Lien" style="flex:1"><select id="sc"><option>Média</option><option>Page locale</option><option>Groupe public</option><option>Activiste</option><option>Hater</option><option>Personnalité</option></select><button class="primary">Ajouter</button></form></div>
+</section>
+
+<!-- JOURNAL D'ACTIVITÉ -->
+<section class="tab" id="jour">
+  <div class="panel" id="journal"><h3>Journal d'activité</h3>
+    <div class="bar" style="margin-bottom:8px"><select id="jf" onchange="jourR()"><option value="">Tous les événements</option><option>Connexion</option><option>Administration</option><option>Rapport</option><option>Passage</option><option>Alerte</option><option>E-mail</option><option>Incident</option><option>Échange Kks</option></select></div>
+    <div class="tw"><table id="jtab"></table></div><p class="note">Les 200 derniers événements.</p></div>
+</section>
+</main>
+</div>
+<div id="zoom" onclick="this.style.display='none'"><img alt=""></div>
+<div id="toast"></div>
+
+<script>
+const STATIC={"geo": {"path": "M70.43 63.80L72.29 64.49L74.37 64.46L76.44 63.90L78.23 63.06L80.08 61.52L81.02 60.92L83.56 60.56L84.53 60.21L85.40 59.63L86.35 58.83L88.73 55.82L89.11 55.05L89.45 53.97L90.10 53.42L90.83 52.96L91.39 52.17L91.58 50.73L92.76 48.71L91.45 47.01L93.45 46.60L95.64 45.29L96.77 43.64L95.57 42.17L96.49 41.71L96.93 41.55L96.93 40.87L98.29 39.75L99.16 39.55L100.34 39.69L101.22 39.41L101.73 38.36L102.11 37.12L102.67 36.29L104.73 35.95L108.29 38.13L110.60 38.35L111.60 38.25L113.38 38.27L114.27 37.95L115.05 37.24L117.40 34.22L118.83 34.14L119.98 34.39L120.93 34.97L121.79 35.89L122.33 37.05L122.41 38.20L122.33 39.25L122.40 40.14L122.79 41.14L124.46 43.92L124.60 45.00L124.35 45.96L124.48 46.58L125.77 46.63L126.69 46.39L129.38 45.38L131.63 45.52L132.22 47.06L131.59 51.14L131.68 53.55L132.52 54.78L134.15 55.21L140.39 55.34L148.25 56.55L158.00 59.27L159.68 60.24L161.30 62.15L162.77 64.40L164.53 65.99L166.98 65.91L169.30 65.09L171.36 63.56L172.57 61.45L172.35 58.90L171.40 57.79L170.10 56.96L169.05 56.06L168.83 54.72L171.21 46.77L172.39 45.51L174.62 45.17L180.24 45.87L182.15 45.62L187.99 42.91L190.15 42.70L192.32 43.39L196.05 45.60L198.26 45.83L200.53 45.10L201.37 43.90L201.43 43.42L201.86 40.20L202.29 39.46L202.94 38.69L203.45 37.81L203.47 36.73L202.85 36.00L201.80 35.54L200.70 35.21L199.97 34.83L198.71 32.88L198.53 31.17L199.50 27.95L199.99 23.40L199.72 22.60L199.36 21.91L199.17 21.06L199.38 19.21L199.85 17.34L200.08 17.26L201.47 14.91L201.35 14.58L203.53 13.87L204.83 14.70L206.85 18.15L208.34 19.51L210.38 20.89L214.39 23.03L216.00 23.58L221.39 24.65L223.47 24.77L225.90 24.34L227.76 23.09L228.11 20.75L227.37 19.81L226.14 19.23L224.99 18.50L224.48 17.13L224.66 13.21L225.35 11.39L227.06 10.56L229.22 10.45L231.25 10.77L233.81 10.86L235.74 9.95L237.59 8.68L239.93 7.67L242.31 7.35L243.32 7.93L243.45 9.31L242.96 13.44L243.24 14.24L245.11 14.92L246.19 15.49L247.09 16.25L247.42 17.04L246.89 18.22L245.90 18.81L244.82 19.31L244.03 20.20L244.60 21.59L244.88 22.80L244.75 23.98L244.10 24.81L242.29 26.28L241.82 27.08L241.78 28.59L242.31 28.84L243.14 28.62L244.03 28.73L244.54 29.24L245.07 29.94L245.64 30.54L246.31 30.74L247.45 30.56L248.25 30.53L248.82 30.89L249.27 31.87L249.10 32.46L248.04 34.26L247.82 35.12L248.17 36.08L249.79 37.98L248.29 41.08L247.98 42.92L249.45 44.11L247.04 46.80L247.09 47.15L247.33 47.74L247.47 48.40L247.25 48.92L246.44 49.22L245.77 48.96L245.29 48.55L245.05 48.39L243.83 49.74L243.57 51.10L243.90 54.81L245.40 54.50L246.47 55.21L248.42 57.58L249.76 58.42L257.25 61.07L266.11 61.01L267.98 59.18L269.15 57.27L269.84 55.14L270.19 52.64L271.36 51.73L275.98 53.34L277.14 52.47L276.72 46.99L277.13 45.17L278.27 43.50L279.78 42.39L286.90 38.65L299.66 35.85L305.19 35.31L307.94 34.61L308.90 34.58L310.15 35.01L312.33 36.44L315.02 37.45L316.76 38.44L318.50 40.71L319.71 43.23L319.82 44.97L321.23 45.48L321.92 45.61L322.84 45.65L323.43 46.00L323.86 46.81L324.19 47.71L324.50 48.31L325.57 49.25L326.93 49.94L328.59 50.35L330.59 50.43L331.06 50.12L331.43 49.56L331.80 49.17L332.32 49.40L332.75 49.69L333.27 49.78L334.41 49.74L335.55 49.47L336.18 48.85L336.68 48.16L337.42 47.70L339.09 47.76L343.68 48.43L345.26 48.01L350.13 50.87L351.02 50.77L351.76 49.44L353.38 49.57L354.95 50.60L355.02 50.65L355.75 52.13L355.75 57.63L355.49 58.17L355.11 58.75L355.23 59.20L356.43 59.31L357.13 59.07L357.72 58.57L358.18 57.92L358.47 57.26L358.74 59.31L357.90 61.12L357.84 62.21L360.49 62.10L359.82 63.90L360.42 64.92L362.92 66.57L363.11 67.35L360.78 68.15L359.88 68.98L360.72 68.99L361.37 69.20L361.94 69.46L362.58 69.67L361.23 70.29L362.04 71.46L363.14 71.62L364.30 71.13L365.29 70.29L365.79 72.10L366.86 73.05L368.16 73.67L369.36 74.45L370.47 75.97L371.16 77.80L370.78 79.15L368.68 79.23L369.12 80.24L370.23 81.69L371.32 84.03L371.50 84.66L370.08 88.76L370.20 89.90L373.11 92.60L373.97 92.91L374.53 92.25L375.06 91.35L375.82 90.89L376.95 91.11L377.39 91.58L377.73 92.05L378.56 92.26L380.88 92.43L382.85 93.06L384.26 94.30L384.92 96.35L386.82 95.75L387.62 97.25L388.11 99.52L389.05 101.20L387.47 101.77L386.62 101.89L385.66 101.82L385.66 102.57L386.54 103.35L386.73 103.75L387.02 104.55L388.33 104.16L389.64 106.26L391.15 105.98L390.58 105.47L390.42 105.01L390.77 104.67L391.75 104.55L392.78 104.68L393.27 105.04L393.60 105.58L394.16 106.29L395.31 107.32L395.68 107.97L395.82 109.02L396.04 109.79L396.57 110.21L397.91 110.76L398.41 111.33L398.38 111.72L398.45 111.79L399.26 111.44L400.07 110.91L400.72 110.24L401.07 109.65L400.96 109.39L402.42 109.40L403.64 109.23L404.81 108.61L406.09 107.28L407.21 108.22L408.64 110.35L409.79 110.76L411.23 110.35L411.61 109.32L411.65 107.97L412.14 106.60L412.45 105.92L412.53 105.53L412.84 105.34L414.64 105.34L415.42 105.49L416.01 105.80L416.25 106.29L416.03 108.01L415.05 110.60L414.83 112.43L416.24 114.50L419.46 114.82L423.01 114.65L425.42 115.23L426.30 116.69L427.16 119.97L427.82 121.06L429.18 121.70L429.51 120.80L429.49 119.16L429.79 117.58L431.31 118.00L434.00 119.11L434.01 119.10L434.66 118.34L435.94 115.83L436.19 114.57L435.89 112.21L435.91 111.33L436.45 110.42L439.46 107.27L438.30 106.89L437.86 106.80L439.18 105.61L440.89 104.99L444.62 104.51L446.45 103.50L449.29 99.52L451.08 98.17L452.79 97.96L458.43 99.62L459.46 100.19L460.04 100.37L460.66 100.24L460.85 99.77L460.89 99.24L460.99 98.97L462.51 98.24L463.33 97.97L466.51 97.92L467.14 96.52L467.56 94.88L469.03 94.10L471.16 93.56L474.89 91.15L476.72 90.61L476.91 90.55L483.48 90.43L485.39 89.86L486.23 89.23L487.82 87.53L488.82 86.87L490.27 86.41L495.08 85.82L495.82 85.92L497.12 86.65L497.74 86.78L498.27 86.47L499.19 85.34L499.52 85.11L500.86 85.54L501.62 86.26L502.26 87.08L503.32 87.83L505.02 88.18L510.94 87.39L526.54 88.68L527.79 89.15L529.53 90.75L530.59 91.30L531.49 90.99L532.65 90.27L533.68 89.87L534.12 90.55L534.04 92.54L534.21 94.59L535.21 95.89L537.58 95.65L538.94 94.29L542.30 89.53L543.83 88.44L545.04 89.18L545.07 91.10L544.86 93.46L545.29 95.46L547.02 96.48L549.25 96.53L551.55 97.05L553.53 99.47L554.77 104.29L555.75 106.61L557.48 108.06L559.27 108.14L562.68 107.14L564.56 107.58L566.12 109.16L567.32 111.48L569.10 116.14L574.03 125.73L583.92 138.89L586.18 140.63L588.55 140.81L590.41 139.19L592.84 134.08L595.94 131.13L597.28 132.83L597.39 134.25L596.98 137.45L597.11 138.22L597.60 139.90L597.60 142.60L597.09 144.30L595.92 145.05L594.56 145.67L593.54 147.01L593.38 148.89L594.16 150.44L595.56 151.47L597.29 151.85L598.85 152.71L598.72 154.61L597.54 156.51L594.39 158.16L593.23 159.97L591.50 163.52L589.39 165.69L588.98 166.52L588.79 171.52L588.38 173.09L587.45 174.50L588.42 175.05L589.05 175.71L589.83 176.26L591.20 176.49L593.74 176.61L596.25 177.17L598.75 178.51L599.39 180.12L599.50 182.16L601.04 186.85L601.63 187.30L602.30 187.40L602.85 187.64L603.08 188.50L603.20 190.22L605.22 197.19L605.11 198.56L604.06 199.14L603.33 199.81L603.07 201.08L603.55 201.87L603.58 201.90L604.47 201.49L604.94 203.05L609.51 231.06L614.07 259.07L613.39 260.60L608.93 263.23L607.58 263.69L606.44 263.57L605.18 262.97L604.36 262.92L603.72 263.51L603.03 264.85L602.61 266.43L602.85 267.69L604.16 270.57L604.81 272.96L604.71 274.71L603.73 276.00L601.69 277.04L595.77 279.03L593.95 280.33L589.42 285.56L587.81 286.93L587.67 286.61L587.17 286.04L586.50 285.60L585.88 285.67L585.59 286.40L585.16 293.87L584.83 294.98L584.05 295.83L581.84 297.16L580.99 297.98L580.90 298.48L581.19 299.77L581.17 300.32L580.79 300.97L579.79 302.19L579.41 302.84L572.25 318.23L570.92 322.28L566.07 352.93L566.16 354.11L566.79 355.50L567.45 356.33L567.89 357.14L567.82 358.50L566.94 360.45L562.39 366.16L561.89 367.16L561.07 372.17L560.57 372.88L555.66 374.48L555.55 374.55L555.48 374.59L554.26 375.36L542.82 395.06L541.16 398.91L541.02 402.52L541.45 403.54L542.69 405.14L544.03 407.73L544.26 408.40L542.31 413.89L541.78 414.54L539.95 415.56L539.24 416.61L539.10 418.29L546.92 453.61L548.10 455.04L548.39 455.39L551.31 458.07L553.42 463.65L556.42 480.33L557.86 483.90L561.68 490.93L562.89 494.55L563.14 498.16L562.17 509.57L568.61 509.02L567.61 515.27L568.15 517.86L570.49 519.17L572.43 518.93L575.66 516.96L577.27 516.32L584.33 518.15L585.60 519.19L586.38 520.50L586.76 522.11L586.99 527.35L588.75 534.51L591.45 540.89L591.88 542.68L591.63 544.43L590.64 545.69L589.33 545.93L585.99 545.31L585.34 551.50L585.62 552.89L587.00 554.89L587.44 556.04L587.39 556.90L586.97 558.99L587.05 559.90L587.37 560.25L588.67 561.37L589.21 562.01L588.26 563.90L586.85 564.91L584.57 565.24L580.62 565.09L580.37 562.30L577.08 561.87L573.02 562.35L570.41 562.29L571.22 564.31L570.72 566.32L569.29 567.88L567.33 568.50L565.78 568.05L560.53 565.59L558.90 564.34L556.92 564.89L552.99 565.00L551.33 565.77L550.57 563.87L549.02 561.59L547.19 559.68L545.60 558.88L544.79 558.13L545.86 556.56L547.39 555.12L548.00 554.78L548.47 553.37L548.76 550.41L549.35 549.26L550.71 548.40L551.76 548.14L552.44 547.51L552.68 545.54L552.46 544.04L551.80 543.32L550.64 543.12L548.99 543.12L548.53 543.34L547.94 543.82L547.20 544.32L546.31 544.54L545.48 544.41L544.12 543.85L543.26 543.80L542.30 544.14L540.39 545.46L539.14 545.91L540.13 548.19L540.64 550.24L539.91 551.64L537.10 551.98L537.54 552.75L537.54 553.46L537.15 554.13L536.43 554.78L537.34 555.38L537.78 555.52L537.10 555.52L538.05 555.88L539.07 556.12L540.14 556.21L541.23 556.15L541.23 556.83L540.30 557.26L538.78 557.13L537.78 557.45L536.94 558.09L536.18 558.95L535.55 559.93L535.08 560.99L534.03 560.27L533.33 560.65L533.50 561.52L535.08 562.29L534.49 563.62L535.07 564.43L536.32 564.86L537.78 565.09L534.17 568.01L527.64 567.68L502.47 562.29L497.85 562.02L494.72 561.39L493.94 561.13L493.60 560.62L493.78 559.69L494.01 558.98L493.85 558.30L492.86 557.45L493.60 556.15L492.58 557.00L491.79 558.29L491.24 559.73L490.96 560.99L490.22 560.99L489.03 560.30L487.11 560.10L483.08 560.24L481.75 559.88L477.30 557.45L470.36 556.54L467.26 555.60L465.79 553.35L467.63 553.97L469.72 553.76L471.55 552.82L472.62 551.31L474.06 553.10L474.77 553.81L475.61 554.10L476.26 553.85L476.52 553.25L476.40 552.55L475.94 551.98L475.94 551.31L477.31 551.61L480.73 553.02L481.41 553.04L482.42 552.71L484.65 553.59L488.25 555.52L488.01 554.88L487.85 553.88L487.57 553.35L489.11 553.39L491.77 553.76L492.86 553.35L494.17 551.77L493.55 550.90L492.28 550.15L491.57 548.95L490.44 545.62L490.22 544.17L489.88 543.38L489.06 542.85L487.97 542.72L486.90 543.12L486.25 542.68L485.32 542.40L484.49 542.56L484.13 543.45L484.42 544.02L486.53 545.54L489.04 548.94L490.53 550.54L492.25 551.31L491.36 552.60L489.83 552.46L488.16 552.10L486.90 552.73L486.16 552.73L484.92 551.22L483.99 550.83L482.96 550.88L481.41 550.68L480.37 550.31L479.20 549.64L478.28 548.66L478.03 547.34L477.56 547.78L476.97 548.22L476.69 548.64L476.28 547.82L476.01 547.03L475.89 546.20L475.94 545.16L475.27 545.16L475.13 546.57L474.65 547.78L473.81 548.38L472.62 547.95L471.85 548.54L470.77 548.71L469.59 548.51L468.50 547.95L466.18 548.32L465.05 548.64L466.02 549.54L467.57 549.91L469.21 549.81L470.47 549.26L471.87 550.68L470.55 551.71L468.85 552.70L467.06 553.09L465.42 552.36L464.18 551.64L462.01 550.66L459.94 550.05L459.02 550.34L458.19 551.22L456.37 550.73L453.54 549.26L452.22 549.66L451.17 550.34L450.10 550.66L448.74 550.00L448.17 550.58L447.52 550.59L446.82 550.12L446.10 549.26L443.40 551.10L442.08 551.61L440.62 551.31L440.82 550.85L441.11 549.70L441.30 549.26L438.76 548.76L437.66 548.95L436.50 550.00L435.76 549.32L434.86 548.88L434.11 548.90L433.50 550.48L431.92 551.74L431.15 552.73L430.44 552.00L429.25 551.08L427.98 550.30L427.07 550.00L426.03 550.57L424.99 551.49L423.96 551.84L422.96 550.68L423.26 550.46L423.38 550.44L423.48 550.36L423.69 550.00L420.02 550.18L418.62 550.87L418.22 552.73L419.17 552.25L420.00 552.39L420.63 553.04L420.99 554.10L419.11 553.66L412.07 553.35L411.68 552.40L411.20 551.55L410.10 550.00L409.53 550.96L409.50 551.75L409.91 552.35L410.71 552.73L410.71 553.35L408.92 553.70L407.56 554.34L405.29 556.15L403.46 554.94L401.34 555.08L399.50 555.93L398.53 556.83L397.85 556.83L397.19 556.54L396.33 556.01L395.57 555.38L395.14 554.78L396.30 554.26L397.27 554.37L398.35 554.70L399.82 554.78L399.61 553.81L399.29 553.19L398.75 552.86L397.85 552.73L397.85 551.98L398.87 551.52L399.51 550.81L399.82 549.85L399.82 548.64L399.21 548.64L397.99 550.94L396.33 552.17L394.24 552.65L391.69 552.73L394.38 554.77L392.40 556.54L388.71 558.11L386.28 559.56L385.67 561.01L385.81 561.95L386.71 562.55L388.31 562.97L390.09 563.07L391.85 562.77L392.86 562.07L392.37 560.99L392.37 560.24L394.88 559.56L396.11 558.87L396.55 559.33L397.04 559.98L397.85 560.24L399.08 559.93L401.09 559.06L402.59 558.88L405.67 558.88L406.60 559.08L407.23 559.52L407.66 559.99L408.00 560.24L409.47 560.45L410.50 560.30L412.80 559.56L411.78 559.68L410.57 559.58L409.63 559.13L409.36 558.20L409.97 557.68L413.42 556.83L413.42 558.20L414.16 558.20L416.35 557.13L422.19 557.50L425.05 556.15L425.52 557.64L426.29 557.03L427.11 555.64L427.75 554.78L429.57 554.83L431.11 555.56L432.49 555.91L433.79 554.78L435.66 555.54L437.60 555.21L439.58 554.50L443.65 553.76L446.19 552.32L447.75 551.98L459.99 551.66L463.08 552.73L462.16 553.16L461.16 553.38L460.11 553.43L459.02 553.35L466.40 556.83L435.43 559.38L404.46 561.93L388.18 565.61L379.19 566.38L377.48 567.14L376.40 566.57L375.24 566.36L369.90 566.26L368.62 566.39L368.62 565.77L368.94 565.74L369.60 565.80L369.91 565.77L369.91 565.09L367.13 565.13L366.46 563.94L366.51 562.12L365.85 560.24L367.13 558.72L365.87 558.39L360.46 559.08L358.69 559.64L357.05 560.52L355.70 561.67L354.04 560.23L351.18 558.78L347.86 558.08L344.87 558.88L344.48 558.45L343.80 557.92L343.63 557.70L343.45 557.45L342.84 557.45L341.75 558.59L339.98 558.06L338.09 557.23L336.62 557.45L336.01 557.45L334.96 556.98L334.39 557.39L334.30 558.35L334.72 559.56L334.41 559.45L333.30 558.88L333.35 559.93L333.30 560.24L334.11 560.01L334.26 560.32L334.67 560.92L334.72 560.99L335.41 560.58L335.95 560.42L337.35 560.24L337.35 560.99L336.60 561.84L334.27 562.99L333.30 563.65L333.30 561.67L331.88 565.82L331.21 567.14L327.88 562.29L327.14 562.29L327.10 562.60L327.14 563.65L325.80 562.97L327.28 565.80L331.35 567.65L336.22 568.19L340.13 567.14L338.53 565.92L336.86 565.96L335.09 566.24L333.30 565.77L333.30 565.09L334.30 565.15L335.11 565.02L335.84 564.74L336.62 564.34L337.14 563.90L338.39 562.59L338.77 562.29L340.25 562.63L341.89 563.46L343.49 563.87L344.87 562.97L346.08 563.72L347.29 563.99L348.30 563.57L348.92 562.29L347.11 562.56L346.31 561.76L345.64 560.70L344.19 560.24L344.19 559.56L345.54 560.24L348.85 559.77L354.86 563.30L357.42 562.63L358.81 561.52L360.12 561.30L363.54 561.67L363.95 562.43L364.51 564.15L365.36 565.99L366.59 567.14L341.52 567.90L337.66 569.40L317.69 570.47L314.80 570.02L312.25 568.50L309.49 570.55L311.54 571.16L312.25 571.23L304.35 573.68L282.43 577.00L281.70 577.23L270.52 580.74L268.84 581.61L268.13 582.52L266.95 582.48L261.77 584.42L253.95 588.48L226.82 597.61L225.97 598.29L225.39 599.80L223.92 600.61L213.44 603.20L211.39 603.44L209.80 603.96L207.14 606.52L205.54 607.54L193.00 611.27L183.05 611.94L180.49 613.21L178.15 613.80L177.05 614.43L174.28 617.84L168.94 622.35L162.77 626.10L158.71 627.35L151.35 628.12L145.46 630.67L144.23 631.51L143.24 633.45L142.17 633.64L140.94 633.62L139.98 633.95L138.21 635.45L132.87 638.39L125.05 644.90L123.26 645.59L120.87 645.39L116.56 644.53L114.94 644.72L111.66 642.46L111.12 641.29L111.25 640.27L112.29 638.41L112.60 637.42L112.46 636.48L111.75 634.46L111.94 631.93L111.76 630.89L111.50 629.97L111.35 629.07L111.79 607.66L111.35 602.47L111.09 601.57L110.49 600.85L109.71 600.26L108.96 599.54L108.46 598.38L108.46 598.26L108.48 597.49L109.04 595.42L109.17 594.29L108.47 591.20L108.51 590.26L111.54 587.84L112.85 587.98L113.67 588.58L114.06 588.61L114.06 587.09L113.49 585.16L112.57 583.84L111.87 582.46L112.01 580.31L112.00 580.31L111.22 574.53L111.46 572.79L112.70 570.98L114.33 570.23L116.01 570.26L117.40 570.82L120.07 565.93L120.66 564.18L120.73 562.49L119.92 557.78L120.96 554.48L121.38 553.58L122.12 552.65L124.68 551.26L124.93 550.98L126.06 551.18L125.90 551.57L125.40 552.07L125.51 552.59L125.83 553.25L125.83 554.00L126.06 554.39L127.02 553.95L127.52 553.33L127.89 551.68L128.13 551.01L129.33 549.32L129.90 548.29L130.00 547.16L129.73 545.23L129.19 543.36L128.45 543.20L127.41 543.40L125.94 542.57L125.01 541.22L124.32 539.51L123.94 537.72L123.91 536.13L125.30 536.87L125.74 535.81L125.68 532.04L126.39 530.58L127.55 529.65L128.08 528.82L127.91 528.66L126.91 527.69L127.55 527.72L129.52 527.60L128.18 525.86L127.71 523.96L128.38 522.76L130.46 523.10L129.22 521.49L127.11 517.22L125.81 514.60L123.98 506.76L124.07 503.09L124.72 498.87L124.27 495.41L121.10 494.01L120.79 496.98L120.30 498.62L119.53 499.38L118.59 498.79L118.10 497.38L117.43 496.08L115.89 495.80L116.22 494.12L115.48 494.42L114.26 495.46L113.11 496.01L112.40 495.63L111.09 493.97L110.33 493.32L111.13 492.28L110.63 491.63L108.49 490.69L108.22 490.63L106.17 489.51L106.02 489.14L104.27 488.87L102.80 487.69L101.72 486.43L101.08 485.91L99.98 487.23L98.83 489.21L97.44 489.92L95.68 487.44L94.47 486.24L90.56 484.18L89.26 482.55L89.16 481.83L89.23 478.98L89.45 478.53L90.36 478.02L90.57 477.49L90.35 476.85L89.84 476.59L89.31 476.43L88.99 476.08L88.67 473.80L88.27 472.88L87.31 471.99L86.42 471.93L85.18 472.26L84.22 472.78L84.18 473.24L83.10 471.85L82.84 469.83L83.08 467.56L83.54 465.46L84.85 461.60L84.61 460.25L83.07 458.36L78.66 454.80L78.32 454.32L78.06 453.16L77.89 452.83L77.28 452.62L76.81 452.75L76.39 452.92L75.86 452.86L69.46 451.33L67.84 450.22L66.13 449.82L63.44 449.89L58.83 450.53L57.67 451.01L55.46 452.24L54.10 452.58L52.49 452.60L51.65 452.31L50.99 451.82L49.91 451.19L48.73 450.75L41.05 448.99L40.15 448.66L40.00 448.25L40.00 447.56L39.89 446.74L39.39 445.94L38.67 445.54L38.25 445.85L37.92 446.30L37.44 446.35L36.39 445.40L35.43 444.30L34.41 443.89L33.12 444.99L32.07 444.53L30.85 444.49L29.64 444.96L28.57 446.00L27.39 444.80L27.75 444.19L28.65 443.68L29.15 442.78L28.93 442.01L28.03 440.18L27.86 439.24L28.37 437.58L29.10 436.95L29.24 436.37L27.93 434.88L24.82 433.21L23.67 431.71L23.05 431.29L22.57 432.14L22.12 433.99L21.34 435.84L20.10 436.86L18.28 436.24L15.33 432.28L14.23 431.30L13.08 430.96L10.70 431.03L9.73 430.83L8.06 430.72L10.50 427.61L10.97 427.39L12.16 427.20L12.62 426.92L12.83 426.49L13.27 425.09L13.17 424.94L13.27 424.91L14.92 423.99L15.15 424.00L16.50 422.37L23.66 416.66L25.61 414.47L34.53 404.46L35.94 402.27L37.18 399.37L38.01 396.37L38.17 394.97L38.10 393.62L37.62 393.03L36.81 392.49L36.32 391.74L37.58 388.98L37.68 387.42L37.55 385.77L37.68 384.00L38.22 383.14L40.24 381.56L40.98 380.62L41.23 378.21L39.54 368.68L39.40 366.24L39.13 365.31L38.52 364.27L37.06 362.79L36.71 362.17L36.63 361.53L36.84 360.26L36.79 359.60L36.39 358.81L35.20 357.32L34.73 356.53L33.95 353.43L33.31 352.11L31.62 349.70L30.97 348.50L30.43 346.57L29.23 336.87L27.20 329.81L25.42 326.29L21.27 324.20L25.78 320.01L28.28 318.71L30.65 321.42L32.49 321.27L36.01 320.22L39.34 321.07L43.09 323.99L46.70 325.57L49.55 322.37L49.59 321.66L49.27 320.04L49.31 319.28L49.78 318.14L51.77 315.61L52.21 315.22L53.33 314.58L53.73 314.18L53.80 313.76L53.52 312.78L53.59 312.37L56.77 308.70L57.24 307.25L57.60 303.92L57.99 302.31L58.45 301.76L59.10 301.37L59.66 300.81L59.85 299.81L59.34 298.72L57.13 296.80L56.39 295.76L56.62 291.74L61.56 284.23L62.57 280.34L62.74 277.92L62.55 277.07L64.06 277.12L68.21 276.44L69.19 276.76L70.14 277.58L71.35 278.34L73.11 278.48L72.81 277.31L72.55 276.30L71.34 274.10L69.69 272.27L67.84 271.15L67.29 269.73L67.25 268.23L67.84 265.18L68.58 263.96L69.16 262.57L69.07 261.60L67.84 261.61L61.87 263.66L60.92 263.80L51.26 260.83L43.03 255.40L43.17 254.35L44.79 252.64L45.08 251.49L44.85 249.62L44.85 247.74L46.07 242.05L45.92 239.99L45.40 238.72L44.71 237.62L44.19 236.55L44.18 235.35L44.73 234.64L49.54 230.82L50.93 230.63L54.48 231.35L56.50 231.14L59.79 229.83L61.80 229.67L62.65 229.95L63.73 230.91L64.38 231.23L65.19 231.28L66.93 231.14L67.84 231.28L70.80 230.51L72.32 230.31L73.74 230.56L74.97 231.54L75.65 232.86L76.18 234.30L76.95 235.62L78.04 236.58L79.46 237.37L81.07 237.85L82.73 237.91L84.41 237.14L84.59 235.73L84.33 234.08L84.69 232.57L86.87 232.21L88.99 235.08L92.10 241.35L94.35 242.77L97.09 243.15L102.87 242.51L100.81 238.27L100.18 236.13L100.49 233.74L101.20 231.23L101.20 229.49L99.97 225.33L99.74 223.22L99.98 219.39L99.46 217.52L98.75 216.65L95.99 214.79L95.06 213.71L92.69 209.39L92.00 208.55L90.13 206.91L89.66 206.35L88.87 205.09L88.22 204.66L87.64 204.65L86.60 205.18L86.15 205.23L80.21 203.43L78.01 203.18L73.47 201.80L72.48 198.72L74.29 190.05L74.71 185.14L75.19 182.78L76.15 180.35L76.16 180.34L77.66 178.77L86.55 174.22L88.46 174.00L90.41 174.00L92.78 173.64L94.37 172.46L94.51 172.36L93.26 170.83L89.13 168.52L86.91 166.80L85.84 165.70L84.48 163.14L83.65 162.98L82.66 163.40L81.43 163.61L76.38 161.61L76.28 157.97L79.82 149.29L80.13 146.98L82.75 139.01L82.23 138.14L78.14 138.13L76.04 138.57L72.27 140.70L70.24 141.47L68.42 141.64L66.20 141.54L64.04 141.09L62.42 140.25L60.76 138.46L54.99 130.29L54.25 128.69L53.77 126.91L53.44 124.64L53.38 122.44L53.51 121.52L57.16 95.51L56.70 93.38L54.84 93.53L54.43 93.39L54.03 92.48L54.32 92.12L54.79 91.99L54.96 91.75L54.80 91.21L54.57 89.47L54.21 88.91L53.64 88.76L53.09 88.73L52.76 88.53L52.40 87.72L52.08 86.70L52.17 85.81L54.29 85.00L55.51 84.03L55.89 83.06L54.64 82.61L53.69 81.51L54.75 79.00L56.76 76.29L58.62 74.58L63.66 72.69L65.94 71.42L67.84 68.96L68.18 67.51L68.68 66.17L69.42 64.93L70.43 63.80ZM553.69 569.22L553.26 570.87L553.20 570.85L548.88 569.85L539.14 568.90L537.72 568.19L538.12 566.76L540.01 565.04L541.91 563.65L544.56 564.34L545.26 564.82L545.55 565.41L545.70 565.98L545.97 566.39L546.79 566.77L548.92 567.45L549.35 567.44L549.74 567.21L550.61 567.84L552.07 569.19L553.39 569.30L553.69 569.22Z", "lieux": {"Abobo": {"xy": [464.39, 538.4], "abj": true}, "Yopougon": {"xy": [457.35, 546.4], "abj": true}, "Anyama": {"xy": [460.82, 530.6], "abj": true}, "Bingerville": {"xy": [477.38, 544.5], "abj": true}, "Port-Bouët": {"xy": [473.32, 554.4], "abj": true}, "Songon": {"xy": [440.6, 548.3], "abj": true}, "Attécoubé": {"xy": [461.82, 546.4], "abj": true}, "Marcory": {"xy": [467.66, 549.8], "abj": true}, "Treichville": {"xy": [465.19, 550.7], "abj": true}, "Cocody (Angré)": {"xy": [467.47, 540.5], "abj": true}, "Cocody": {"xy": [468.95, 544.0], "abj": true}, "Adjamé": {"xy": [464.0, 544.0], "abj": true}, "Koumassi": {"xy": [470.94, 551.0], "abj": true}, "Plateau": {"xy": [464.0, 548.0], "abj": true}, "Yamoussoukro": {"xy": [338.18, 397.3], "abj": false}, "Daloa": {"xy": [223.08, 392.3], "abj": false}, "Bonoua": {"xy": [506.03, 552.8], "abj": false}, "Tiapoum": {"xy": [563.14, 566.0], "abj": false}, "Saïoua": {"xy": [246.18, 438.3], "abj": false}, "Bouaké": {"xy": [363.86, 311.0], "abj": false}, "Minignan": {"xy": [85.66, 80.3], "abj": false}, "Gagnoa": {"xy": [272.55, 466.9], "abj": false}, "Sassandra": {"xy": [259.46, 584.8], "abj": false}, "Abengourou": {"xy": [515.95, 407.0], "abj": false}, "San-Pédro": {"xy": [204.63, 605.2], "abj": false}, "Korhogo": {"xy": [304.47, 134.2], "abj": false}, "Man": {"xy": [113.62, 338.8], "abj": false}, "Odienné": {"xy": [112.53, 129.0], "abj": false}, "Grand-Bassam": {"xy": [491.86, 558.9], "abj": false}, "Tiébissou": {"xy": [344.53, 364.5], "abj": false}, "Kani": {"xy": [207.71, 232.2], "abj": false}, "Azaguié": {"xy": [457.85, 517.0], "abj": false}, "Adiaké": {"xy": [535.18, 551.3], "abj": false}, "Agou": {"xy": [470.94, 481.7], "abj": false}, "Bouaflé": {"xy": [292.97, 381.0], "abj": false}, "Alépé": {"xy": [499.39, 530.0], "abj": false}}, "abidjan": [465.19, 544.0]}, "canaux": {"CIE": [["Page Facebook CIE", "https://www.facebook.com/PageofficielleCIE"], ["Clément conseiller client CIE (Facebook)", "https://www.facebook.com/61558438130946"], ["TikTok @cieofficiel", "https://www.tiktok.com/@cieofficiel"], ["X @CIEofficiel", "https://x.com/CIEofficiel"]], "SODECI": [["Page Facebook SODECI", "https://www.facebook.com/PageofficielleSODECI"], ["Sara Conseiller Client Sodeci (Facebook)", "https://www.facebook.com/profile.php?id=100041591867269"], ["TikTok @sodeci.officiel", "https://www.tiktok.com/@sodeci.officiel"], ["X @SODECIofficiel", "https://x.com/SODECIofficiel"]]}};
+const SB=supabase.createClient('https://vtpfgzrlyqdjrulotxni.supabase.co','sb_publishable_iV-Z2ES2S-gP9x-Wx6j1Yg_7gvkSJEt',{auth:{storage:window.sessionStorage,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const now0=new Date();const isoD=d=>d.toISOString().slice(0,10);
+let D={pubs:[],p01:[],serie:[],att:[],themes_att:[],officiels:{CIE:[],SODECI:[]},comm_off:{CIE:[],SODECI:[]},canaux:STATIC.canaux,geo:STATIC.geo,rapports:{},jour:isoD(now0),jour_fr:isoD(now0).split('-').reverse().join('/'),fenetre_comm:'',passages:[]};
+let ROLE=null,MOI=null,REF=new Date(),U=[],H=[],Z=[],J=[],SRC=[];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const nf=n=>n==null?'–':n.toLocaleString('fr-FR');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const inter=r=>(r.jaime||0)+(r.com||0)+(r.part||0);
+const BC={CIE:'#E87400',SODECI:'#00A04A'};
+let M='CIE';
+function toast(t){try{if(WIN&&!/Génération/.test(t)){WIN.close();WIN=null}}catch(e){}const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',3500)}
+const RL={user:'Utilisateur',admin:'Admin',super:'Super admin'};
+async function envoyerLien(){const e=$('#lemail').value.trim().toLowerCase();$('#lmsg').textContent='Envoi du lien…';
+ const {error}=await SB.auth.signInWithOtp({email:e,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
+ $('#lmsg').textContent=error?(/autoris|Database error/i.test(error.message)?'Cette adresse n’est pas autorisée. Contactez un administrateur.':'Envoi impossible : '+error.message):'Lien envoyé : ouvrez l’e-mail reçu à '+e+' et cliquez sur le lien.'}
+async function sortir(){await SB.auth.signOut();location.reload()}
+const fh=d=>{d=new Date(d);return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+' '+String(d.getUTCHours()).padStart(2,'0')+'h'+String(d.getUTCMinutes()).padStart(2,'0')};
+async function signer(paths){const out={};paths=[...new Set(paths.filter(Boolean))];for(let i=0;i<paths.length;i+=100){const {data}=await SB.storage.from('captures').createSignedUrls(paths.slice(i,i+100),43200);(data||[]).forEach(x=>{if(x.signedUrl)out[x.path]=x.signedUrl})}return out}
+async function charger(){
+ const depuis=new Date(Date.now()-400*86400000).toISOString();
+ const [p,st,rl,th,cm,ps,rj]=await Promise.all([
+  SB.from('publications').select('*').gte('remontee_le',depuis).order('remontee_le',{ascending:false}).limit(20000),
+  SB.from('stats_jour').select('*').order('jour'),
+  SB.from('releves').select('*').order('releve_le'),
+  SB.from('themes_alerte').select('*').order('depuis',{ascending:false}),
+  SB.from('commentaires').select('*').order('publie_le',{ascending:false}),
+  SB.from('passages').select('*').order('debut',{ascending:false}).limit(20),
+  SB.from('rapports_journaliers').select('*')]);
+ const P=p.data||[];const urls=await signer(P.map(x=>x.capture));
+ const row=x=>({id:x.id,jour:isoD(new Date(x.remontee_le)),t:new Date(x.remontee_le),marque:x.marque,pf:x.plateforme,auteur:x.auteur||'',texte:x.texte||'',theme:x.theme||'Non classé',lieu:x.lieu||'Non localisé',sentiment:x.sentiment||'Neutre',jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,remontee:fh(x.remontee_le),lien:x.lien,img:urls[x.capture]||''});
+ D.pubs=P.filter(x=>x.type==='remontee').map(row);
+ const maxT=D.pubs.reduce((m,r)=>r.t>m?r.t:m,new Date(0));REF=(Date.now()-maxT>72*3600000&&D.pubs.length)?new Date(maxT.getTime()+60000):new Date();
+ const ser={};(st.data||[]).forEach(s=>{ser[s.jour]=ser[s.jour]||{jour:s.jour,CIE:null,SODECI:null};ser[s.jour][s.marque]={n:s.publications,neg:s.publications?Math.round(100*s.negatives/s.publications):0,inter:s.interactions}});D.serie=Object.values(ser).sort((a,b)=>a.jour.localeCompare(b.jour));
+ const R={};(rl.data||[]).forEach(r=>{(R[r.publication_id]=R[r.publication_id]||[]).push({h:fh(r.releve_le),jaime:r.jaime,com:r.com,part:r.part})});
+ const sem=Date.now()-7*86400000;
+ D.att=P.filter(x=>x.point_attention&&(x.statut_alerte!=='Alerte close'||new Date(x.attention_depuis||x.remontee_le)>=sem)).map(x=>({id:x.id,type:'pub',marque:x.marque,pf:x.plateforme,auteur:x.auteur||'',titre:x.texte||x.lien||'',lien:x.lien,img:urls[x.capture]||'',raisons:x.motifs&&x.motifs.length?x.motifs:['Point d’attention'],depuis:fh(x.attention_depuis||x.remontee_le),statut:x.statut_alerte||'Suivi toutes les heures',actif:x.statut_alerte!=='Alerte close',sens:x.sens,mots:x.mots,releves:(R[x.id]&&R[x.id].length)?R[x.id]:[{h:fh(x.remontee_le),jaime:x.jaime,com:x.com,part:x.part}]}));
+ D.themes_att=(th.data||[]).filter(t=>t.actif).map(t=>{const xs=P.filter(x=>x.type==='remontee'&&x.marque===t.marque&&x.theme===t.theme&&new Date(x.remontee_le)>=new Date(t.depuis));const rel=t.releves||[];const n=rel.length;
+  return{marque:t.marque,theme:t.theme,raison:t.raison||'Thématique en alerte',depuis:fh(t.depuis),n:xs.length,inter:xs.reduce((s,x)=>s+(x.jaime||0)+(x.com||0)+(x.part||0),0),neg:xs.length?Math.round(100*xs.filter(x=>x.sentiment==='Négatif').length/xs.length):0,evol:n>1&&rel[n-2].n?Math.round(100*(rel[n-1].n-rel[n-2].n)/rel[n-2].n):null,releves:rel.slice(-6)}});
+ const off=P.filter(x=>x.type==='officiel');['CIE','SODECI'].forEach(m=>{D.officiels[m]=off.filter(x=>x.marque===m).map(x=>({id:String(x.id),canal:x.plateforme+' · '+(x.auteur||''),date:fh(x.publiee_le||x.remontee_le),texte:x.texte,jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,lien:x.lien,img:urls[x.capture]||''}));
+  const ids=new Set(off.filter(x=>x.marque===m).map(x=>x.id));D.comm_off[m]=(cm.data||[]).filter(c=>ids.has(c.publication_id)).map(c=>({date:c.publie_le?fh(c.publie_le):'',auteur:c.auteur,texte:c.texte,sentiment:c.sentiment,theme:c.theme,lieu:c.lieu}))});
+ D.fenetre_comm='Commentaires publiés sous les publications des canaux officiels relevées (conservées 48 h, sauf points d’attention).';
+ D.passages=ps.data||[];D.rapports={};(rj.data||[]).forEach(r=>D.rapports[r.jour]=r.fichier);
+}
+function passesR(){const L=D.passages;const last=L[0];const h=[0,3,6,9,12,15,18,21];const auj=isoD(new Date());const faits=new Set(L.filter(x=>isoD(new Date(x.debut))===auj&&x.statut!=='échec').map(x=>Math.floor(new Date(x.debut).getUTCHours()/3)*3));const nh=new Date().getUTCHours();const next=h.find(x=>x>nh);
+ let s='<span>Passages du jour :</span>'+h.map(x=>`<span class="pass ${faits.has(x)?'ok':(x===next?'next':'')}"><i></i>${String(x).padStart(2,'0')}h</span>`).join('');
+ s+=`<span style="margin-left:auto">${last?'Dernier passage : '+fh(last.debut)+' UTC':'Aucun passage enregistré pour l’instant'}${next!=null?' · prochain passage '+String(next).padStart(2,'0')+'h00':''}</span>`;$('#passes').innerHTML=s}
+async function demarrer(){const {data:{session}}=await SB.auth.getSession();if(!session){$('#login').hidden=false;return}
+ MOI=session.user.email.toLowerCase();const {data:u}=await SB.from('utilisateurs').select('*').eq('email',MOI).maybeSingle();
+ if(!u){$('#login').hidden=false;$('#lmsg').textContent='Cette adresse n’est pas autorisée.';await SB.auth.signOut();return}
+ ROLE=u.role;$('#moi').textContent=(u.nom||MOI)+' · '+RL[ROLE];$('#login').hidden=true;$('#app').hidden=false;$('#cards').innerHTML='<div class="empty" style="grid-column:1/-1">Chargement…</div>';
+ await charger();today=new Date(D.jour+'T12:00:00Z');$('#d1').value=D.serie[0]?D.serie[0].jour:D.jour;$('#d2').value=D.jour;
+ const js=Object.keys(D.rapports).sort();$('#rj').value=js.length?js[js.length-1]:D.jour;$('#rp1').value=$('#d1').value;$('#rp2').value=D.jour;
+ attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));passesR();setRole(ROLE);tout();if(ROLE!=='user')await admCharger();}
+$('#login').hidden=true;
+$$('nav.tabs button.t').forEach(b=>b.onclick=()=>{$$('nav.tabs button.t').forEach(x=>x.classList.toggle('on',x===b));$$('section.tab').forEach(s=>s.classList.toggle('on',s.id===b.dataset.t));$('#mtabs').style.visibility=['rap','adm','jour'].includes(b.dataset.t)?'hidden':'visible';scrollTo(0,0)});
+$$('#mtabs button').forEach(b=>b.onclick=()=>{M=b.dataset.m;$$('#mtabs button').forEach(x=>x.classList.toggle('on',x===b));document.body.className=M;tout()});
+function setRole(r){$('#tadm').hidden=r==='user';$$('.so').forEach(o=>o.hidden=r!=='super');$('#tjour').hidden=r!=='super';$$('.adm-only').forEach(e=>e.hidden=r==='user');if((r==='user'&&$('#adm').classList.contains('on'))||(r!=='super'&&$('#jour').classList.contains('on')))$('nav.tabs button.t').click()}
+
+// ---------- outils ----------
+const STOP=new Set(('le la les de des du un une et en à a au aux ce ces cet cette il ils elle elles on nous vous je tu me te se sa son ses leur leurs lui y ne pas plus que qui quoi dont où ou mais donc or ni car pour par sur sous dans avec sans chez entre vers est sont été être avoir ont ai as avons avez fait faire tout tous toute toutes très bien comme quand même aussi encore déjà là ici cela ça ca c d l j n s qu m t si non oui peu trop rien depuis après avant alors moi toi notre nos votre vos mon ma mes ton ta tes va vont doit peut fois chaque autre autres hein svp etc jour jours heures heure h ans an voilà sommes dites jusqu hier toujours port quel quelle quels comment pourquoi faut veut veux tout').split(' '));
+const BRANDW=new Set(['cie','sodeci','compagnie','ivoirienne','électricité','electricite','distribution','eau']);
+function mots(texts,n){const c={};texts.forEach(t=>String(t).toLowerCase().replace(/[«»"“”.,;:!?()\[\]…'’\-–—\/#@0-9]/g,' ').split(/\s+/).forEach(w=>{if(w.length>=4&&!STOP.has(w)&&!BRANDW.has(w))c[w]=(c[w]||0)+1}));return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n)}
+function cloudHTML(list,min,max){if(!list.length)return'<span class="small">Pas assez de texte.</span>';const hi=list[0][1],lo=list[list.length-1][1];const sz=v=>min+(max-min)*((v-lo)/((hi-lo)||1));
+ const sh=list.map((x,i)=>[x,i]).sort((a,b)=>((a[1]*7)%11)-((b[1]*7)%11));return sh.map(([[w,v],i])=>`<span class="${i%3===2?'alt':''}" style="font-size:${sz(v).toFixed(1)}px" title="${v}">${esc(w)}</span>`).join('')}
+const allRows=()=>D.pubs.concat(D.p01);
+function frd(s){const[y,m,d]=s.split('-');return d+'/'+m+'/'+y}
+
+// ---------- Tableau de bord ----------
+let P='1';let today=new Date();const iso=d=>d.toISOString().slice(0,10);
+function rangeDays(){if(P==='c')return[$('#d1').value||D.jour,$('#d2').value||D.jour];const a=new Date(today);a.setUTCDate(a.getUTCDate()-(+P-1));return[iso(a),D.jour]}
+function bord(){
+ const[a,b]=rangeDays();const rows=allRows().filter(r=>r.jour>=a&&r.jour<=b&&r.marque===M);const ser=D.serie.filter(s=>s.jour>=a&&s.jour<=b);
+ $('#pertxt').textContent=M+' · '+(a===b?'statistiques du '+frd(a)+(a===D.jour?' (aujourd’hui)':''):'du '+frd(a)+' au '+frd(b))+'.';
+ const n=ser.reduce((t,s)=>t+(s[M]?s[M].n:0),0);const neg=rows.length?Math.round(100*rows.filter(r=>r.sentiment==='Négatif').length/rows.length):null;
+ const th={};rows.forEach(r=>th[r.theme]=(th[r.theme]||0)+1);const ths=Object.entries(th).sort((x,y)=>y[1]-x[1]);
+ const A=D.att.filter(t=>t.marque===M);
+ $('#kpis').innerHTML=`<div class="panel kpi"><span class="l">Publications</span><span class="v">${nf(n)}</span><span class="s">${M}</span></div>
+ <div class="panel kpi"><span class="l">Publications négatives</span><span class="v">${neg==null?'–':neg+' %'}</span><span class="s">${rows.filter(r=>r.sentiment==='Négatif').length} sur ${rows.length}</span></div>
+ <div class="panel kpi"><span class="l">Interactions</span><span class="v">${nf(rows.reduce((t,r)=>t+inter(r),0))}</span><span class="s">j'aime, commentaires, partages</span></div>
+ <div class="panel kpi"><span class="l">Points d'attention</span><span class="v">${A.filter(t=>t.actif).length+D.themes_att.filter(t=>t.marque===M).length}</span><span class="s">en cours</span></div>
+ <div class="panel kpi"><span class="l">Thème dominant</span><span class="v" style="font-size:1.15rem;padding-block:6px">${ths[0]?esc(ths[0][0]):'–'}</span><span class="s">${ths[0]?Math.round(100*ths[0][1]/rows.length)+' % des publications':''}</span></div>`;
+ $('#evo').hidden=a===b;
+ if(a!==b){const days=[];for(let d=new Date(a+'T12:00:00Z');iso(d)<=b;d.setUTCDate(d.getUTCDate()+1))days.push(iso(d));
+  const W=900,H=220,pl=34,pb=26,pt=24;const val=dd=>{const s=D.serie.find(x=>x.jour===dd);return s&&s[M]?s[M].n:null};
+  const mx=Math.ceil(Math.max(10,...days.map(dd=>val(dd)||0))*1.1);const sx=i=>pl+12+(days.length===1?0:i*(W-pl-40)/(days.length-1)),sy=v=>pt+(H-pt-pb)*(1-v/mx);
+  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Publications par jour">`;
+  [0,.5,1].forEach(f=>{const v=Math.round(mx*f);g+=`<line x1="${pl}" x2="${W-10}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${sy(v)+4}" text-anchor="end" font-size="11">${v}</text>`});
+  const step=Math.ceil(days.length/10);days.forEach((dd,i)=>{if(i%step===0||i===days.length-1)g+=`<text x="${sx(i)}" y="${H-6}" text-anchor="middle" font-size="11">${dd.slice(8)}/${dd.slice(5,7)}</text>`});
+  let seg=[],paths=[];days.forEach((dd,i)=>{const v=val(dd);if(v==null){if(seg.length)paths.push(seg);seg=[]}else seg.push([sx(i),sy(v),v,dd])});if(seg.length)paths.push(seg);
+  paths.forEach(p=>{g+=`<polyline fill="none" stroke="${BC[M]}" stroke-width="2.5" points="${p.map(q=>q[0]+','+q[1]).join(' ')}"/>`;p.forEach(q=>g+=`<circle cx="${q[0]}" cy="${q[1]}" r="4" fill="${BC[M]}"><title>${frd(q[3])} : ${q[2]} publications</title></circle><text x="${q[0]}" y="${q[1]-9}" text-anchor="middle" font-size="11" font-weight="700">${q[2]}</text>`)});
+  $('#evosvg').innerHTML=g+'</svg>'}
+ const tm=Math.max(1,...ths.map(t=>t[1]));
+ $('#themes').innerHTML=ths.map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/tm}%"></span></span><span class="n">${v}</span>`).join('')||'<span class="small">Aucune donnée.</span>';
+ $('#nuage').innerHTML=cloudHTML(mots(rows.map(r=>r.texte),35),13,38);
+ const li={};rows.forEach(r=>{if(r.lieu&&r.lieu!=='Non localisé')li[r.lieu]=(li[r.lieu]||0)+1});const ls=Object.entries(li).sort((x,y)=>y[1]-x[1]);const lm=Math.max(1,...ls.map(t=>t[1]));
+ const nl=rows.filter(r=>r.lieu==='Non localisé').length;
+ $('#lieux').innerHTML=ls.slice(0,10).map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/lm}%"></span></span><span class="n">${v}</span>`).join('')+(nl?`<span class="small" style="grid-column:1/-1">${nl} publication(s) sans localité.</span>`:'');
+ carte(ls)}
+function carte(ls){const G=D.geo;let abj=0,pts=[];ls.forEach(([t,n])=>{const L=G.lieux[t];if(t==='Abidjan'||(L&&L.abj))abj+=n;else if(L)pts.push([L.xy,n,t])});
+ const r=n=>8+Math.sqrt(n)*8,col=BC[M];let s=`<svg viewBox="0 0 622 653" width="100%" style="max-height:300px" role="img" aria-label="Carte des localités citées"><path d="${G.path}" fill="var(--soft)" stroke="var(--line)" stroke-width="2"/>`;
+ pts.forEach(([xy,n,t])=>s+=`<circle cx="${xy[0]}" cy="${xy[1]}" r="${r(n)}" fill="${col}" fill-opacity=".55" stroke="${col}"><title>${esc(t)} : ${n}</title></circle>`);
+ if(abj){const[x,y]=G.abidjan;s+=`<circle cx="${x}" cy="${y}" r="${r(abj)}" fill="${col}" fill-opacity=".55" stroke="${col}"><title>Grand Abidjan : ${abj}</title></circle><text x="${x+r(abj)+6}" y="${y+6}" font-size="22" font-weight="700">Grand Abidjan · ${abj}</text>`}
+ $('#carte').innerHTML=s+'</svg>'}
+$$('#per button').forEach(b=>b.onclick=()=>{P=b.dataset.p;$$('#per button').forEach(x=>x.classList.toggle('on',x===b));$('#perc').hidden=P!=='c';bord()});
+$('#d1').onchange=$('#d2').onchange=bord;
+
+// ---------- Publications (tranches 0-24 h, 24-48 h, 48-72 h) ----------
+const TRL=['dernières 24 heures','de 24 à 48 heures avant','de 48 à 72 heures avant'];
+function inTr(r){const b=REF.getTime()-T*86400000,a=b-86400000;return r.t.getTime()>a&&r.t.getTime()<=b}
+let T=0;let attLinks=new Set();
+function dk(r){const m=/(\d\d)\/(\d\d) (\d\d)h(\d\d)/.exec(r.remontee||'');return m?m[2]+m[1]+m[3]+m[4]:''}
+function pubSel(){const q=$('#q').value.toLowerCase(),p=$('#fp').value,t=$('#ft').value,l=$('#fl').value,mi=+$('#fi').value,so=$('#fs').value;
+ return allRows().filter(r=>inTr(r)&&r.marque===M&&(!p||r.pf===p)&&(!t||r.theme===t)&&(!l||r.lieu===l)&&inter(r)>=mi&&(!q||(r.auteur+' '+r.texte).toLowerCase().includes(q))).sort((a,b)=>so==='d'?dk(b).localeCompare(dk(a)):inter(b)-inter(a))}
+function fillSel(){const base=allRows().filter(r=>inTr(r)&&r.marque===M);
+ [['#ft','Toutes thématiques','theme'],['#fl','Toutes localités','lieu']].forEach(([id,lab,k])=>{const v=$(id).value;const vals=[...new Set(base.map(r=>r[k]))].sort((a,b)=>a.localeCompare(b,'fr'));
+  $(id).innerHTML=`<option value="">${lab}</option>`+vals.map(x=>`<option>${esc(x)}</option>`).join('');if(vals.includes(v))$(id).value=v})}
+function pubsR(){const L=pubSel();
+ $('#pubtxt').textContent=`${M} · ${L.length} publication(s) remontée(s) ${TRL[T]}${REF<Date.now()-3600000?' (avant le '+fh(REF)+', dernières données disponibles)':''}. Les publications ordinaires restent 72 h ; les points d’attention, une semaine.`;
+ $('#cards').innerHTML=L.map(r=>`<article class="pc">${r.img?`<img loading="lazy" src="${r.img}" alt="Capture de la publication" onclick="zoom(this.src)">`:''}<div class="b">
+  <div class="h"><span class="tag">${esc(r.pf)}</span>${r.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(r.sentiment)+'</span>'}${attLinks.has((r.lien||'').replace(/\/$/,''))?'<span class="tag alerte">Point d’attention</span>':''}</div>
+  <div class="a">${esc(r.auteur)}</div><div class="x">${esc(r.texte)}</div>
+  <div class="m">${esc(r.theme)} · ${esc(r.lieu)}${r.remontee&&r.remontee!=='non disponible'?' · remontée le '+esc(r.remontee):''}</div>
+  <div class="st"><span><b>${nf(r.jaime)}</b> j'aime</span><span><b>${nf(r.com)}</b> comm.</span><span><b>${nf(r.part)}</b> partages</span>${r.vues?`<span><b>${nf(r.vues)}</b> vues</span>`:''}</div>
+  ${r.lien?`<a href="${esc(r.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:''}</div></article>`).join('')||`<div class="empty" style="grid-column:1/-1">Aucune publication dans cette tranche ou pour cette recherche.</div>`}
+$$('#tr button').forEach(b=>b.onclick=()=>{T=+b.dataset.r;$$('#tr button').forEach(x=>x.classList.toggle('on',x===b));fillSel();pubsR()});
+['#q','#fp','#ft','#fl','#fi','#fs'].forEach(s=>$(s).oninput=pubsR);
+function zoom(src){$('#zoom img').src=src;$('#zoom').style.display='grid'}
+
+// ---------- Points d'attention ----------
+function evoInter(rel){const R=rel.slice(-6).map(r=>({h:r.h,v:(r.jaime||0)+(r.com||0)+(r.part||0),r}));const mx=Math.max(1,...R.map(x=>x.v));
+ let s=R.map((x,i)=>`<span>${esc(x.h)}</span><span class="t" title="${nf(x.r.jaime)} j'aime, ${nf(x.r.com)} commentaires, ${nf(x.r.part)} partages"><span class="${i===R.length-1?'last':''}" style="width:${100*x.v/mx}%"></span></span><span class="n">${nf(x.v)}</span>`).join('');
+ if(R.length>1){const a=R[R.length-2].v,b=R[R.length-1].v,ev=Math.round(100*(b-a)/a);s+=`<span class="d">Total j'aime + commentaires + partages à chaque relevé · ${ev>=0?'+':''}${ev} % depuis le relevé précédent</span>`}
+ else s+=`<span class="d">Total j'aime + commentaires + partages · un seul relevé</span>`;return`<div class="ib">${s}</div>`}
+function attCard(a){const last=a.releves[a.releves.length-1];const S=a.sens||null;
+ return`<article class="att ${a.actif?'':'off'}" data-k="${esc(a.lien)}">${a.img?`<img src="${a.img}" alt="Capture" onclick="zoom(this.src)" style="cursor:zoom-in">`:`<div class="ph">${esc(a.pf)}</div>`}
+ <div style="display:grid;gap:8px;min-width:0;align-content:start"><div class="h">${a.raisons.map(x=>`<span class="tag alerte">${esc(x)}</span>`).join('')}<span class="tag">${esc(a.pf)}</span><span class="statut ${a.actif?'on':''}">${esc(a.statut)}</span></div>
+ <div class="top"><span style="font-weight:700">${esc(a.auteur)} – ${esc(a.titre)}</span>${a.lien?`<a class="noprint small" href="${esc(a.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:''}</div>
+ <div class="small">Depuis le ${esc(a.depuis)} · dernier relevé ${esc(last.h)} : <b>${nf(last.jaime)}</b> j'aime, <b>${nf(last.com)}</b> commentaires, <b>${nf(last.part)}</b> partages</div>
+ <div class="viz"><div class="col"><div><div class="k">Sens des commentaires</div>${S?`<div class="sens"><span style="width:${S.neg}%;background:var(--bad)"></span><span style="width:${S.neu}%;background:var(--neutral)"></span><span style="width:${S.pos}%;background:var(--good)"></span></div>
+   <div class="sensl"><span><i style="background:var(--bad)"></i>${S.neg} % négatifs</span><span><i style="background:var(--neutral)"></i>${S.neu} % neutres</span><span><i style="background:var(--good)"></i>${S.pos} % positifs</span></div>`:'<span class="small">Calculé dès que les commentaires sont collectés.</span>'}</div>
+  <div><div class="k">Mots des commentaires</div><div class="cloud">${cloudHTML(Object.entries(a.mots||{}).sort((x,y)=>y[1]-x[1]).slice(0,10),11,19)}</div></div></div>
+  <div><div class="k">Interactions par relevé</div>${evoInter(a.releves)}</div></div>
+ </div></article>`}
+function thCard(t){const ev=t.evol;return`<div class="thc" data-k="${esc(t.theme)}"><div style="font-weight:700">${esc(t.theme)}</div><div class="h"><span class="tag alerte">${esc(t.raison)}</span></div>
+ <div class="row"><span>Publications depuis le ${esc(t.depuis)}</span><b>${nf(t.n)}</b></div><div class="row"><span>Interactions</span><b>${nf(t.inter)}</b></div>
+ <div class="row"><span>Négatives</span><b>${t.neg} %</b></div><div class="row"><span>Évolution</span><b class="${ev>0?'up':ev<0?'down':''}">${ev==null?'–':(ev>0?'▲ +':ev<0?'▼ ':'')+ev+' %'}</b></div>
+ <div class="small">Relevés : ${t.releves.map(r=>esc(r.h)+' : '+r.n).join(' · ')}</div></div>`}
+function attR(){const A=D.att.filter(a=>a.marque===M),TH=D.themes_att.filter(t=>t.marque===M).slice(0,5);
+ $('#nbatt').textContent=D.att.filter(a=>a.actif).length+D.themes_att.length;
+ const k=(l,v,s)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
+ $('#attk').innerHTML=k('Publications',A.length,'en point d’attention cette semaine')+k('En cours de suivi',A.filter(a=>a.actif).length,'relevés toutes les 1 ou 2 h')+k('Thématiques',TH.length,'en point d’attention')+k('Commentaires suivis',nf(A.reduce((t,a)=>t+(a.releves[a.releves.length-1].com||0),0)),'au dernier relevé');
+ $('#attl').innerHTML=A.map(attCard).join('')||'<div class="empty">Aucune publication en point d’attention cette semaine.</div>';
+ $('#thl').innerHTML=TH.map(thCard).join('')||'<p class="small">Aucune thématique en point d’attention.</p>'}
+
+function pfDe(u){return /tiktok/i.test(u)?'TikTok':/(x|twitter)\.com/i.test(u)?'X':'Facebook'}
+async function addAtt(u,o){if(!u)return;const {error}=await SB.from('publications').insert({marque:M,type:'remontee',plateforme:o?o.canal.split(' · ')[0]:pfDe(u),auteur:o?(o.canal.split(' · ')[1]||o.canal):null,texte:o?o.texte:null,lien:u,jaime:o?o.jaime:null,com:o?o.com:null,part:o?o.part:null,vues:o?o.vues:null,point_attention:true,ajout_manuel:true,motifs:['Ajout manuel'],statut_alerte:'En attente du premier relevé',attention_depuis:new Date().toISOString()});
+ if(error)return toast(/duplicate/i.test(error.message)?'Cette publication est déjà suivie.':'Ajout impossible : '+error.message);log('Alerte','Point d’attention ajouté manuellement : '+u);if($('#au'))$('#au').value='';await charger();attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));tout();toast('Ajouté aux points d’attention : il sera relevé au prochain passage.')}
+
+// ---------- Administration ----------
+async function admCharger(){const q=await Promise.all([SB.from('utilisateurs').select('*').order('ajoute_le'),SB.from('haters').select('*').order('ajoute_le'),SB.from('zones').select('*').order('marque'),SB.from('sources_suivies').select('*').order('plateforme'),ROLE==='super'?SB.from('journal').select('*').order('le',{ascending:false}).limit(200):{data:[]}]);
+ U=q[0].data||[];H=q[1].data||[];Z=q[2].data||[];SRC=q[3].data||[];J=q[4].data||[];admR()}
+function admR(){$('#ucount').textContent='('+U.length+' / 10)';
+ $('#users').innerHTML='<tr><th>E-mail</th><th>Rôle</th><th></th></tr>'+U.map(u=>`<tr><td>${esc(u.email)}${u.nom?` <span class="small">(${esc(u.nom)})</span>`:''}</td><td>${RL[u.role]}</td><td>${u.email!==MOI&&(u.role!=='super'||ROLE==='super')?`<button class="del" onclick="delUser('${esc(u.email)}')">Retirer</button>`:''}</td></tr>`).join('');
+ $('#haters').innerHTML=H.map(h=>`<span class="pill">${esc(h.nom)} <button onclick="del('haters',${h.id})" aria-label="Retirer">×</button></span>`).join('')||'<span class="small">Liste vide.</span>';
+ $('#zones').innerHTML='<tr><th>Marque</th><th>Zone</th><th>Localités</th><th>Responsable</th><th></th></tr>'+(Z.map(z=>`<tr><td><span class="tag ${z.marque}">${z.marque}</span></td><td>${esc(z.nom)}</td><td>${esc((z.localites||[]).join(', '))}</td><td>${esc(z.email_responsable)}</td><td><button class="del" onclick="del('zones',${z.id})">Retirer</button></td></tr>`).join('')||'<tr><td colspan="5" class="small">Aucune zone pour l’instant.</td></tr>');
+ $('#sources').innerHTML='<tr><th>Plateforme</th><th>Source</th><th>Catégorie</th><th></th></tr>'+(SRC.map(x=>`<tr><td>${esc(x.plateforme)}</td><td>${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.nom)}</a>`:esc(x.nom)}</td><td>${esc(x.categorie||'')}</td><td><button class="del" onclick="del('sources_suivies',${x.id})">Retirer</button></td></tr>`).join('')||'<tr><td colspan="4" class="small">Aucune source pour l’instant.</td></tr>');jourR()}
+function jourR(){const f=$('#jf').value;$('#jtab').innerHTML='<tr><th>Date</th><th>Type</th><th>Par</th><th>Détail</th></tr>'+(J.filter(j=>!f||j.type===f).map(j=>`<tr><td style="white-space:nowrap">${fh(j.le)}</td><td>${esc(j.type)}</td><td>${esc(j.par||'')}</td><td>${esc(j.detail||'')}</td></tr>`).join('')||'<tr><td colspan="4" class="small">Aucun événement.</td></tr>')}
+async function log(t,d){try{await SB.from('journal').insert({type:t,par:MOI,detail:d})}catch(e){}}
+async function apres(error,ok){if(error)return toast('Action refusée : '+error.message);toast(ok);await admCharger()}
+async function addUser(){const e=$('#ue').value.trim().toLowerCase();if(U.length>=10)return toast('Limite de 10 utilisateurs atteinte.');const {error}=await SB.from('utilisateurs').insert({email:e,role:$('#ur').value,ajoute_par:MOI});$('#ue').value='';apres(error,'Utilisateur ajouté : il peut maintenant demander son lien de connexion.')}
+async function delUser(e){if(!confirm('Retirer '+e+' ?'))return;const {error}=await SB.from('utilisateurs').delete().eq('email',e);apres(error,'Utilisateur retiré.')}
+async function del(t,id){const {error}=await SB.from(t).delete().eq('id',id);apres(error,'Élément retiré.')}
+async function addHater(){const {error}=await SB.from('haters').insert({nom:$('#he').value,ajoute_par:MOI});$('#he').value='';apres(error,'Hater ajouté.')}
+async function addZone(){const {error}=await SB.from('zones').insert({marque:$('#zm').value,nom:$('#zn').value,localites:$('#zl').value.split(',').map(x=>x.trim()).filter(Boolean),email_responsable:$('#zr').value.trim().toLowerCase()});['#zn','#zl','#zr'].forEach(x=>$(x).value='');apres(error,'Zone ajoutée.')}
+async function addSource(){const {error}=await SB.from('sources_suivies').insert({plateforme:$('#sp').value,nom:$('#sn').value,url:$('#su').value||null,categorie:$('#sc').value,ajoute_par:MOI});['#sn','#su'].forEach(x=>$(x).value='');apres(error,'Source ajoutée.')}
+
+// ---------- PDF ----------
+const clean=s=>String(s??'').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/…/g,'...').replace(/[–—]/g,'-').replace(/ | /g,' ').replace(/[^\x00-\xFF]/g,'');
+function libs(){if(!window.jspdf||!window.html2canvas){toast('Chargement des outils PDF impossible : vérifiez la connexion.');return false}return true}
+let LOGO=null;
+async function entete(d,titre,sous){d.setFillColor(192,0,0);d.rect(0,0,595,64,'F');d.setTextColor(255);d.setFont('helvetica','bold');d.setFontSize(17);d.text(clean(titre),32,34);d.setFont('helvetica','normal');d.setFontSize(10);d.text(clean(sous),32,52);d.setTextColor(30);
+ if(!LOGO)LOGO=await imgData('img/logo-viral.jpg');if(LOGO){try{const pr=d.getImageProperties(LOGO);const h=40,w=h*pr.width/pr.height;d.setFillColor(255,255,255);d.roundedRect(595-32-w-8,12,w+8,h,4,4,'F');d.addImage(LOGO,'JPEG',595-32-w-4,14,w,h-4)}catch(e){}}}
+let WIN=null;function preOuvrir(){try{WIN=window.open('','_blank');if(WIN)WIN.document.write('<p style="font-family:sans-serif;padding:20px">Génération du rapport…</p>')}catch(e){WIN=null}}
+function pieds(d){const n=d.internal.getNumberOfPages(),now=new Date(),t=now.toLocaleDateString('fr-FR')+' à '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+ for(let i=1;i<=n;i++){d.setPage(i);d.setDrawColor(220);d.line(32,818,563,818);d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(120);d.text(clean('Généré le '+t),32,830);d.text('Page '+i+' / '+n,563,830,{align:'right'})}d.setTextColor(30)}
+function livrer(d,nom){pieds(d);const url=d.output('bloburl');if(WIN&&!WIN.closed){WIN.location.href=url}else{const a=document.createElement('a');a.href=url;a.download=nom;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}WIN=null}
+async function captureToPdf(nodes,titre,sous,nom){if(!libs())return;toast('Génération du PDF…');const root=document.documentElement,prev=root.getAttribute('data-theme');root.setAttribute('data-theme','light');
+ const{jsPDF}=window.jspdf;const d=new jsPDF({unit:'pt',format:'a4'});await entete(d,titre,sous);let y=80;
+ try{for(const n of nodes){n.classList.add('capture');const c=await html2canvas(n,{scale:2,backgroundColor:'#F4F5F3',useCORS:true});n.classList.remove('capture');
+  const w=531,h=c.height*w/c.width;let off=0;while(off<h){const room=806-y;const part=Math.min(room,h-off);
+   const sc=document.createElement('canvas');sc.width=c.width;sc.height=Math.round(part*c.width/w);sc.getContext('2d').drawImage(c,0,Math.round(off*c.width/w),c.width,sc.height,0,0,c.width,sc.height);
+   d.addImage(sc.toDataURL('image/jpeg',.9),'JPEG',32,y,w,part);off+=part;y+=part+10;if(off<h||y>760){d.addPage();y=32}}}
+  if(y===32&&d.internal.getNumberOfPages()>1)d.deletePage(d.internal.getNumberOfPages());
+  livrer(d,nom)}finally{if(prev)root.setAttribute('data-theme',prev);else root.removeAttribute('data-theme')}}
+async function pdfJour(){const f=D.rapports[$('#rj').value];if(!f)return toast('Pas de rapport journalier pour ce jour.');const w=window.open('','_blank');const {data,error}=await SB.storage.from('rapports').createSignedUrl(f,600);if(error){if(w)w.close();return toast('Rapport indisponible : '+error.message)}if(w)w.location.href=data.signedUrl;else location.href=data.signedUrl;log('Rapport','Rapport journalier du '+frd($('#rj').value))}
+async function pdfPerso(){const a=$('#rp1').value,b=$('#rp2').value,m=$('#rpm').value;const keep=[P,M,$('#d1').value,$('#d2').value];
+ P='c';M=m;document.body.className=m;$('#d1').value=a;$('#d2').value=b;bord();const sec=$('#bord');const was=sec.classList.contains('on');sec.classList.add('on');
+ await captureToPdf([$('#bordc')],'Rapport personnalisé',m+' - du '+frd(a)+' au '+frd(b),'Rapport_personnalise_'+m+'_'+a+'_'+b+'.pdf');
+ if(!was)sec.classList.remove('on');[P,M]=keep;$('#d1').value=keep[2];$('#d2').value=keep[3];document.body.className=M;bord();log('Rapport','Rapport personnalisé '+m)}
+function chkR(){const m=$('#ram').value;$('#rachk').innerHTML='<b class="small">Thématiques</b>'+(D.themes_att.filter(t=>t.marque===m).map(t=>`<label><input type="checkbox" data-th="${esc(t.theme)}" checked> ${esc(t.theme)}</label>`).join('')||'<span class="small">Aucune</span>')+
+ '<b class="small" style="margin-top:6px">Publications</b>'+(D.att.filter(a=>a.marque===m).map((a,i)=>`<label><input type="checkbox" data-pu="${esc(a.lien)}" checked> ${esc(a.auteur)} – ${esc(a.titre.slice(0,60))}</label>`).join('')||'<span class="small">Aucune</span>')}
+async function pdfAtt(){const m=$('#ram').value;const ths=$$('#rachk [data-th]:checked').map(x=>x.dataset.th),pus=$$('#rachk [data-pu]:checked').map(x=>x.dataset.pu);if(!ths.length&&!pus.length)return toast('Cochez au moins un élément.');
+ const box=document.createElement('div');box.style.cssText='position:fixed;left:-10000px;top:0;width:900px';document.body.appendChild(box);const keep=M;M=m;document.body.className=m;
+ box.innerHTML=(ths.length?`<div class="panel" style="margin-bottom:12px"><h3>Thématiques en point d'attention</h3>${D.themes_att.filter(t=>t.marque===m&&ths.includes(t.theme)).map(thCard).join('')}</div>`:'')+`<div class="grid">${D.att.filter(a=>a.marque===m&&pus.includes(a.lien)).map(attCard).join('')}</div>`;
+ await captureToPdf([box],"Rapport points d'attention",m+' - semaine au '+D.jour_fr,'Rapport_points_attention_'+m+'.pdf');box.remove();M=keep;document.body.className=M;log('Rapport','Rapport points d’attention '+m)}
+async function imgData(src){try{const r=await fetch(src);const b=await r.blob();return await new Promise(ok=>{const f=new FileReader();f.onload=()=>ok(f.result);f.readAsDataURL(b)})}catch(e){return null}}
+async function pdfPubs(){if(!libs())return;const L=pubSel();if(!L.length)return toast('Aucune publication dans la sélection.');toast('Génération du PDF…');
+ const{jsPDF}=window.jspdf;const d=new jsPDF({unit:'pt',format:'a4'});const BR=M==='CIE'?[232,116,0]:[0,160,74];
+ const f=[$('#ft').value,$('#fl').value,$('#fp').value,+$('#fi').value?'plus de '+$('#fi').value+' interactions':''].filter(Boolean).join(' - ');
+ await entete(d,'Rapport publications',M+' - '+['dernières 24 h','24 à 48 h','48 à 72 h'][T]+(f?' - '+f:''));
+ const imgs=[];for(const r of L)imgs.push(r.img?await Promise.race([imgData(r.img),new Promise(z=>setTimeout(()=>z(null),5000))]):null);
+ // chiffres clés
+ const neg=L.filter(r=>r.sentiment==='Négatif').length,K=[['Publications',String(L.length)],['Négatives',Math.round(100*neg/L.length)+' %'],['Interactions',nf(L.reduce((t,r)=>t+inter(r),0))]];
+ K.forEach(([l,v],i)=>{const x=32+i*181;d.setFillColor(246,247,245);d.roundedRect(x,80,169,52,5,5,'F');d.setFillColor(...BR);d.rect(x,80,169,3,'F');d.setFont('helvetica','normal');d.setFontSize(8.5);d.setTextColor(95);d.text(l.toUpperCase(),x+10,97);d.setFont('helvetica','bold');d.setFontSize(19);d.setTextColor(30);d.text(clean(v),x+10,123)});
+ // répartitions côte à côte
+ const bars=(titre,obj,x0)=>{let y=156;d.setFont('helvetica','bold');d.setFontSize(10.5);d.setTextColor(30);d.text(titre,x0,y);y+=12;const E=Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,12),mx=E.length?E[0][1]:1;
+  d.setFontSize(8.5);E.forEach(([k,v])=>{d.setFont('helvetica','normal');d.setTextColor(40);d.text(d.splitTextToSize(clean(k),118)[0],x0,y+8);d.setFillColor(238,241,236);d.rect(x0+122,y+1,110,9,'F');d.setFillColor(...BR);d.rect(x0+122,y+1,Math.max(2,110*v/mx),9,'F');d.setFont('helvetica','bold');d.text(String(v),x0+258,y+8,{align:'right'});y+=14});
+  if(Object.keys(obj).length>12){d.setFont('helvetica','normal');d.setTextColor(120);d.text('+ '+(Object.keys(obj).length-12)+' autre(s)',x0,y+8);y+=14}return y};
+ const th={},li={};L.forEach(r=>{th[r.theme]=(th[r.theme]||0)+1;li[r.lieu]=(li[r.lieu]||0)+1});
+ let y=Math.max(bars('Par thématique',th,32),bars('Par localité',li,305))+16;
+ // visuels
+ d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(30);if(y>700){d.addPage();y=40}d.text('Visuels',32,y);y+=10;
+ const cw=165,gap=18,capH=50;
+ for(let i=0;i<L.length;i+=3){const row=L.slice(i,i+3),ims=imgs.slice(i,i+3);
+  const hs=ims.map(im=>{if(!im)return 70;try{const p=d.getImageProperties(im);return Math.min(220,cw*p.height/p.width)}catch(e){return 70}});const rh=Math.max(...hs)+capH;
+  if(y+rh>806){d.addPage();y=36}
+  row.forEach((r,j)=>{const x=32+j*(cw+gap),im=ims[j];
+   if(im){try{d.addImage(im,'JPEG',x,y,cw,hs[j])}catch(e){}d.setDrawColor(215);d.rect(x,y,cw,hs[j])}else{d.setFillColor(246,247,245);d.rect(x,y,cw,hs[j],'F');d.setFontSize(8);d.setTextColor(120);d.text('Visuel non disponible',x+cw/2,y+hs[j]/2,{align:'center'})}
+   let cy=y+hs[j]+11;d.setTextColor(30);d.setFont('helvetica','bold');d.setFontSize(8.5);d.text(d.splitTextToSize(clean(r.auteur),cw)[0],x,cy);cy+=10;
+   d.setFont('helvetica','normal');d.setFontSize(7.5);d.setTextColor(90);d.text(d.splitTextToSize(clean(r.theme+' · '+r.lieu),cw)[0],x,cy);cy+=9;
+   d.text(clean(nf(r.jaime)+" j'aime · "+nf(r.com)+' comm. · '+nf(r.part)+' partages'),x,cy);cy+=10;
+   if(r.lien){d.setTextColor(31,111,178);d.textWithLink('Voir la publication',x,cy,{url:r.lien})}});
+  y+=rh+8}
+ livrer(d,'Rapport_publications_'+M+'.pdf');log('Rapport','Rapport publications '+M)}
+
+function offR(){const P=D.officiels[M]||[],C=D.comm_off[M]||[];const neg=C.filter(c=>c.sentiment==='Négatif').length;
+ const th={};C.forEach(c=>th[c.theme]=(th[c.theme]||0)+1);const top=Object.entries(th).sort((a,b)=>b[1]-a[1])[0];
+ const k=(l,v,s)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
+ $('#offk').innerHTML=k('Publications officielles',P.length,'données du 01/11')+k('Interactions',nf(P.reduce((t,o)=>t+inter(o),0)),'sur ces publications')+k('Commentaires analysés',C.length,C.length?Math.round(100*neg/C.length)+' % négatifs':'')+k('Thème des commentaires',top?`<span style="font-size:1.1rem">${esc(top[0])}</span>`:'–',top?top[1]+' commentaire(s)':'');
+ const canaux={};P.forEach(o=>{const c=canaux[o.canal]=canaux[o.canal]||{n:0,j:0,c:0,p:0,v:0};c.n++;c.j+=o.jaime||0;c.c+=o.com||0;c.p+=o.part||0;c.v+=o.vues||0});
+ $('#offs').innerHTML='<tr><th>Canal</th><th>Publ.</th><th>J\'aime</th><th>Comm.</th><th>Partages</th><th>Vues</th><th>Évol. 6 h</th></tr>'+Object.entries(canaux).sort((a,b)=>(b[1].j+b[1].c+b[1].p)-(a[1].j+a[1].c+a[1].p)).map(([k,c])=>`<tr><td>${esc(k)}</td><td>${c.n}</td><td>${nf(c.j)}</td><td>${nf(c.c)}</td><td>${nf(c.p)}</td><td>${c.v?nf(c.v):'–'}</td><td class="small">au prochain relevé</td></tr>`).join('');
+ const nn=C.filter(c=>c.sentiment==='Neutre').length,np=C.filter(c=>c.sentiment==='Positif').length,pc=x=>C.length?Math.round(100*x/C.length):0;
+ $('#offsens').innerHTML=C.length?`<div class="sens"><span style="width:${pc(neg)}%;background:var(--bad)"></span><span style="width:${pc(nn)}%;background:var(--neutral)"></span><span style="width:${pc(np)}%;background:var(--good)"></span></div><div class="sensl"><span><i style="background:var(--bad)"></i>${pc(neg)} % négatifs</span><span><i style="background:var(--neutral)"></i>${pc(nn)} % neutres</span><span><i style="background:var(--good)"></i>${pc(np)} % positifs</span></div><div class="small" style="margin-top:4px">${C.length} commentaires analysés</div>`:'<span class="small">Aucun commentaire analysé.</span>';
+ const tp=P.slice().sort((a,b)=>inter(b)-inter(a))[0];$('#offtop').innerHTML=tp?`<div style="font-weight:700">${esc(tp.canal)}</div><div>${esc(tp.texte)}</div><div class="small">${nf(inter(tp))} interactions · publiée le ${esc(tp.date)}</div>`:'–';
+ $('#offc').innerHTML=(D.canaux[M]||[]).map(([n,u])=>`<span class="pill" style="padding-right:10px"><a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a></span>`).join('');
+ $('#offp').innerHTML=P.map(o=>`<article class="pc">${o.img?`<img loading="lazy" src="${o.img}" alt="Visuel de la publication officielle" onclick="zoom(this.src)">`:''}<div class="b"><div class="h"><span class="tag">${esc(o.canal)}</span></div>
+  <div class="x">${esc(o.texte)}</div><div class="m">Publiée le ${esc(o.date)}</div>
+  <div class="st"><span><b>${nf(o.jaime)}</b> j'aime</span><span><b>${nf(o.com)}</b> comm.</span><span><b>${nf(o.part)}</b> partages</span>${o.vues?`<span><b>${nf(o.vues)}</b> vues</span>`:''}</div>
+  <div class="bar">${o.lien?`<a href="${esc(o.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:''}<button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="addAtt(${esc(JSON.stringify(o.lien||('officiel:'+o.id)))},D.officiels[M].find(x=>x.id==='${o.id}'))">Mettre en point d'attention</button></div></div></article>`).join('')||'<div class="empty">Aucune publication officielle sur la période.</div>';
+ $$('#off .adm-only').forEach(e=>e.hidden=ROLE==='user');
+ $('#offw').textContent=D.fenetre_comm||'';
+ $('#offt').innerHTML='<tr><th>Date</th><th>Auteur</th><th>Commentaire</th><th>Sens</th><th>Thème</th><th>Localité</th></tr>'+C.map(c=>`<tr><td style="white-space:nowrap">${esc(c.date)}</td><td>${esc(c.auteur)}</td><td>${esc(c.texte)}</td><td>${c.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(c.sentiment)+'</span>'}</td><td>${esc(c.theme)}</td><td>${esc(c.lieu||'')}</td></tr>`).join('')}
+function tout(){bord();fillSel();pubsR();attR();offR();chkR()}
+$('#ram').onchange=chkR;
+demarrer();
+</script>
+</body>
+</html>

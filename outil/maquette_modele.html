@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Plateforme de Veille Réputation Numérique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{--bg:#F4F5F3;--panel:#fff;--fg:#1B1F1C;--muted:#5E6A62;--line:#DFE4E0;--soft:#EEF1EC;--red:#C00000;--sodeci:#00A04A;--cie:#E87400;--blue:#1F6FB2;--bad:#C62828;--neutral:#9AA49E;--good:#2E7D32;
+--sans:"Source Sans 3","Segoe UI",Roboto,Arial,sans-serif;--serif:"Source Serif 4",Georgia,serif;--brand:var(--cie);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--panel:#1B201D;--fg:#E9EEEA;--muted:#A3AFA7;--line:#2E3631;--soft:#242B26;--neutral:#6F7A73;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121614;--panel:#1B201D;--fg:#E9EEEA;--muted:#A3AFA7;--line:#2E3631;--soft:#242B26;--neutral:#6F7A73;color-scheme:dark}
+body.SODECI{--brand:var(--sodeci)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.45}
+a{color:var(--blue)}
+.wrap{max-width:80rem;margin-inline:auto;padding-inline:16px}
+button,input,select{font:inherit;color:inherit}
+.demo{background:#FFF4D6;color:#5A3B00;font-size:.85rem;text-align:center;padding:6px 16px;border-bottom:1px solid #F0D690}
+
+#login{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,var(--red) 0 38%,var(--bg) 38%)}
+.card-login{background:var(--panel);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.15);padding:28px;width:min(420px,100%);display:grid;gap:14px}
+.card-login img{height:56px;width:auto;justify-self:start;border-radius:6px}
+.card-login h1{font-family:var(--serif);font-size:1.5rem;margin:0}
+.card-login p{margin:0;color:var(--muted)}
+.card-login input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.primary{background:var(--red);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
+.ghostb{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600}
+.small{font-size:.82rem;color:var(--muted)}
+
+header.top{background:var(--red);color:#fff}
+header.top .wrap{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:space-between;padding-block:12px}
+.brand{display:flex;gap:12px;align-items:center}
+.brand img{height:42px;border-radius:5px;background:#fff;padding:3px 6px}
+.brand .sub{font-size:.9rem;font-weight:700;letter-spacing:.04em;opacity:.95}
+.brand h1{font-family:var(--serif);font-size:clamp(1.15rem,3vw,1.5rem);margin:0;line-height:1.15}
+.brand .sub{font-size:.82rem;opacity:.92}
+.user{display:flex;gap:8px;align-items:center;font-size:.85rem;flex-wrap:wrap}
+.user select{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.6);border-radius:6px;padding:4px 6px}
+.user select option{color:#000}
+.user button{background:#fff;color:var(--red);border:0;border-radius:6px;padding:5px 10px;font-weight:700;cursor:pointer}
+.passes{background:#9E0000;color:#fff;font-size:.8rem}
+.passes .wrap{display:flex;gap:6px 14px;align-items:center;flex-wrap:wrap;padding-block:6px}
+.pass{display:inline-flex;gap:4px;align-items:center;opacity:.65}
+.pass i{width:9px;height:9px;border-radius:50%;border:1.5px solid #fff;display:inline-block}
+.pass.ok{opacity:1}.pass.ok i{background:#fff}
+.pass.next{opacity:1;font-weight:700}.pass.next i{background:#FFC857;border-color:#FFC857}
+nav.tabs{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav.tabs .wrap{display:flex;gap:2px;overflow-x:auto;align-items:center}
+nav.tabs button.t{background:none;border:0;border-bottom:3px solid transparent;padding:12px 14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav.tabs button.t.on{color:var(--fg);border-color:var(--red)}
+nav.tabs .badge{background:var(--red);color:#fff;border-radius:10px;font-size:.72rem;padding:0 6px;margin-left:4px}
+.mtabs{display:flex;gap:8px;margin-left:auto;padding-left:12px}
+.mtabs button{border:2px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 14px;font-weight:700;cursor:pointer;color:var(--muted)}
+.mtabs button.on[data-m=CIE]{background:var(--cie);border-color:var(--cie);color:#fff}
+.mtabs button.on[data-m=SODECI]{background:var(--sodeci);border-color:var(--sodeci);color:#fff}
+main{padding-block:18px 48px}
+section.tab{display:none;gap:16px}
+section.tab.on{display:grid}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:none;padding:6px 11px;cursor:pointer;font-weight:600;color:var(--muted);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--fg);color:var(--panel)}
+.bar input,.bar select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--panel)}
+h3{font-size:1rem;margin:0 0 8px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.kpi{display:grid;gap:2px;border-top:4px solid var(--brand)}
+.kpi .l{font-size:.8rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:1.9rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.82rem;color:var(--muted)}
+.hb{display:grid;grid-template-columns:minmax(90px,38%) 1fr auto;gap:6px 10px;align-items:center;font-size:.88rem}
+.hb .t{height:14px;background:var(--soft);border-radius:3px;overflow:hidden}
+.hb .t span{display:block;height:100%;background:var(--brand)}
+.hb .n{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
+svg text{fill:var(--muted);font-family:var(--sans)}
+.note{font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.cloud{display:flex;flex-wrap:wrap;gap:2px 10px;justify-content:center;align-items:baseline;line-height:1.1;padding:6px 0}
+.cloud span{font-weight:700;color:var(--brand)}
+.cloud span.alt{color:var(--fg);opacity:.75}
+
+.cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.pc{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;border-top:4px solid var(--brand)}
+.pc img{width:100%;height:190px;object-fit:cover;object-position:top;background:var(--soft);display:block;cursor:zoom-in}
+.pc .b{padding:12px;display:grid;gap:6px;flex:1;align-content:start}
+.h{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:.78rem}
+.tag{border-radius:4px;padding:1px 6px;font-weight:700;font-size:.74rem;background:var(--soft);color:var(--muted)}
+.tag.CIE{background:var(--cie);color:#fff}.tag.SODECI{background:var(--sodeci);color:#fff}
+.tag.neg{background:#FDE7E7;color:var(--bad)}
+.tag.alerte{background:var(--red);color:#fff}
+.pc .a{font-weight:700}.pc .x{font-size:.92rem}.pc .m{font-size:.8rem;color:var(--muted)}
+.pc .st{display:flex;gap:10px;font-size:.82rem;font-variant-numeric:tabular-nums;color:var(--muted);flex-wrap:wrap}
+.pc .st b{color:var(--fg)}
+.empty{color:var(--muted);padding:20px;text-align:center;background:var(--panel);border:1px dashed var(--line);border-radius:12px}
+
+.attwrap{display:grid;gap:14px;grid-template-columns:minmax(0,1fr) 300px;align-items:start}
+aside.side{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow:auto}
+@media (max-width:900px){.attwrap{grid-template-columns:1fr}.attwrap aside{order:-1}aside.side{position:static;max-height:none}}
+.att{display:grid;gap:14px;grid-template-columns:150px minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--red);border-radius:12px;padding:14px}
+.att.off{border-left-color:var(--neutral)}
+.att img,.att .ph{width:150px;height:100%;min-height:170px;max-height:230px;object-fit:cover;object-position:top;border-radius:8px;background:var(--soft)}
+.att .ph{display:grid;place-items:center;color:var(--muted);font-size:.8rem}
+.att .viz{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:10px 22px;margin-top:2px}
+.att .viz .col{display:grid;gap:10px;align-content:start}
+.ib{display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;font-size:.8rem;font-variant-numeric:tabular-nums}
+.ib .t{height:12px;background:var(--soft);border-radius:2px;overflow:hidden}
+.ib .t span{display:block;height:100%;background:var(--brand)}
+.ib .t span.last{background:var(--red)}
+.ib .n{font-weight:700;text-align:right}
+.ib .d{grid-column:1/-1;font-size:.72rem;color:var(--muted)}
+.att .top{display:flex;gap:10px;justify-content:space-between;align-items:baseline;flex-wrap:wrap}
+.att .viz>div{min-width:0}
+.att .viz .k{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px}
+@media (max-width:700px){.att{grid-template-columns:1fr}.att img,.att .ph{width:100%;height:170px}.att .viz{grid-template-columns:1fr}}
+.sens{display:flex;height:14px;border-radius:3px;overflow:hidden}
+.sens span{display:block}
+.sensl{display:flex;gap:8px;font-size:.78rem;color:var(--muted);margin-top:4px;flex-wrap:wrap}
+.sensl i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:3px}
+.att .cloud{justify-content:flex-start;padding:0}
+.statut{font-weight:700;font-size:.8rem}.statut.on{color:var(--red)}
+.ex{font-size:.75rem;color:var(--muted);font-style:italic}
+.thc{border-top:1px solid var(--line);padding-top:10px;margin-top:10px;display:grid;gap:4px}
+.thc:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.thc .row{display:flex;justify-content:space-between;font-size:.88rem}
+.thc .row b{font-variant-numeric:tabular-nums}
+.up{color:var(--bad)}.down{color:var(--good)}
+
+.rep{display:grid;gap:10px;align-content:start}
+.rep .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rep input,.rep select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg)}
+.chk{display:grid;gap:4px;max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:.88rem}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700}
+.tw{overflow-x:auto}
+.inl{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.inl input,.inl select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);min-width:0}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:14px;padding:2px 4px 2px 10px;margin:3px 4px 3px 0;font-size:.85rem}
+.pill button{background:none;border:0;color:var(--muted);cursor:pointer}
+#zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;place-items:center;z-index:20;padding:16px;cursor:zoom-out}
+#zoom img{max-width:100%;max-height:100%;border-radius:6px}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--panel);padding:10px 16px;border-radius:8px;font-size:.9rem;display:none;z-index:30;max-width:calc(100% - 32px)}
+@media (max-width:700px){nav.tabs .wrap{flex-wrap:wrap}.mtabs{margin-left:0;padding:0 0 8px;width:100%}.mtabs button{flex:1}}
+.capture .bar,.capture .noprint{display:none!important}
+</style>
+</head>
+<body class="CIE">
+<div class="demo"><b>MAQUETTE</b> – aperçu du format final. Données réelles du 01/11 et du 03/11/2026 ; connexion, envois, administration et éléments marqués « exemple » sont simulés.</div>
+
+<div id="login">
+  <form class="card-login" onsubmit="event.preventDefault();entrer()">
+    <img src="img/logo-viral.jpg" alt="Viral">
+    <h1>Plateforme de Veille<br>Réputation Numérique</h1>
+    <p>Accès réservé. Saisissez votre adresse e-mail autorisée : vous recevrez un lien de connexion.</p>
+    <input type="email" placeholder="prenom.nom@exemple.ci" aria-label="Adresse e-mail">
+    <button class="primary" type="submit">Recevoir le lien de connexion</button>
+    <p class="small">Maquette : cliquez pour entrer directement.</p>
+  </form>
+</div>
+
+<div id="app" hidden>
+<header class="top"><div class="wrap">
+  <div class="brand"><img src="img/logo-viral.jpg" alt="Viral"><div><h1>Plateforme de Veille Réputation Numérique</h1><div class="sub">CIE - SODECI</div></div></div>
+  <div class="user"><span>Connecté en tant que</span>
+    <select id="role" onchange="setRole(this.value)"><option value="user">Utilisateur</option><option value="admin">Admin</option><option value="super" selected>Super admin</option></select>
+    <button onclick="sortir()">Déconnexion</button></div>
+</div></header>
+<div class="passes"><div class="wrap" id="passes"></div></div>
+<nav class="tabs"><div class="wrap">
+  <button class="t on" data-t="bord">Tableau de bord</button>
+  <button class="t" data-t="pubs">Publications</button>
+  <button class="t" data-t="att">Points d'attention de la semaine <span class="badge" id="nbatt"></span></button>
+  <button class="t" data-t="off">Canaux officiels</button>
+  <button class="t" data-t="rap">Rapports</button>
+  <button class="t" data-t="adm" id="tadm">Administration</button>
+  <button class="t" data-t="jour" id="tjour">Journal d'activité</button>
+  <div class="mtabs" id="mtabs"><button data-m="CIE" class="on">CIE</button><button data-m="SODECI">SODECI</button></div>
+</div></nav>
+
+<main class="wrap">
+<!-- TABLEAU DE BORD -->
+<section class="tab on" id="bord">
+  <div class="bar">
+    <div class="seg" id="per"><button data-p="1" class="on">Aujourd'hui</button><button data-p="7">7 jours</button><button data-p="30">30 jours</button><button data-p="90">3 mois</button><button data-p="365">1 an</button><button data-p="c">Personnalisée</button></div>
+    <span id="perc" hidden><input type="date" id="d1"> → <input type="date" id="d2"></span>
+  </div>
+  <div id="bordc" class="grid">
+    <div class="small" id="pertxt"></div>
+    <div class="grid g4" id="kpis"></div>
+    <div class="panel" id="evo"><h3>Évolution sur la période</h3><div id="evosvg"></div><p class="note">Publications par jour. Les jours sans veille apparaissent vides.</p></div>
+    <div class="grid g2">
+      <div class="grid" style="align-content:start">
+        <div class="panel"><h3>Thématiques</h3><div class="hb" id="themes"></div></div>
+        <div class="panel"><h3>Nuage de mots</h3><div class="cloud" id="nuage"></div></div>
+      </div>
+      <div class="panel"><h3>Localités citées</h3><div id="carte"></div><div class="hb" id="lieux" style="margin-top:8px"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PUBLICATIONS -->
+<section class="tab" id="pubs">
+  <div class="bar">
+    <div class="seg" id="tr"><button data-r="0" class="on">24 h</button><button data-r="1">48 h</button><button data-r="2">72 h</button></div>
+    <select id="ft"><option value="">Toutes thématiques</option></select>
+    <select id="fl"><option value="">Toutes localités</option></select>
+    <select id="fp"><option value="">Toutes plateformes</option><option>Facebook</option><option>TikTok</option><option>X</option></select>
+    <select id="fi"><option value="0">Toutes interactions</option><option value="100">Plus de 100 interactions</option><option value="500">Plus de 500 interactions</option><option value="1000">Plus de 1 000 interactions</option><option value="5000">Plus de 5 000 interactions</option></select>
+    <select id="fs"><option value="i">Tri : interactions</option><option value="d">Tri : plus récentes</option></select>
+    <input type="search" id="q" placeholder="Rechercher un mot, un auteur">
+    <button class="primary" onclick="preOuvrir();pdfPubs()">Imprimer le rapport</button>
+  </div>
+  <div class="small" id="pubtxt"></div>
+  <div class="cards" id="cards"></div>
+</section>
+
+<!-- POINTS D'ATTENTION -->
+<section class="tab" id="att">
+  <form class="panel inl adm-only" style="margin:0;align-items:center" onsubmit="event.preventDefault();addAtt($('#au').value)"><b>Ajouter un point d'attention</b><input type="url" id="au" placeholder="Adresse (URL) de la publication Facebook, TikTok ou X" required style="flex:1;min-width:220px"><button class="primary">Ajouter</button><span class="small" style="width:100%">Réservé aux admins. La publication est ensuite suivie comme les autres points d'attention.</span></form>
+  <div class="grid g4" id="attk"></div>
+  <div class="attwrap">
+    <div class="grid" id="attl"></div>
+    <aside class="panel side"><h3>Thématiques en point d'attention</h3><div id="thl"></div><p class="note">5 thématiques au plus. Évolution : variation du nombre de publications entre les deux derniers relevés.</p></aside>
+  </div>
+</section>
+
+<!-- CANAUX OFFICIELS -->
+<section class="tab" id="off">
+  <div class="grid g4" id="offk"></div>
+  <div class="small">Relevé toutes les 6 heures (00h, 06h, 12h, 18h). Publications conservées 48 h, sauf celles passées en point d'attention.</div>
+  <div class="grid g2"><div class="panel"><h3>Statistiques par canal</h3><div class="tw"><table id="offs"></table></div><div id="offc" style="margin-top:10px"></div></div>
+  <div class="panel"><h3>Sens des commentaires</h3><div id="offsens"></div><h3 style="margin-top:16px">Publication la plus engageante</h3><div id="offtop"></div></div></div>
+  <div><h3>Publications des canaux officiels</h3><div class="cards" id="offp"></div></div>
+  <div class="panel"><h3>Commentaires sous les publications officielles</h3><div class="small" id="offw" style="margin-bottom:8px"></div><div class="tw"><table id="offt"></table></div></div>
+</section>
+
+<!-- RAPPORTS -->
+<section class="tab" id="rap">
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(290px,1fr))">
+    <div class="panel rep"><h3>Rapport journalier</h3><p class="small" style="margin:0">Même présentation que le rapport actuel. De 06h la veille à 03h le jour choisi ; envoyé automatiquement par e-mail à 06h UTC.</p>
+      <div class="row"><input type="date" id="rj" value="2026-11-01"><button class="primary" onclick="pdfJour()">Télécharger le PDF</button></div></div>
+    <div class="panel rep"><h3>Rapport personnalisé</h3><p class="small" style="margin:0">Copie du tableau de bord pour la période et la marque choisies.</p>
+      <div class="row"><input type="date" id="rp1" value="2026-10-31"> → <input type="date" id="rp2" value="2026-11-03"></div>
+      <div class="row"><select id="rpm"><option>CIE</option><option>SODECI</option></select><button class="primary" onclick="preOuvrir();pdfPerso()">Générer le PDF</button></div></div>
+    <div class="panel rep"><h3>Rapport points d'attention</h3><p class="small" style="margin:0">Choisissez les thématiques et publications ; le rapport reprend leurs fiches telles qu'affichées.</p>
+      <div class="row"><select id="ram" onchange="chkR()"><option>CIE</option><option>SODECI</option></select></div>
+      <div class="chk" id="rachk"></div>
+      <div class="row"><button class="primary" onclick="preOuvrir();pdfAtt()">Générer le PDF</button></div></div>
+  </div>
+</section>
+
+<!-- ADMINISTRATION -->
+<section class="tab" id="adm">
+  <div class="grid g2">
+    <div class="panel"><h3>Utilisateurs <span class="small" id="ucount"></span></h3><div class="tw"><table id="users"></table></div>
+      <form class="inl" onsubmit="event.preventDefault();addUser()"><input type="email" id="ue" placeholder="Adresse e-mail" required style="flex:1"><select id="ur"><option value="user">Utilisateur</option><option value="admin">Admin</option><option value="super" class="so">Super admin</option></select><button class="primary">Ajouter</button></form></div>
+    <div class="panel"><h3>Liste des haters</h3><div id="haters"></div>
+      <form class="inl" onsubmit="event.preventDefault();addHater()"><input id="he" placeholder="Nom du compte ou lien du profil" required style="flex:1"><button class="primary">Ajouter</button></form></div>
+  </div>
+  <div class="panel"><h3>Zones et responsables (alertes localités)</h3><p class="small" style="margin:0 0 8px">À chaque passage, le responsable reçoit par e-mail les liens des nouvelles publications observées sur ses localités.</p><div class="tw"><table id="zones"></table></div>
+    <form class="inl" onsubmit="event.preventDefault();addZone()"><select id="zm"><option>CIE</option><option>SODECI</option></select><input id="zn" placeholder="Zone" required><input id="zl" placeholder="Localités (séparées par des virgules)" required style="flex:2"><input type="email" id="zr" placeholder="E-mail du responsable" required style="flex:1"><button class="primary">Ajouter</button></form></div>
+  <div class="panel"><h3>Destinataires des e-mails</h3><div class="tw"><table><tr><th>Destinataire</th><th>Rapport 06h</th><th>Incidents</th><th>Dispositif RAS</th></tr>
+    <tr><td>Kks</td><td>Oui</td><td>WhatsApp + e-mail</td><td>WhatsApp + e-mail</td></tr>
+    <tr><td>Kouadio</td><td>Oui</td><td>WhatsApp + e-mail</td><td>WhatsApp + e-mail</td></tr>
+    <tr><td>Fatou</td><td>Oui</td><td>E-mail</td><td>E-mail</td></tr></table></div><p class="note">Adresses à fournir.</p></div>
+</section>
+
+<!-- JOURNAL D'ACTIVITÉ -->
+<section class="tab" id="jour">
+  <div class="panel" id="journal"><h3>Journal d'activité</h3>
+    <div class="bar" style="margin-bottom:8px"><select id="jf" onchange="jourR()"><option value="">Tous les événements</option><option>Connexion</option><option>Administration</option><option>Rapport</option><option>Passage</option><option>Alerte</option><option>E-mail</option><option>Incident</option><option>Échange Kks</option></select></div>
+    <div class="tw"><table id="jtab"></table></div><p class="note">Exemple d'entrées : le vrai journal se remplit automatiquement.</p></div>
+</section>
+</main>
+</div>
+<div id="zoom" onclick="this.style.display='none'"><img alt=""></div>
+<div id="toast"></div>
+
+<script>
+const D=/*DATA*/null;
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const nf=n=>n==null?'–':n.toLocaleString('fr-FR');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const inter=r=>(r.jaime||0)+(r.com||0)+(r.part||0);
+const BC={CIE:'#E87400',SODECI:'#00A04A'};
+let M='CIE';
+function toast(t){try{if(WIN&&!/Génération/.test(t)){WIN.close();WIN=null}}catch(e){}const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',3500)}
+function entrer(){$('#login').hidden=true;$('#app').hidden=false;try{sessionStorage.setItem('in','1')}catch(e){}}
+function sortir(){$('#login').hidden=false;$('#app').hidden=true;try{sessionStorage.removeItem('in')}catch(e){}}
+try{if(sessionStorage.getItem('in'))entrer()}catch(e){}
+
+(function(){const h=[0,3,6,9,12,15,18,21],done=15;let s='<span>Passages du 03/11 :</span>';
+ h.forEach(x=>{const c=x<=done?'ok':(x===18?'next':'');s+=`<span class="pass ${c}"><i></i>${String(x).padStart(2,'0')}h</span>`});
+ s+='<span style="margin-left:auto">Dernière mise à jour : 03/11 à 15h12 UTC · prochain passage 18h00</span>';$('#passes').innerHTML=s})();
+
+$$('nav.tabs button.t').forEach(b=>b.onclick=()=>{$$('nav.tabs button.t').forEach(x=>x.classList.toggle('on',x===b));$$('section.tab').forEach(s=>s.classList.toggle('on',s.id===b.dataset.t));$('#mtabs').style.visibility=['rap','adm','jour'].includes(b.dataset.t)?'hidden':'visible';scrollTo(0,0)});
+$$('#mtabs button').forEach(b=>b.onclick=()=>{M=b.dataset.m;$$('#mtabs button').forEach(x=>x.classList.toggle('on',x===b));document.body.className=M;tout()});
+function setRole(r){$('#tadm').hidden=r==='user';$$('.so').forEach(o=>o.hidden=r!=='super');$('#tjour').hidden=r!=='super';$$('.adm-only').forEach(e=>e.hidden=r==='user');if((r==='user'&&$('#adm').classList.contains('on'))||(r!=='super'&&$('#jour').classList.contains('on')))$('nav.tabs button.t').click()}
+
+// ---------- outils ----------
+const STOP=new Set(('le la les de des du un une et en à a au aux ce ces cet cette il ils elle elles on nous vous je tu me te se sa son ses leur leurs lui y ne pas plus que qui quoi dont où ou mais donc or ni car pour par sur sous dans avec sans chez entre vers est sont été être avoir ont ai as avons avez fait faire tout tous toute toutes très bien comme quand même aussi encore déjà là ici cela ça ca c d l j n s qu m t si non oui peu trop rien depuis après avant alors moi toi notre nos votre vos mon ma mes ton ta tes va vont doit peut fois chaque autre autres hein svp etc jour jours heures heure h ans an voilà sommes dites jusqu hier toujours port quel quelle quels comment pourquoi faut veut veux tout').split(' '));
+const BRANDW=new Set(['cie','sodeci','compagnie','ivoirienne','électricité','electricite','distribution','eau']);
+function mots(texts,n){const c={};texts.forEach(t=>String(t).toLowerCase().replace(/[«»"“”.,;:!?()\[\]…'’\-–—\/#@0-9]/g,' ').split(/\s+/).forEach(w=>{if(w.length>=4&&!STOP.has(w)&&!BRANDW.has(w))c[w]=(c[w]||0)+1}));return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n)}
+function cloudHTML(list,min,max){if(!list.length)return'<span class="small">Pas assez de texte.</span>';const hi=list[0][1],lo=list[list.length-1][1];const sz=v=>min+(max-min)*((v-lo)/((hi-lo)||1));
+ const sh=list.map((x,i)=>[x,i]).sort((a,b)=>((a[1]*7)%11)-((b[1]*7)%11));return sh.map(([[w,v],i])=>`<span class="${i%3===2?'alt':''}" style="font-size:${sz(v).toFixed(1)}px" title="${v}">${esc(w)}</span>`).join('')}
+const allRows=()=>D.pubs.concat(D.p01);
+function frd(s){const[y,m,d]=s.split('-');return d+'/'+m+'/'+y}
+
+// ---------- Tableau de bord ----------
+let P='1';const today=new Date(D.jour+'T12:00:00Z');const iso=d=>d.toISOString().slice(0,10);
+function rangeDays(){if(P==='c')return[$('#d1').value||D.jour,$('#d2').value||D.jour];const a=new Date(today);a.setUTCDate(a.getUTCDate()-(+P-1));return[iso(a),D.jour]}
+function bord(){
+ const[a,b]=rangeDays();const rows=allRows().filter(r=>r.jour>=a&&r.jour<=b&&r.marque===M);const ser=D.serie.filter(s=>s.jour>=a&&s.jour<=b);
+ $('#pertxt').textContent=M+' · '+(a===b?'statistiques du '+frd(a)+(a===D.jour?' (aujourd’hui)':''):'du '+frd(a)+' au '+frd(b))+'. Historique de la maquette : 31/10, 01/11 et 03/11 (pas de veille le 02/11).';
+ const n=ser.reduce((t,s)=>t+(s[M]?s[M].n:0),0);const neg=rows.length?Math.round(100*rows.filter(r=>r.sentiment==='Négatif').length/rows.length):null;
+ const th={};rows.forEach(r=>th[r.theme]=(th[r.theme]||0)+1);const ths=Object.entries(th).sort((x,y)=>y[1]-x[1]);
+ const A=D.att.filter(t=>t.marque===M);
+ $('#kpis').innerHTML=`<div class="panel kpi"><span class="l">Publications</span><span class="v">${nf(n)}</span><span class="s">${M}</span></div>
+ <div class="panel kpi"><span class="l">Publications négatives</span><span class="v">${neg==null?'–':neg+' %'}</span><span class="s">${rows.filter(r=>r.sentiment==='Négatif').length} sur ${rows.length}</span></div>
+ <div class="panel kpi"><span class="l">Interactions</span><span class="v">${nf(rows.reduce((t,r)=>t+inter(r),0))}</span><span class="s">j'aime, commentaires, partages</span></div>
+ <div class="panel kpi"><span class="l">Points d'attention</span><span class="v">${A.filter(t=>t.actif).length+D.themes_att.filter(t=>t.marque===M).length}</span><span class="s">en cours</span></div>
+ <div class="panel kpi"><span class="l">Thème dominant</span><span class="v" style="font-size:1.15rem;padding-block:6px">${ths[0]?esc(ths[0][0]):'–'}</span><span class="s">${ths[0]?Math.round(100*ths[0][1]/rows.length)+' % des publications':''}</span></div>`;
+ $('#evo').hidden=a===b;
+ if(a!==b){const days=[];for(let d=new Date(a+'T12:00:00Z');iso(d)<=b;d.setUTCDate(d.getUTCDate()+1))days.push(iso(d));
+  const W=900,H=220,pl=34,pb=26,pt=24;const val=dd=>{const s=D.serie.find(x=>x.jour===dd);return s&&s[M]?s[M].n:null};
+  const mx=Math.ceil(Math.max(10,...days.map(dd=>val(dd)||0))*1.1);const sx=i=>pl+12+(days.length===1?0:i*(W-pl-40)/(days.length-1)),sy=v=>pt+(H-pt-pb)*(1-v/mx);
+  let g=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Publications par jour">`;
+  [0,.5,1].forEach(f=>{const v=Math.round(mx*f);g+=`<line x1="${pl}" x2="${W-10}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${sy(v)+4}" text-anchor="end" font-size="11">${v}</text>`});
+  const step=Math.ceil(days.length/10);days.forEach((dd,i)=>{if(i%step===0||i===days.length-1)g+=`<text x="${sx(i)}" y="${H-6}" text-anchor="middle" font-size="11">${dd.slice(8)}/${dd.slice(5,7)}</text>`});
+  let seg=[],paths=[];days.forEach((dd,i)=>{const v=val(dd);if(v==null){if(seg.length)paths.push(seg);seg=[]}else seg.push([sx(i),sy(v),v,dd])});if(seg.length)paths.push(seg);
+  paths.forEach(p=>{g+=`<polyline fill="none" stroke="${BC[M]}" stroke-width="2.5" points="${p.map(q=>q[0]+','+q[1]).join(' ')}"/>`;p.forEach(q=>g+=`<circle cx="${q[0]}" cy="${q[1]}" r="4" fill="${BC[M]}"><title>${frd(q[3])} : ${q[2]} publications</title></circle><text x="${q[0]}" y="${q[1]-9}" text-anchor="middle" font-size="11" font-weight="700">${q[2]}</text>`)});
+  $('#evosvg').innerHTML=g+'</svg>'}
+ const tm=Math.max(1,...ths.map(t=>t[1]));
+ $('#themes').innerHTML=ths.map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/tm}%"></span></span><span class="n">${v}</span>`).join('')||'<span class="small">Aucune donnée.</span>';
+ $('#nuage').innerHTML=cloudHTML(mots(rows.map(r=>r.texte),35),13,38);
+ const li={};rows.forEach(r=>{if(r.lieu&&r.lieu!=='Non localisé')li[r.lieu]=(li[r.lieu]||0)+1});const ls=Object.entries(li).sort((x,y)=>y[1]-x[1]);const lm=Math.max(1,...ls.map(t=>t[1]));
+ const nl=rows.filter(r=>r.lieu==='Non localisé').length;
+ $('#lieux').innerHTML=ls.slice(0,10).map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/lm}%"></span></span><span class="n">${v}</span>`).join('')+(nl?`<span class="small" style="grid-column:1/-1">${nl} publication(s) sans localité.</span>`:'');
+ carte(ls)}
+function carte(ls){const G=D.geo;let abj=0,pts=[];ls.forEach(([t,n])=>{const L=G.lieux[t];if(t==='Abidjan'||(L&&L.abj))abj+=n;else if(L)pts.push([L.xy,n,t])});
+ const r=n=>8+Math.sqrt(n)*8,col=BC[M];let s=`<svg viewBox="0 0 622 653" width="100%" style="max-height:300px" role="img" aria-label="Carte des localités citées"><path d="${G.path}" fill="var(--soft)" stroke="var(--line)" stroke-width="2"/>`;
+ pts.forEach(([xy,n,t])=>s+=`<circle cx="${xy[0]}" cy="${xy[1]}" r="${r(n)}" fill="${col}" fill-opacity=".55" stroke="${col}"><title>${esc(t)} : ${n}</title></circle>`);
+ if(abj){const[x,y]=G.abidjan;s+=`<circle cx="${x}" cy="${y}" r="${r(abj)}" fill="${col}" fill-opacity=".55" stroke="${col}"><title>Grand Abidjan : ${abj}</title></circle><text x="${x+r(abj)+6}" y="${y+6}" font-size="22" font-weight="700">Grand Abidjan · ${abj}</text>`}
+ $('#carte').innerHTML=s+'</svg>'}
+$$('#per button').forEach(b=>b.onclick=()=>{P=b.dataset.p;$$('#per button').forEach(x=>x.classList.toggle('on',x===b));$('#perc').hidden=P!=='c';bord()});
+$('#d1').value='2026-10-31';$('#d2').value=D.jour;$('#d1').onchange=$('#d2').onchange=bord;
+
+// ---------- Publications (tranches 0-24 h, 24-48 h, 48-72 h) ----------
+const TR=[{l:'dernières 24 heures (depuis le 02/11 15h)',j:['2026-11-03']},{l:'de 24 à 48 heures avant (01/11 15h – 02/11 15h)',j:[],vide:'Pas de veille le 02/11 : aucune publication dans cette tranche.'},{l:'de 48 à 72 heures avant (31/10 15h – 01/11 15h)',j:['2026-11-01']}];
+let T=0;const attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));
+function dk(r){const m=/(\d\d)\/(\d\d) (\d\d)h(\d\d)/.exec(r.remontee||'');return m?m[2]+m[1]+m[3]+m[4]:''}
+function pubSel(){const q=$('#q').value.toLowerCase(),p=$('#fp').value,t=$('#ft').value,l=$('#fl').value,mi=+$('#fi').value,so=$('#fs').value;
+ return allRows().filter(r=>TR[T].j.includes(r.jour)&&r.marque===M&&(!p||r.pf===p)&&(!t||r.theme===t)&&(!l||r.lieu===l)&&inter(r)>=mi&&(!q||(r.auteur+' '+r.texte).toLowerCase().includes(q))).sort((a,b)=>so==='d'?dk(b).localeCompare(dk(a)):inter(b)-inter(a))}
+function fillSel(){const base=allRows().filter(r=>TR[T].j.includes(r.jour)&&r.marque===M);
+ [['#ft','Toutes thématiques','theme'],['#fl','Toutes localités','lieu']].forEach(([id,lab,k])=>{const v=$(id).value;const vals=[...new Set(base.map(r=>r[k]))].sort((a,b)=>a.localeCompare(b,'fr'));
+  $(id).innerHTML=`<option value="">${lab}</option>`+vals.map(x=>`<option>${esc(x)}</option>`).join('');if(vals.includes(v))$(id).value=v})}
+function pubsR(){const L=pubSel();
+ $('#pubtxt').textContent=`${M} · ${L.length} publication(s) remontée(s) ${TR[T].l}. Les publications ordinaires restent 72 h ; les points d’attention, une semaine.`;
+ $('#cards').innerHTML=L.map(r=>`<article class="pc">${r.img?`<img loading="lazy" src="${r.img}" alt="Capture de la publication" onclick="zoom(this.src)">`:''}<div class="b">
+  <div class="h"><span class="tag">${esc(r.pf)}</span>${r.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(r.sentiment)+'</span>'}${attLinks.has((r.lien||'').replace(/\/$/,''))?'<span class="tag alerte">Point d’attention</span>':''}</div>
+  <div class="a">${esc(r.auteur)}</div><div class="x">${esc(r.texte)}</div>
+  <div class="m">${esc(r.theme)} · ${esc(r.lieu)}${r.remontee&&r.remontee!=='non disponible'?' · remontée le '+esc(r.remontee):''}</div>
+  <div class="st"><span><b>${nf(r.jaime)}</b> j'aime</span><span><b>${nf(r.com)}</b> comm.</span><span><b>${nf(r.part)}</b> partages</span>${r.vues?`<span><b>${nf(r.vues)}</b> vues</span>`:''}</div>
+  ${r.lien?`<a href="${esc(r.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:''}</div></article>`).join('')||`<div class="empty" style="grid-column:1/-1">${TR[T].vide||'Aucune publication ne correspond à la recherche.'}</div>`}
+$$('#tr button').forEach(b=>b.onclick=()=>{T=+b.dataset.r;$$('#tr button').forEach(x=>x.classList.toggle('on',x===b));fillSel();pubsR()});
+['#q','#fp','#ft','#fl','#fi','#fs'].forEach(s=>$(s).oninput=pubsR);
+function zoom(src){$('#zoom img').src=src;$('#zoom').style.display='grid'}
+
+// ---------- Points d'attention ----------
+function evoInter(rel){const R=rel.slice(-6).map(r=>({h:r.h,v:(r.jaime||0)+(r.com||0)+(r.part||0),r}));const mx=Math.max(1,...R.map(x=>x.v));
+ let s=R.map((x,i)=>`<span>${esc(x.h)}</span><span class="t" title="${nf(x.r.jaime)} j'aime, ${nf(x.r.com)} commentaires, ${nf(x.r.part)} partages"><span class="${i===R.length-1?'last':''}" style="width:${100*x.v/mx}%"></span></span><span class="n">${nf(x.v)}</span>`).join('');
+ if(R.length>1){const a=R[R.length-2].v,b=R[R.length-1].v,ev=Math.round(100*(b-a)/a);s+=`<span class="d">Total j'aime + commentaires + partages à chaque relevé · ${ev>=0?'+':''}${ev} % depuis le relevé précédent</span>`}
+ else s+=`<span class="d">Total j'aime + commentaires + partages · un seul relevé</span>`;return`<div class="ib">${s}</div>`}
+function attCard(a){const last=a.releves[a.releves.length-1];const S=a.sens;
+ return`<article class="att ${a.actif?'':'off'}" data-k="${esc(a.lien)}">${a.img?`<img src="${a.img}" alt="Capture" onclick="zoom(this.src)" style="cursor:zoom-in">`:`<div class="ph">${esc(a.pf)}</div>`}
+ <div style="display:grid;gap:8px;min-width:0;align-content:start"><div class="h">${a.raisons.map(x=>`<span class="tag alerte">${esc(x)}</span>`).join('')}<span class="tag">${esc(a.pf)}</span><span class="statut ${a.actif?'on':''}">${esc(a.statut)}</span></div>
+ <div class="top"><span style="font-weight:700">${esc(a.auteur)} – ${esc(a.titre)}</span>${a.lien?`<a class="noprint small" href="${esc(a.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:''}</div>
+ <div class="small">Depuis le ${esc(a.depuis)} · dernier relevé ${esc(last.h)} : <b>${nf(last.jaime)}</b> j'aime, <b>${nf(last.com)}</b> commentaires, <b>${nf(last.part)}</b> partages</div>
+ <div class="viz"><div class="col"><div><div class="k">Sens des commentaires</div><div class="sens"><span style="width:${S.neg}%;background:var(--bad)"></span><span style="width:${S.neu}%;background:var(--neutral)"></span><span style="width:${S.pos}%;background:var(--good)"></span></div>
+   <div class="sensl"><span><i style="background:var(--bad)"></i>${S.neg} % négatifs</span><span><i style="background:var(--neutral)"></i>${S.neu} % neutres</span><span><i style="background:var(--good)"></i>${S.pos} % positifs</span></div></div>
+  <div><div class="k">Mots des commentaires</div><div class="cloud">${cloudHTML(Object.entries(a.mots).sort((x,y)=>y[1]-x[1]).slice(0,10),11,19)}</div></div></div>
+  <div><div class="k">Interactions par relevé</div>${evoInter(a.releves)}</div></div>
+ ${a.exemple?'<div class="ex">Exemple : sens, mots et relevés intermédiaires seront calculés par le suivi réel.</div>':''}</div></article>`}
+function thCard(t){const ev=t.evol;return`<div class="thc" data-k="${esc(t.theme)}"><div style="font-weight:700">${esc(t.theme)}</div><div class="h"><span class="tag alerte">${esc(t.raison)}</span></div>
+ <div class="row"><span>Publications depuis le ${esc(t.depuis)}</span><b>${nf(t.n)}</b></div><div class="row"><span>Interactions</span><b>${nf(t.inter)}</b></div>
+ <div class="row"><span>Négatives</span><b>${t.neg} %</b></div><div class="row"><span>Évolution</span><b class="${ev>0?'up':ev<0?'down':''}">${ev==null?'–':(ev>0?'▲ +':ev<0?'▼ ':'')+ev+' %'}</b></div>
+ <div class="small">Relevés : ${t.releves.map(r=>esc(r.h)+' : '+r.n).join(' · ')}</div></div>`}
+function attR(){const A=D.att.filter(a=>a.marque===M),TH=D.themes_att.filter(t=>t.marque===M).slice(0,5);
+ $('#nbatt').textContent=D.att.filter(a=>a.actif).length+D.themes_att.length;
+ const k=(l,v,s)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
+ $('#attk').innerHTML=k('Publications',A.length,'en point d’attention cette semaine')+k('En cours de suivi',A.filter(a=>a.actif).length,'relevés toutes les 1 ou 2 h')+k('Thématiques',TH.length,'en point d’attention')+k('Commentaires suivis',nf(A.reduce((t,a)=>t+(a.releves[a.releves.length-1].com||0),0)),'au dernier relevé');
+ $('#attl').innerHTML=A.map(attCard).join('')||'<div class="empty">Aucune publication en point d’attention cette semaine.</div>';
+ $('#thl').innerHTML=TH.map(thCard).join('')||'<p class="small">Aucune thématique en point d’attention.</p>'}
+
+function pfDe(u){return /tiktok/i.test(u)?'TikTok':/(x|twitter)\.com/i.test(u)?'X':'Facebook'}
+function addAtt(u,o){if(!u)return;D.att.unshift({type:'pub',marque:M,pf:o?o.canal.split(' · ')[0]:pfDe(u),auteur:o?o.canal.split(' · ')[1]||o.canal:'Ajout manuel',titre:o?o.texte:u,lien:u,img:o&&o.img||'',raisons:['Ajout manuel'],depuis:'03/11 15h30',statut:'En attente du premier relevé',actif:true,exemple:true,
+ releves:[{h:'03/11 15h30',jaime:o?o.jaime:0,com:o?o.com:0,part:o?o.part:0}],sens:{neg:0,neu:100,pos:0},mots:{}});log('Alerte','Point d\u2019attention ajouté manuellement : '+u);if($('#au'))$('#au').value='';attLinks.add(u.replace(/\/$/,''));attR();chkR();toast('Ajouté aux points d\u2019attention (simulation).')}
+
+// ---------- Administration (simulée) ----------
+const U=[['kks@exemple.ci','super','Kks'],['kouadio@exemple.ci','admin','Kouadio'],['fatou@exemple.ci','user','Fatou']];
+const H=['Exemple de compte hater'];
+const Z=[['CIE','Abidjan Sud','Koumassi, Port-Bouët, Marcory, Treichville','responsable.sud@exemple.ci'],['SODECI','Abidjan Nord','Abobo, Anyama, Yopougon','responsable.nord@exemple.ci']];
+const RL={user:'Utilisateur',admin:'Admin',super:'Super admin'};
+const J=[['03/11 15h12','Passage','Système','Passage de 15h terminé : 6 remontées, page mise à jour'],['03/11 15h05','E-mail','Système','Récapitulatif localités envoyé à responsable.sud@exemple.ci (3 liens)'],['03/11 14h40','Rapport','fatou@exemple.ci','Rapport personnalisé CIE du 31/10 au 03/11'],['03/11 14h02','Alerte','Système','Relevé horaire Boli Conseil envoyé au groupe d’alerte et à Kks'],['03/11 12h31','Administration','kouadio@exemple.ci','Hater ajouté : « Exemple de compte hater »'],['03/11 10h00','Incident','Système','WhatsApp Web déconnecté 6 min, rétabli ; Kks et Kouadio prévenus'],['03/11 09h47','Échange Kks','Kks','Demande d’échange, identification réussie, consigne : relancer le passage'],['03/11 08h15','Connexion','kks@exemple.ci','Connexion par lien e-mail'],['03/11 06h00','E-mail','Système','Rapport journalier envoyé à Kks, Kouadio et Fatou']];
+function admR(){$('#ucount').textContent='('+U.length+' / 10)';
+ $('#users').innerHTML='<tr><th>E-mail</th><th>Rôle</th><th></th></tr>'+U.map((u,i)=>`<tr><td>${esc(u[0])}${u[2]?` <span class="small">(${esc(u[2])})</span>`:''}</td><td>${RL[u[1]]}</td><td><button class="del" onclick="U.splice(${i},1);admR()">Retirer</button></td></tr>`).join('');
+ $('#haters').innerHTML=H.map((h,i)=>`<span class="pill">${esc(h)} <button onclick="H.splice(${i},1);admR()" aria-label="Retirer">×</button></span>`).join('')||'<span class="small">Liste vide.</span>';
+ $('#zones').innerHTML='<tr><th>Marque</th><th>Zone</th><th>Localités</th><th>Responsable</th><th></th></tr>'+Z.map((z,i)=>`<tr><td><span class="tag ${z[0]}">${z[0]}</span></td><td>${esc(z[1])}</td><td>${esc(z[2])}</td><td>${esc(z[3])}</td><td><button class="del" onclick="Z.splice(${i},1);admR()">Retirer</button></td></tr>`).join('');jourR()}
+function jourR(){const f=$('#jf').value;$('#jtab').innerHTML='<tr><th>Date</th><th>Type</th><th>Par</th><th>Détail</th></tr>'+J.filter(j=>!f||j[1]===f).map(j=>`<tr><td style="white-space:nowrap">${j[0]}</td><td>${j[1]}</td><td>${esc(j[2])}</td><td>${esc(j[3])}</td></tr>`).join('')}
+function log(t,d){J.unshift(['03/11 15h30',t,'vous',d]);jourR()}
+function addUser(){if(U.length>=10)return toast('Limite de 10 utilisateurs atteinte.');U.push([$('#ue').value,$('#ur').value,'']);log('Administration','Utilisateur ajouté : '+$('#ue').value);$('#ue').value='';admR();toast('Utilisateur ajouté (simulation) : il recevra un lien de connexion.')}
+function addHater(){H.push($('#he').value);log('Administration','Hater ajouté : '+$('#he').value);$('#he').value='';admR()}
+function addZone(){Z.push([$('#zm').value,$('#zn').value,$('#zl').value,$('#zr').value]);log('Administration','Zone ajoutée : '+$('#zn').value);['#zn','#zl','#zr'].forEach(s=>$(s).value='');admR()}
+
+// ---------- PDF ----------
+const clean=s=>String(s??'').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/…/g,'...').replace(/[–—]/g,'-').replace(/ | /g,' ').replace(/[^\x00-\xFF]/g,'');
+function libs(){if(!window.jspdf||!window.html2canvas){toast('Chargement des outils PDF impossible : vérifiez la connexion.');return false}return true}
+let LOGO=null;
+async function entete(d,titre,sous){d.setFillColor(192,0,0);d.rect(0,0,595,64,'F');d.setTextColor(255);d.setFont('helvetica','bold');d.setFontSize(17);d.text(clean(titre),32,34);d.setFont('helvetica','normal');d.setFontSize(10);d.text(clean(sous),32,52);d.setTextColor(30);
+ if(!LOGO)LOGO=await imgData('img/logo-viral.jpg');if(LOGO){try{const pr=d.getImageProperties(LOGO);const h=40,w=h*pr.width/pr.height;d.setFillColor(255,255,255);d.roundedRect(595-32-w-8,12,w+8,h,4,4,'F');d.addImage(LOGO,'JPEG',595-32-w-4,14,w,h-4)}catch(e){}}}
+let WIN=null;function preOuvrir(){try{WIN=window.open('','_blank');if(WIN)WIN.document.write('<p style="font-family:sans-serif;padding:20px">Génération du rapport…</p>')}catch(e){WIN=null}}
+function pieds(d){const n=d.internal.getNumberOfPages(),now=new Date(),t=now.toLocaleDateString('fr-FR')+' à '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+ for(let i=1;i<=n;i++){d.setPage(i);d.setDrawColor(220);d.line(32,818,563,818);d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(120);d.text(clean('Généré le '+t),32,830);d.text('Page '+i+' / '+n,563,830,{align:'right'})}d.setTextColor(30)}
+function livrer(d,nom){pieds(d);const url=d.output('bloburl');if(WIN&&!WIN.closed){WIN.location.href=url}else{const a=document.createElement('a');a.href=url;a.download=nom;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}WIN=null}
+async function captureToPdf(nodes,titre,sous,nom){if(!libs())return;toast('Génération du PDF…');const root=document.documentElement,prev=root.getAttribute('data-theme');root.setAttribute('data-theme','light');
+ const{jsPDF}=window.jspdf;const d=new jsPDF({unit:'pt',format:'a4'});await entete(d,titre,sous);let y=80;
+ try{for(const n of nodes){n.classList.add('capture');const c=await html2canvas(n,{scale:2,backgroundColor:'#F4F5F3',useCORS:true});n.classList.remove('capture');
+  const w=531,h=c.height*w/c.width;let off=0;while(off<h){const room=806-y;const part=Math.min(room,h-off);
+   const sc=document.createElement('canvas');sc.width=c.width;sc.height=Math.round(part*c.width/w);sc.getContext('2d').drawImage(c,0,Math.round(off*c.width/w),c.width,sc.height,0,0,c.width,sc.height);
+   d.addImage(sc.toDataURL('image/jpeg',.9),'JPEG',32,y,w,part);off+=part;y+=part+10;if(off<h||y>760){d.addPage();y=32}}}
+  if(y===32&&d.internal.getNumberOfPages()>1)d.deletePage(d.internal.getNumberOfPages());
+  livrer(d,nom)}finally{if(prev)root.setAttribute('data-theme',prev);else root.removeAttribute('data-theme')}}
+function pdfJour(){const f=D.rapports[$('#rj').value];if(!f)return toast('Rapport non disponible dans la maquette (31/10 ou 01/11).');window.open(f,'_blank','noopener');log('Rapport','Rapport journalier du '+frd($('#rj').value))}
+async function pdfPerso(){const a=$('#rp1').value,b=$('#rp2').value,m=$('#rpm').value;const keep=[P,M,$('#d1').value,$('#d2').value];
+ P='c';M=m;document.body.className=m;$('#d1').value=a;$('#d2').value=b;bord();const sec=$('#bord');const was=sec.classList.contains('on');sec.classList.add('on');
+ await captureToPdf([$('#bordc')],'Rapport personnalisé',m+' - du '+frd(a)+' au '+frd(b),'Rapport_personnalise_'+m+'_'+a+'_'+b+'.pdf');
+ if(!was)sec.classList.remove('on');[P,M]=keep;$('#d1').value=keep[2];$('#d2').value=keep[3];document.body.className=M;bord();log('Rapport','Rapport personnalisé '+m)}
+function chkR(){const m=$('#ram').value;$('#rachk').innerHTML='<b class="small">Thématiques</b>'+(D.themes_att.filter(t=>t.marque===m).map(t=>`<label><input type="checkbox" data-th="${esc(t.theme)}" checked> ${esc(t.theme)}</label>`).join('')||'<span class="small">Aucune</span>')+
+ '<b class="small" style="margin-top:6px">Publications</b>'+(D.att.filter(a=>a.marque===m).map((a,i)=>`<label><input type="checkbox" data-pu="${esc(a.lien)}" checked> ${esc(a.auteur)} – ${esc(a.titre.slice(0,60))}</label>`).join('')||'<span class="small">Aucune</span>')}
+async function pdfAtt(){const m=$('#ram').value;const ths=$$('#rachk [data-th]:checked').map(x=>x.dataset.th),pus=$$('#rachk [data-pu]:checked').map(x=>x.dataset.pu);if(!ths.length&&!pus.length)return toast('Cochez au moins un élément.');
+ const box=document.createElement('div');box.style.cssText='position:fixed;left:-10000px;top:0;width:900px';document.body.appendChild(box);const keep=M;M=m;document.body.className=m;
+ box.innerHTML=(ths.length?`<div class="panel" style="margin-bottom:12px"><h3>Thématiques en point d'attention</h3>${D.themes_att.filter(t=>t.marque===m&&ths.includes(t.theme)).map(thCard).join('')}</div>`:'')+`<div class="grid">${D.att.filter(a=>a.marque===m&&pus.includes(a.lien)).map(attCard).join('')}</div>`;
+ await captureToPdf([box],"Rapport points d'attention",m+' - semaine au '+D.jour_fr,'Rapport_points_attention_'+m+'.pdf');box.remove();M=keep;document.body.className=M;log('Rapport','Rapport points d’attention '+m)}
+async function imgData(src){try{const r=await fetch(src);const b=await r.blob();return await new Promise(ok=>{const f=new FileReader();f.onload=()=>ok(f.result);f.readAsDataURL(b)})}catch(e){return null}}
+async function pdfPubs(){if(!libs())return;const L=pubSel();if(!L.length)return toast('Aucune publication dans la sélection.');toast('Génération du PDF…');
+ const{jsPDF}=window.jspdf;const d=new jsPDF({unit:'pt',format:'a4'});const BR=M==='CIE'?[232,116,0]:[0,160,74];
+ const f=[$('#ft').value,$('#fl').value,$('#fp').value,+$('#fi').value?'plus de '+$('#fi').value+' interactions':''].filter(Boolean).join(' - ');
+ await entete(d,'Rapport publications',M+' - '+['dernières 24 h','24 à 48 h','48 à 72 h'][T]+(f?' - '+f:''));
+ const imgs=[];for(const r of L)imgs.push(r.img?await Promise.race([imgData(r.img),new Promise(z=>setTimeout(()=>z(null),5000))]):null);
+ // chiffres clés
+ const neg=L.filter(r=>r.sentiment==='Négatif').length,K=[['Publications',String(L.length)],['Négatives',Math.round(100*neg/L.length)+' %'],['Interactions',nf(L.reduce((t,r)=>t+inter(r),0))]];
+ K.forEach(([l,v],i)=>{const x=32+i*181;d.setFillColor(246,247,245);d.roundedRect(x,80,169,52,5,5,'F');d.setFillColor(...BR);d.rect(x,80,169,3,'F');d.setFont('helvetica','normal');d.setFontSize(8.5);d.setTextColor(95);d.text(l.toUpperCase(),x+10,97);d.setFont('helvetica','bold');d.setFontSize(19);d.setTextColor(30);d.text(clean(v),x+10,123)});
+ // répartitions côte à côte
+ const bars=(titre,obj,x0)=>{let y=156;d.setFont('helvetica','bold');d.setFontSize(10.5);d.setTextColor(30);d.text(titre,x0,y);y+=12;const E=Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,12),mx=E.length?E[0][1]:1;
+  d.setFontSize(8.5);E.forEach(([k,v])=>{d.setFont('helvetica','normal');d.setTextColor(40);d.text(d.splitTextToSize(clean(k),118)[0],x0,y+8);d.setFillColor(238,241,236);d.rect(x0+122,y+1,110,9,'F');d.setFillColor(...BR);d.rect(x0+122,y+1,Math.max(2,110*v/mx),9,'F');d.setFont('helvetica','bold');d.text(String(v),x0+258,y+8,{align:'right'});y+=14});
+  if(Object.keys(obj).length>12){d.setFont('helvetica','normal');d.setTextColor(120);d.text('+ '+(Object.keys(obj).length-12)+' autre(s)',x0,y+8);y+=14}return y};
+ const th={},li={};L.forEach(r=>{th[r.theme]=(th[r.theme]||0)+1;li[r.lieu]=(li[r.lieu]||0)+1});
+ let y=Math.max(bars('Par thématique',th,32),bars('Par localité',li,305))+16;
+ // visuels
+ d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(30);if(y>700){d.addPage();y=40}d.text('Visuels',32,y);y+=10;
+ const cw=165,gap=18,capH=50;
+ for(let i=0;i<L.length;i+=3){const row=L.slice(i,i+3),ims=imgs.slice(i,i+3);
+  const hs=ims.map(im=>{if(!im)return 70;try{const p=d.getImageProperties(im);return Math.min(220,cw*p.height/p.width)}catch(e){return 70}});const rh=Math.max(...hs)+capH;
+  if(y+rh>806){d.addPage();y=36}
+  row.forEach((r,j)=>{const x=32+j*(cw+gap),im=ims[j];
+   if(im){try{d.addImage(im,'JPEG',x,y,cw,hs[j])}catch(e){}d.setDrawColor(215);d.rect(x,y,cw,hs[j])}else{d.setFillColor(246,247,245);d.rect(x,y,cw,hs[j],'F');d.setFontSize(8);d.setTextColor(120);d.text('Visuel non disponible',x+cw/2,y+hs[j]/2,{align:'center'})}
+   let cy=y+hs[j]+11;d.setTextColor(30);d.setFont('helvetica','bold');d.setFontSize(8.5);d.text(d.splitTextToSize(clean(r.auteur),cw)[0],x,cy);cy+=10;
+   d.setFont('helvetica','normal');d.setFontSize(7.5);d.setTextColor(90);d.text(d.splitTextToSize(clean(r.theme+' · '+r.lieu),cw)[0],x,cy);cy+=9;
+   d.text(clean(nf(r.jaime)+" j'aime · "+nf(r.com)+' comm. · '+nf(r.part)+' partages'),x,cy);cy+=10;
+   if(r.lien){d.setTextColor(31,111,178);d.textWithLink('Voir la publication',x,cy,{url:r.lien})}});
+  y+=rh+8}
+ livrer(d,'Rapport_publications_'+M+'.pdf');log('Rapport','Rapport publications '+M)}
+
+function offR(){const P=D.officiels[M]||[],C=D.comm_off[M]||[];const neg=C.filter(c=>c.sentiment==='Négatif').length;
+ const th={};C.forEach(c=>th[c.theme]=(th[c.theme]||0)+1);const top=Object.entries(th).sort((a,b)=>b[1]-a[1])[0];
+ const k=(l,v,s)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
+ $('#offk').innerHTML=k('Publications officielles',P.length,'données du 01/11')+k('Interactions',nf(P.reduce((t,o)=>t+inter(o),0)),'sur ces publications')+k('Commentaires analysés',C.length,C.length?Math.round(100*neg/C.length)+' % négatifs':'')+k('Thème des commentaires',top?`<span style="font-size:1.1rem">${esc(top[0])}</span>`:'–',top?top[1]+' commentaire(s)':'');
+ const canaux={};P.forEach(o=>{const c=canaux[o.canal]=canaux[o.canal]||{n:0,j:0,c:0,p:0,v:0};c.n++;c.j+=o.jaime||0;c.c+=o.com||0;c.p+=o.part||0;c.v+=o.vues||0});
+ $('#offs').innerHTML='<tr><th>Canal</th><th>Publ.</th><th>J\'aime</th><th>Comm.</th><th>Partages</th><th>Vues</th><th>Évol. 6 h</th></tr>'+Object.entries(canaux).sort((a,b)=>(b[1].j+b[1].c+b[1].p)-(a[1].j+a[1].c+a[1].p)).map(([k,c])=>`<tr><td>${esc(k)}</td><td>${c.n}</td><td>${nf(c.j)}</td><td>${nf(c.c)}</td><td>${nf(c.p)}</td><td>${c.v?nf(c.v):'–'}</td><td class="small">au prochain relevé</td></tr>`).join('');
+ const nn=C.filter(c=>c.sentiment==='Neutre').length,np=C.filter(c=>c.sentiment==='Positif').length,pc=x=>C.length?Math.round(100*x/C.length):0;
+ $('#offsens').innerHTML=C.length?`<div class="sens"><span style="width:${pc(neg)}%;background:var(--bad)"></span><span style="width:${pc(nn)}%;background:var(--neutral)"></span><span style="width:${pc(np)}%;background:var(--good)"></span></div><div class="sensl"><span><i style="background:var(--bad)"></i>${pc(neg)} % négatifs</span><span><i style="background:var(--neutral)"></i>${pc(nn)} % neutres</span><span><i style="background:var(--good)"></i>${pc(np)} % positifs</span></div><div class="small" style="margin-top:4px">${C.length} commentaires analysés</div>`:'<span class="small">Aucun commentaire analysé.</span>';
+ const tp=P.slice().sort((a,b)=>inter(b)-inter(a))[0];$('#offtop').innerHTML=tp?`<div style="font-weight:700">${esc(tp.canal)}</div><div>${esc(tp.texte)}</div><div class="small">${nf(inter(tp))} interactions · publiée le ${esc(tp.date)}</div>`:'–';
+ $('#offc').innerHTML=(D.canaux[M]||[]).map(([n,u])=>`<span class="pill" style="padding-right:10px"><a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a></span>`).join('');
+ $('#offp').innerHTML=P.map(o=>`<article class="pc">${o.img?`<img loading="lazy" src="${o.img}" alt="Visuel de la publication officielle" onclick="zoom(this.src)">`:''}<div class="b"><div class="h"><span class="tag">${esc(o.canal)}</span></div>
+  <div class="x">${esc(o.texte)}</div><div class="m">Publiée le ${esc(o.date)}</div>
+  <div class="st"><span><b>${nf(o.jaime)}</b> j'aime</span><span><b>${nf(o.com)}</b> comm.</span><span><b>${nf(o.part)}</b> partages</span>${o.vues?`<span><b>${nf(o.vues)}</b> vues</span>`:''}</div>
+  <div class="bar">${o.lien?`<a href="${esc(o.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:''}<button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="addAtt(${esc(JSON.stringify(o.lien||('officiel:'+o.id)))},D.officiels[M].find(x=>x.id==='${o.id}'))">Mettre en point d'attention</button></div></div></article>`).join('')||'<div class="empty">Aucune publication officielle sur la période.</div>';
+ $$('#off .adm-only').forEach(e=>e.hidden=$('#role').value==='user');
+ $('#offw').textContent=D.fenetre_comm||'';
+ $('#offt').innerHTML='<tr><th>Date</th><th>Auteur</th><th>Commentaire</th><th>Sens</th><th>Thème</th><th>Localité</th></tr>'+C.map(c=>`<tr><td style="white-space:nowrap">${esc(c.date)}</td><td>${esc(c.auteur)}</td><td>${esc(c.texte)}</td><td>${c.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(c.sentiment)+'</span>'}</td><td>${esc(c.theme)}</td><td>${esc(c.lieu||'')}</td></tr>`).join('')}
+function tout(){bord();fillSel();pubsR();attR();offR();chkR()}
+$('#ram').onchange=chkR;
+tout();admR();setRole('super');
+</script>
+</body>
+</html>

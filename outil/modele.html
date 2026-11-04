@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Veille CIE-SODECI · Viral SARL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
+<style>
+  :root {
+    --bg: #F6F7F5; --panel: #FFFFFF; --fg: #1B1F1C; --muted: #5E6A62; --line: #DFE4E0; --land: #EEF1EC;
+    --red: #C00000; --sodeci: #00A04A; --cie: #E87400; --auto: #1F6FB2; --bad: #C62828; --neutral: #9AA49E; --good: #00A04A; --warn: #B45309;
+    --sans: "Source Sans 3", "Segoe UI", Roboto, Arial, sans-serif; --serif: "Source Serif 4", Georgia, serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) { :root { --bg: #121614; --panel: #1B201D; --fg: #E9EEEA; --muted: #A3AFA7; --line: #2E3631; --neutral: #6F7A73; --land: #242B26; color-scheme: dark; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.45; }
+  a { color: var(--auto); }
+  .wrap { max-width: 78rem; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  header.top { background: var(--red); color: #fff; }
+  header.top .wrap { padding-block: 16px; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+  .brand { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .brand .logo { background: #fff; border-radius: 6px; padding: 4px 8px; display: inline-flex; }
+  .brand .logo img { height: 52px; width: auto; display: block; }
+  .brand .dept { font-size: .8rem; line-height: 1.3; font-weight: 600; }
+  .ttl { display: grid; gap: 6px; justify-items: end; text-align: right; }
+  header.top h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(1.4rem, 3.5vw, 2rem); margin: 0; text-wrap: balance; }
+  header.top .meta { font-size: .9rem; opacity: .95; }
+  .conf { font-weight: 700; letter-spacing: .08em; font-size: .78rem; border: 1px solid rgba(255,255,255,.7); padding: 1px 8px; border-radius: 4px; }
+  .acts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  .btn { font: inherit; font-size: .85rem; font-weight: 700; color: var(--red); background: #fff; border: 0; border-radius: 6px; padding: 6px 12px; text-decoration: none; cursor: pointer; }
+  .btn.ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.8); }
+  @media (max-width: 640px) { .ttl { justify-items: start; text-align: left; } .acts { justify-content: flex-start; } }
+  main { padding-block: 18px 40px; display: grid; gap: 18px; }
+  .lead { color: var(--muted); margin: 0; max-width: 75ch; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .85rem; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 5; overflow-x: auto; scrollbar-width: thin; }
+  .tab { font: inherit; font-size: 1.02rem; font-weight: 600; background: none; border: 0; border-bottom: 4px solid transparent; padding: 10px 16px; color: var(--muted); cursor: pointer; white-space: nowrap; align-self: end; }
+  .tab small { display: block; font-size: .72rem; font-weight: 600; color: var(--muted); }
+  .tab[aria-selected="true"] { color: var(--fg); }
+  .tab.s[aria-selected="true"] { border-bottom-color: var(--sodeci); } .tab.c[aria-selected="true"] { border-bottom-color: var(--cie); } .tab.h[aria-selected="true"] { border-bottom-color: var(--red); }
+  .tab:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
+  .panel { display: grid; gap: 16px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: 12px; }
+  .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 2px; justify-items: center; text-align: center; }
+  .tile small { color: var(--muted); font-size: .82rem; }
+  .tile b { font-family: var(--serif); font-size: 2rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .tile b.neg { color: var(--bad); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; display: grid; gap: 8px; align-content: start; }
+  .card h2 { margin: 0; font-size: 1.05rem; }
+  .card h3 { margin: 4px 0 0; font-size: .95rem; text-transform: uppercase; letter-spacing: .04em; }
+  .card p.note { margin: 0; color: var(--muted); font-size: .82rem; }
+  .wide { grid-column: 1 / -1; }
+  .bars { display: grid; gap: 6px; }
+  .bar { display: grid; grid-template-columns: minmax(0, 11rem) 1fr; gap: 8px; align-items: center; font-size: .86rem; }
+  .bar .lab { text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar .track { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .bar .fill { height: 14px; border-radius: 3px; min-width: 2px; }
+  .val { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: .82rem; }
+  .pie { display: flex; justify-content: center; }
+  .pie svg { width: min(100%, 300px); height: auto; overflow: visible; }
+  .pie text { font-family: var(--sans); font-weight: 700; }
+  .cloud { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; justify-content: center; padding: 8px 4px; line-height: 1.15; }
+  .cloud span { font-weight: 700; white-space: nowrap; }
+  .alert-box { border-left: 5px solid var(--bad); background: color-mix(in srgb, var(--bad) 5%, var(--panel)); }
+  .alert-box > h2 { color: var(--bad); font-size: 1.15rem; }
+  .watch { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 10px; }
+  .witem { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px; display: grid; gap: 4px; font-size: .87rem; align-content: start; }
+  .witem b.t { font-size: .95rem; }
+  .witem .who { font-weight: 700; }
+  .witem .d { color: var(--muted); font-size: .78rem; }
+  .stats { display: flex; flex-wrap: wrap; gap: 4px 8px; font-weight: 700; font-variant-numeric: tabular-nums; font-size: .84rem; }
+  .stats span { background: var(--land); border-radius: 4px; padding: 1px 7px; }
+  .stats .neg { color: #fff; background: var(--bad); }
+  .witem ul { margin: 0; padding-left: 1.1em; font-size: .82rem; display: grid; gap: 2px; }
+  .witem a { word-break: break-all; font-size: .8rem; }
+  .last { list-style: none; margin: 0; padding: 0; display: grid; }
+  .last li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 8px; padding: 6px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+  .last li:last-child { border-bottom: 0; }
+  .last .h { font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .last .ti { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .86rem; }
+  .last a { grid-column: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; min-width: 0; font-size: .78rem; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+  .dash { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr); grid-template-areas: "th se de" "nu nu de" "lo lo lo"; }
+  .dash.off { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); grid-template-areas: "se th" "se nu" "lo lo"; }
+  .dash.off .a-se { grid-template-rows: auto 1fr; } .dash.off .a-se .pie { align-items: center; }
+  @media (max-width: 900px) { .dash, .dash.off { grid-template-columns: 1fr; grid-template-areas: "th" "se" "de" "nu" "lo"; } }
+  .a-th { grid-area: th; } .a-se { grid-area: se; } .a-de { grid-area: de; } .a-nu { grid-area: nu; align-content: center; } .a-lo { grid-area: lo; }
+  .loc { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; align-items: center; }
+  @media (max-width: 640px) { .loc { grid-template-columns: 1fr; } }
+  .loc svg { width: 100%; max-width: 300px; height: auto; display: block; margin-inline: auto; overflow: visible; }
+  .loc { column-gap: 80px; }
+  .loc .land { fill: url(#landg); stroke: #8FA39A; stroke-width: 1.2; filter: drop-shadow(0 2px 3px rgba(0,0,0,.15)); }
+  .loc circle.b { fill-opacity: .7; stroke: #fff; stroke-width: 1.5; }
+  .loc text { font-family: var(--sans); font-weight: 700; font-size: 30px; fill: var(--fg); paint-order: stroke; stroke: rgba(255,255,255,.95); stroke-width: 7px; stroke-linejoin: round; }
+  .loc .sub { margin: 2px 0 0 1.2rem; display: grid; gap: 3px; }
+  .loc .sub .bar { font-size: .8rem; }
+  .map { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 12px; align-items: start; }
+  @media (max-width: 720px) { .map { grid-template-columns: 1fr; } }
+  .map figure { margin: 0; display: grid; gap: 4px; }
+  .map figcaption { font-size: .8rem; color: var(--muted); font-weight: 600; text-align: center; }
+  .map svg { width: 100%; max-height: 520px; height: auto; display: block; background: color-mix(in srgb, var(--auto) 7%, var(--panel)); border-radius: 6px; }
+  .map .land { fill: var(--land); stroke: var(--muted); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .map circle.b { fill-opacity: .55; stroke-width: 1.5; vector-effect: non-scaling-stroke; cursor: pointer; }
+  .map text { font-family: var(--sans); fill: var(--fg); font-weight: 600; paint-order: stroke; stroke: var(--panel); stroke-linejoin: round; }
+  .map .frame { fill: none; stroke: var(--red); stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; stroke-width: 1.5; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; font-size: .82rem; }
+  .chips span { border: 1px solid var(--line); border-radius: 12px; padding: 1px 9px; }
+  .chips b { font-variant-numeric: tabular-nums; }
+  .pubs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16.5rem), 1fr)); gap: 12px; }
+  .pub { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: grid; grid-template-rows: auto auto 1fr; min-width: 0; }
+  .pub .band { color: #fff; font-size: .74rem; font-weight: 700; letter-spacing: .04em; padding: 5px 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .pub .band.h { background: var(--sodeci); } .pub .band.a { background: var(--auto); } .pub .band.o { background: #444; }
+  .tag { font-size: .68rem; padding: 1px 6px; border-radius: 3px; background: rgba(255,255,255,.22); }
+  .tag.alert { background: var(--bad); }
+  .pub .vis { background: #fff; display: flex; justify-content: center; max-height: 330px; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .pub .vis img { display: block; max-width: 100%; height: auto; object-fit: contain; object-position: top; }
+  .pub .txt { padding: 10px 12px; display: grid; gap: 4px; align-content: start; font-size: .86rem; }
+  .pub .who { font-weight: 700; }
+  .pub .when, .pub .meta2 { color: var(--muted); font-size: .78rem; }
+  .nums { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .nums .alert { color: var(--bad); }
+  .pub a { font-size: .75rem; word-break: break-all; }
+  .brandh { margin: 10px 0 0; font-family: var(--serif); font-size: 1.4rem; border-left: 6px solid; padding-left: 10px; }
+  .canaux { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .86rem; }
+  .comms { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); }
+  .com { border: 1px solid var(--line); border-left: 4px solid var(--neutral); border-radius: 6px; padding: 9px 11px; display: grid; gap: 3px; font-size: .86rem; align-content: start; }
+  .com.neg { border-left-color: var(--bad); } .com.pos { border-left-color: var(--good); }
+  .com .d { color: var(--muted); font-size: .78rem; }
+  .com q { font-style: italic; } .com q::before { content: "« "; } .com q::after { content: " »"; }
+  .nd { color: var(--muted); font-size: .85rem; margin: 0; }
+  table.hist { width: 100%; border-collapse: collapse; font-size: .86rem; font-variant-numeric: tabular-nums; }
+  table.hist th, table.hist td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: center; }
+  table.hist th { font-size: .78rem; color: var(--muted); }
+  table.hist td:first-child, table.hist th:first-child { text-align: left; }
+  .tscroll { overflow-x: auto; }
+  .trends { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+  .trend svg { width: 100%; height: auto; max-height: 170px; display: block; }
+  .trend text { font-family: var(--sans); font-size: 11px; fill: var(--muted); }
+  footer { color: var(--muted); font-size: .8rem; padding-block: 0 30px; }
+  [hidden] { display: none !important; }
+  @media print {
+    @page { size: A4; margin: 10mm; }
+    body { background: #fff; font-size: 12px; }
+    .tabs, .acts { display: none !important; }
+    .panel[hidden] { display: grid !important; }
+    .panel { break-before: page; }
+    .panel:first-of-type { break-before: auto; }
+    .panel::before { content: attr(data-titre); font: 700 1.3rem var(--serif); color: var(--red); }
+    .card, .pub, .witem, .com { break-inside: avoid; }
+    header.top, .pub .band, .stats .neg, .tag { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><span class="logo"><img src="img/logo-viral.jpg" alt="Viral"></span>
+    <span class="dept">Département Veille Stratégique et informationnelle<br>Section E-réputation</span></div>
+  <div class="ttl"><h1>Veille e-réputation CIE – SODECI</h1>
+    <div class="meta">mise à jour <span id="maj">—</span> · <span class="conf">CONFIDENTIEL</span></div>
+    <div class="acts"><a class="btn" id="pdf" href="#" target="_blank" rel="noopener">⬇ Rapport PDF du jour</a><button class="btn ghost" type="button" onclick="window.print()">Imprimer / enregistrer en PDF</button></div></div>
+</div></header>
+<main class="wrap">
+  <div class="tabs" role="tablist">
+    <button class="tab s" role="tab" id="t-SODECI" aria-controls="p-SODECI" aria-selected="true" data-b="SODECI">SODECI</button>
+    <button class="tab c" role="tab" id="t-CIE" aria-controls="p-CIE" aria-selected="false" data-b="CIE">CIE</button>
+    <button class="tab s" role="tab" id="t-OSODECI" aria-controls="p-OSODECI" aria-selected="false" data-b="OSODECI">Canaux SODECI</button>
+    <button class="tab c" role="tab" id="t-OCIE" aria-controls="p-OCIE" aria-selected="false" data-b="OCIE">Canaux CIE</button>
+    <button class="tab h" role="tab" id="t-HIST" aria-controls="p-HIST" aria-selected="false" data-b="HIST">Historique</button>
+  </div>
+  <section class="panel" id="p-SODECI" role="tabpanel" aria-labelledby="t-SODECI" data-titre="SODECI"></section>
+  <section class="panel" id="p-CIE" role="tabpanel" aria-labelledby="t-CIE" data-titre="CIE" hidden></section>
+  <section class="panel" id="p-OSODECI" role="tabpanel" aria-labelledby="t-OSODECI" data-titre="Canaux officiels SODECI" hidden></section>
+  <section class="panel" id="p-OCIE" role="tabpanel" aria-labelledby="t-OCIE" data-titre="Canaux officiels CIE" hidden></section>
+  <section class="panel" id="p-HIST" role="tabpanel" aria-labelledby="t-HIST" data-titre="Historique" hidden></section>
+</main>
+<footer class="wrap">Viral SARL – Département Veille Stratégique et informationnelle, Section E-réputation. Chiffres relevés au moment de la collecte ; une donnée absente est notée « non disponible ». Positions sur la carte approximatives.</footer>
+<script>
+const DATA = /*__DATA__*/null;
+const fmt = (n) => (n == null ? 'non disponible' : String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '));
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const NS = 'http://www.w3.org/2000/svg';
+const sv = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const link = (href, text) => { const a = el('a', null, text || href); a.href = href.startsWith('http') || href.startsWith('/') ? href : 'https://' + href.replace(/…$/, ''); a.target = '_blank'; a.rel = 'noopener'; return a; };
+document.getElementById('maj').textContent = DATA.maj;
+document.getElementById('pdf').href = DATA.pdf;
+const COL = { SODECI: 'var(--sodeci)', CIE: 'var(--cie)' };
+const SCOL = { 'Négatif': '#C62828', 'Neutre': '#8E9993', 'Positif': '#00A04A' };
+
+function count(rows, key) { const m = new Map(); rows.forEach((r) => m.set(r[key], (m.get(r[key]) || 0) + 1)); return [...m].sort((a, b) => b[1] - a[1]); }
+function bars(entries, total, color, pct) {
+  const box = el('div', 'bars'); const max = Math.max(1, ...entries.map((e) => e[1]));
+  entries.forEach(([lab, n]) => {
+    const r = el('div', 'bar'); const l = el('span', 'lab', lab); l.title = lab;
+    const t = el('span', 'track'); const f = el('span', 'fill'); f.style.width = (n / max * 78) + '%'; f.style.background = color;
+    t.append(f, el('span', 'val', pct ? `${Math.round(100 * n / total)} % (${n})` : String(n))); r.append(l, t); box.append(r);
+  });
+  return box;
+}
+function card(title, note, body, cls) { const c = el('div', 'card' + (cls ? ' ' + cls : '')); c.append(el('h2', null, title)); if (note) c.append(el('p', 'note', note)); if (body) c.append(body); return c; }
+function tiles(list) { const t = el('div', 'tiles'); list.forEach(([l, v, c]) => { const d = el('div', 'tile'); d.append(el('small', null, l), el('b', c || '', v)); t.append(d); }); return t; }
+
+// Camembert : étiquettes posées sur les parts (à l'extérieur pour les petites parts)
+function pie(entries) {
+  const total = entries.reduce((s, e) => s + e[1], 0) || 1, box = el('div', 'pie');
+  const svg = sv('svg', { viewBox: '-1.6 -1.3 3.2 2.6', role: 'img', 'aria-label': entries.map(([l, n]) => `${l} ${Math.round(100 * n / total)} %`).join(', ') });
+  let a0 = -Math.PI / 2; const labels = [];
+  entries.forEach(([l, n]) => {
+    const frac = n / total, a1 = a0 + frac * 2 * Math.PI;
+    const sh = frac >= 0.9999 ? sv('circle', { r: 1 }) : sv('path', { d: `M0 0L${Math.cos(a0)} ${Math.sin(a0)}A1 1 0 ${frac > 0.5 ? 1 : 0} 1 ${Math.cos(a1)} ${Math.sin(a1)}Z` });
+    sh.setAttribute('fill', SCOL[l]); sh.setAttribute('stroke', '#fff'); sh.setAttribute('stroke-width', '0.02'); svg.append(sh);
+    labels.push({ l, n, frac, mid: (a0 + a1) / 2 }); a0 = a1;
+  });
+  labels.forEach(({ l, n, frac, mid }) => {
+    const pct = Math.round(100 * frac) + ' %';
+    if (frac >= 0.12) {
+      const r = frac >= 0.9999 ? 0 : 0.52, x = Math.cos(mid) * r, y = Math.sin(mid) * r;
+      const t1 = sv('text', { x, y: y - 0.04, 'text-anchor': 'middle', 'font-size': 0.13, fill: '#fff' }); t1.textContent = l;
+      const t2 = sv('text', { x, y: y + 0.17, 'text-anchor': 'middle', 'font-size': 0.16, fill: '#fff' }); t2.textContent = `${pct} (${n})`;
+      svg.append(t1, t2);
+    } else {
+      const x0 = Math.cos(mid), y0 = Math.sin(mid), x1 = x0 * 1.12, y1 = y0 * 1.12, right = x0 >= 0;
+      svg.append(sv('polyline', { points: `${x0},${y0} ${x1},${y1} ${x1 + (right ? 0.12 : -0.12)},${y1}`, fill: 'none', stroke: SCOL[l], 'stroke-width': 0.015 }));
+      const t = sv('text', { x: x1 + (right ? 0.15 : -0.15), y: y1 + 0.05, 'text-anchor': right ? 'start' : 'end', 'font-size': 0.15, fill: SCOL[l] }); t.textContent = `${l} ${pct} (${n})`; svg.append(t);
+    }
+  });
+  box.append(svg); return box;
+}
+
+const STOP = new Set(("a à au aux avec ce ces cet cette c ça ca d de des du elle elles en est et être eu il ils je j l la le les leur leurs lui m ma mais me même mes moi mon n ne ni nos notre nous on ou où par pas pour qu que qui s sa se ses si son sont sur t ta te tes toi ton tu un une vos votre vous y été étaient était ont avons avez fait faire plus moins très tout tous toute toutes rien aussi alors comme car donc depuis encore déjà bien sans sous chez entre vers après avant quand dont quel quelle quels quelles cela celui celle ceux ici là non oui ah oh eh bon ok svp merci bonjour bonsoir hein hier aujourd hui jour jours fois chaque autre autres peu trop dans cie sodeci www com https http facebook tiktok ans an dit dire voir veut faut peut va vont avoir sommes êtes suis ai as ya lol remontée remontées écrit interpelle quoi comment").split(' '));
+function cloud(texts, color) {
+  const m = new Map();
+  texts.map((t) => t.replace(/\(remontée[^)]*\)/gi, '')).join(' ').toLowerCase().replace(/[’']/g, ' ').split(/[^a-zàâäçéèêëîïôöùûüÿœ0-9-]+/).forEach((w) => {
+    w = w.replace(/^-+|-+$/g, ''); if (w.length < 3 || STOP.has(w) || /^\d+$/.test(w)) return; m.set(w, (m.get(w) || 0) + 1); });
+  const top = [...m].sort((a, b) => b[1] - a[1]).slice(0, 60); const box = el('div', 'cloud');
+  if (!top.length) { box.append(el('p', 'nd', 'non disponible')); return box; }
+  const max = top[0][1], min = top[top.length - 1][1];
+  top.sort((a, b) => a[0].localeCompare(b[0], 'fr')).forEach(([w, n], i) => {
+    const sp = el('span', null, w); const k = max === min ? 0.5 : (n - min) / (max - min);
+    sp.style.fontSize = (0.85 + 2 * k).toFixed(2) + 'rem'; sp.style.color = k > 0.4 ? color : (i % 2 ? 'var(--muted)' : 'var(--fg)'); sp.style.opacity = (0.7 + 0.3 * k).toFixed(2);
+    sp.title = `${w} : ${n} occurrence${n > 1 ? 's' : ''}`; box.append(sp); });
+  return box;
+}
+
+// Localisation : petite carte + liste des localités (Abidjan détaillé par commune)
+function localisation(items, color) {
+  const G = DATA.geo, cnt = new Map(); items.forEach((r) => cnt.set(r.lieu, (cnt.get(r.lieu) || 0) + 1));
+  const known = [...cnt].filter(([l]) => G.lieux[l]), abj = known.filter(([l]) => G.lieux[l].abj), abjN = abj.reduce((s, e) => s + e[1], 0);
+  const pts = known.filter(([l]) => !G.lieux[l].abj).map(([l, n]) => [l, n, G.lieux[l].xy]); if (abjN) pts.push(['Abidjan', abjN, G.abidjan]);
+  const max = Math.max(1, ...pts.map((p) => p[1]));
+  const wrap = el('div', 'loc');
+  const s = sv('svg', { viewBox: '0 0 622 652', role: 'img', 'aria-label': 'Carte des plaintes en Côte d’Ivoire' });
+  const defs = sv('defs', {}); const lg = sv('linearGradient', { id: 'landg', x1: 0, y1: 0, x2: 0, y2: 1 });
+  lg.append(sv('stop', { offset: '0', 'stop-color': '#F4F1E6' }), sv('stop', { offset: '1', 'stop-color': '#E3EDE2' })); defs.append(lg); s.append(defs);
+  s.append(sv('path', { d: G.path, class: 'land' }));
+  const rad = (n) => 12 + 40 * Math.sqrt(n / max);
+  pts.slice().sort((a, b) => b[1] - a[1]).forEach(([l, n, xy]) => { const c = sv('circle', { cx: xy[0], cy: xy[1], r: rad(n), class: 'b', fill: color }); const t = sv('title', {}); t.textContent = `${l} : ${n}`; c.append(t); s.append(c); });
+  pts.forEach(([l, n, xy]) => { const right = xy[0] < 560 && !(l === 'Abidjan' && pts.some((q) => q[0] === 'Bonoua')); const t = sv('text', { x: xy[0] + (right ? 1 : -1) * (rad(n) + 5), y: xy[1] + 10, 'text-anchor': right ? 'start' : 'end' }); t.textContent = `${l} ${n}`; s.append(t); });
+  wrap.append(s);
+  const list = el('div');
+  const rows = [...cnt].filter(([l]) => l !== 'Non localisé' && !(G.lieux[l] && G.lieux[l].abj));
+  if (abjN) rows.push(['Abidjan (district)', abjN]);
+  rows.sort((a, b) => b[1] - a[1]);
+  const bx = el('div', 'bars'); const m2 = Math.max(1, ...rows.map((r) => r[1]));
+  rows.forEach(([l, n]) => {
+    const r = el('div', 'bar'); const lab = el('span', 'lab', l); const t = el('span', 'track'); const f = el('span', 'fill'); f.style.width = (n / m2 * 70) + '%'; f.style.background = color;
+    t.append(f, el('span', 'val', String(n))); r.append(lab, t); bx.append(r);
+    if (l === 'Abidjan (district)') { const sub = el('div', 'bars sub'); abj.sort((a, b) => b[1] - a[1]).forEach(([c, k]) => { const rr = el('div', 'bar'); const t2 = el('span', 'track'); const f2 = el('span', 'fill'); f2.style.width = (k / m2 * 70) + '%'; f2.style.background = color; f2.style.opacity = '.55'; t2.append(f2, el('span', 'val', String(k))); rr.append(el('span', 'lab', '↳ ' + c), t2); sub.append(rr); }); bx.append(sub); }
+  });
+  if (!rows.length) bx.append(el('p', 'nd', 'Aucune localité citée.'));
+  list.append(bx);
+  const nl = cnt.get('Non localisé') || 0; if (nl) list.append(el('p', 'note', `${nl} sans localisation.`));
+  wrap.append(list); return wrap;
+}
+
+// Carte de Côte d'Ivoire : bulle proportionnelle au nombre de plaintes, zoom sur Abidjan
+function carte(items, color) {
+  const G = DATA.geo, cnt = new Map(); items.forEach((r) => cnt.set(r.lieu, (cnt.get(r.lieu) || 0) + 1));
+  const placed = [], absent = [];
+  for (const [l, n] of cnt) { if (l === 'Non localisé') continue; (G.lieux[l] ? placed : absent).push([l, n]); }
+  const abj = placed.filter(([l]) => G.lieux[l].abj), abjN = abj.reduce((s, e) => s + e[1], 0);
+  const max = Math.max(1, abjN, ...placed.map((e) => e[1]));
+  const wrap = el('div'), grid = el('div', 'map');
+  function svgMap(vb, list, scale, frame, caption) {
+    const fig = el('figure'); const s = sv('svg', { viewBox: vb.join(' '), role: 'img', 'aria-label': caption });
+    s.append(sv('path', { d: G.path, class: 'land' }));
+    if (frame) s.append(sv('rect', { x: G.inset[0], y: G.inset[1], width: G.inset[2], height: G.inset[3], class: 'frame' }));
+    const rad = (n) => (5 + 22 * Math.sqrt(n / max)) * scale;
+    list.slice().sort((a, b) => b[1] - a[1]).forEach(([l, n, xy]) => {
+      const c = sv('circle', { cx: xy[0], cy: xy[1], r: rad(n), class: 'b', fill: color, stroke: color });
+      const t = sv('title', {}); t.textContent = `${l} : ${n} publication${n > 1 ? 's' : ''}`; c.append(t); s.append(c);
+    });
+    // étiquettes : on évite les chevauchements en essayant plusieurs positions
+    const boxes = [], fs = 12 * scale;
+    list.slice().sort((a, b) => b[1] - a[1]).forEach(([l, n, xy]) => {
+      const txt = `${l} (${n})`, w = txt.length * fs * 0.55, h = fs * 1.15, r = rad(n);
+      const pref = xy[0] > vb[0] + vb[2] * 0.72 ? ['L', 'R'] : ['R', 'L'];
+      let best = null;
+      search: for (const dy of [0, 1, -1, 2, -2, 3, -3]) for (const side of pref) {
+        const x = side === 'R' ? xy[0] + r + 2 * scale : xy[0] - r - 2 * scale - w, y = xy[1] - h / 2 + dy * h;
+        if (y < vb[1] || y + h > vb[1] + vb[3] || x < vb[0] || x + w > vb[0] + vb[2]) continue;
+        if (!boxes.some((q) => x < q.x + q.w && x + w > q.x && y < q.y + q.h && y + h > q.y)) { best = { x, y, w, h, side, dy }; break search; }
+      }
+      if (!best) best = { x: xy[0] + r, y: xy[1] - h / 2, w, h, side: 'R', dy: 0 };
+      boxes.push(best);
+      const tx = sv('text', { x: best.side === 'R' ? best.x : best.x + w, y: best.y + h * 0.8, 'font-size': fs, 'stroke-width': 3 * scale, 'text-anchor': best.side === 'R' ? 'start' : 'end' }); tx.textContent = txt; s.append(tx);
+      if (best.dy) s.append(sv('line', { x1: xy[0], y1: xy[1], x2: best.side === 'R' ? best.x : best.x + w, y2: best.y + h / 2, stroke: 'var(--muted)', 'stroke-width': 0.8, 'vector-effect': 'non-scaling-stroke' }));
+    });
+    fig.append(s, el('figcaption', null, caption)); return fig;
+  }
+  const nat = placed.filter(([l]) => !G.lieux[l].abj).map(([l, n]) => [l, n, G.lieux[l].xy]);
+  if (abjN) nat.push(['Abidjan', abjN, G.abidjan]);
+  grid.append(svgMap([0, 0, 622, 652], nat, 1.3, abjN > 0, "Côte d'Ivoire (Abidjan regroupé, cadre rouge)"));
+  grid.append(svgMap(G.inset, abj.map(([l, n]) => [l, n, G.lieux[l].xy]), G.inset[2] / 420, false, 'Zoom sur le district d’Abidjan'));
+  wrap.append(grid);
+  const chips = el('div', 'chips');
+  [...cnt].sort((a, b) => b[1] - a[1]).forEach(([l, n]) => { const c = el('span'); c.append(document.createTextNode(l + ' '), el('b', null, String(n))); chips.append(c); });
+  wrap.append(chips);
+  const nl = cnt.get('Non localisé') || 0;
+  wrap.append(el('p', 'note', `${nl} sans localisation${absent.length ? ' ; non placé(s) sur la carte (position incertaine) : ' + absent.map(([l, n]) => `${l} (${n})`).join(', ') : ''}.`));
+  return wrap;
+}
+
+function stats(list) { const s = el('div', 'stats'); list.forEach(([t, c]) => s.append(el('span', c || '', t))); return s; }
+function pointAttention(b) {
+  const P = DATA.point[b], c = el('div', 'card alert-box');
+  c.append(el('h2', null, "⚠ Point d'attention"));
+  const AL = (DATA.alertes || []).filter((a) => a.marque === b);
+  if (AL.length) {
+    c.append(el('h3', null, 'Publications en alerte (suivi à chaque passage)'));
+    const w0 = el('div', 'watch');
+    AL.forEach((a) => {
+      const s = a.suivi || [], last = s[s.length - 1] || {}, first = s[0] || {};
+      const it = (x) => (x.jaime || 0) + (x.com || 0) + (x.part || 0);
+      const evo = s.length > 1 && it(first) ? Math.round(100 * (it(last) - it(first)) / it(first)) : null;
+      const d = el('div', 'witem');
+      d.append(el('span', 'who', `${a.auteur} · ${a.pf}`), el('b', 't', a.titre || ''));
+      d.append(stats([[`J'aime ${fmt(last.jaime)}`], [`Commentaires ${fmt(last.com)}`, 'neg'], [`Partages ${fmt(last.part)}`]].concat(last.vues ? [[`Vues ${fmt(last.vues)}`]] : [])));
+      d.append(el('span', 'd', `Alerte du ${a.alerte_le || 'non disponible'} UTC · dernier relevé ${last.heure || 'non disponible'} UTC` + (evo != null ? ` · interactions ${evo >= 0 ? '+' : ''}${evo} % depuis l'alerte` : '') + ` · ${s.length} relevé(s)`), link(a.lien));
+      w0.append(d);
+    });
+    c.append(w0);
+  }
+  c.append(el('h3', null, 'Publications à surveiller'));
+  const w1 = el('div', 'watch');
+  P.pubs.forEach((p) => {
+    const d = el('div', 'witem');
+    d.append(el('span', 'who', `${p.auteur} · ${p.pf}`), el('b', 't', p.titre));
+    d.append(stats([[`J'aime ${fmt(p.jaime)}`], [`Commentaires ${fmt(p.com)}`, p.com > 50 ? 'neg' : ''], [`Partages ${fmt(p.part)}`]].concat(p.vues ? [[`Vues ${fmt(p.vues)}`]] : [])));
+    d.append(el('span', 'd', p.note + (p.publiee !== 'non disponible' ? ` Publiée le ${p.publiee} UTC.` : '')), link(p.lien));
+    w1.append(d);
+  });
+  c.append(w1, el('h3', null, 'Thèmes à surveiller'));
+  const w2 = el('div', 'watch');
+  P.themes.forEach((t) => {
+    const d = el('div', 'witem');
+    d.append(el('b', 't', t.theme), stats([[`${t.n} publications`], [`${fmt(t.inter)} interactions`], [`${t.neg} % négatif`, 'neg']]), el('span', 'd', t.note));
+    const ul = el('ul'); t.liens.forEach((l) => { const li = el('li'); li.append(document.createTextNode(`${l.auteur} (${l.inter} interactions) : `), link(l.lien)); ul.append(li); });
+    d.append(ul); if (t.autres) d.append(el('span', 'd', `+ ${t.autres} autres publications dans la liste plus bas.`));
+    w2.append(d);
+  });
+  c.append(w2, el('p', 'note', 'Interactions = j’aime + commentaires + partages. Aucune publication citant la marque n’a dépassé 50 commentaires sur la période.'));
+  return c;
+}
+function dernieres(b) {
+  const ul = el('ul', 'last');
+  DATA.dernieres[b].forEach((d) => {
+    const li = el('li'); const h = el('span', 'h'); const dot = el('i', 'dot'); dot.style.background = d.origine === 'h' ? 'var(--sodeci)' : 'var(--auto)'; h.append(dot, document.createTextNode(d.remontee));
+    const ti = el('span', 'ti'); ti.append(el('b', null, d.auteur + ' — '), document.createTextNode(d.titre)); ti.title = d.titre;
+    li.append(h, ti, link(d.lien)); ul.append(li);
+  });
+  return ul;
+}
+
+function render(b) {
+  const p = document.getElementById('p-' + b); p.replaceChildren();
+  const rows = DATA.publications.filter((r) => r.marque === b);
+  const n = rows.length, neg = rows.filter((r) => r.sentiment === 'Négatif').length;
+  const sum = (k) => rows.reduce((s, r) => s + (Number(r[k]) || 0), 0);
+  p.append(tiles([['Publications', n], ['Sentiment négatif', Math.round(100 * neg / Math.max(1, n)) + ' %', 'neg'], ["J'aime", fmt(sum('jaime'))], ['Commentaires', fmt(sum('com'))], ['Partages', fmt(sum('part'))]]));
+  p.append(pointAttention(b));
+  const g = el('div', 'dash');
+  g.append(card('Thématiques', 'Part des publications, en % (nombre).', bars(count(rows, 'theme'), n, COL[b], true), 'a-th'));
+  const sent = ['Négatif', 'Neutre', 'Positif'].map((s) => [s, rows.filter((r) => r.sentiment === s).length]).filter((e) => e[1]);
+  g.append(card('Sens des publications', null, pie(sent), 'a-se'));
+  g.append(card('10 dernières publications remontées', 'Heure de remontée (UTC), auteur, objet et lien.', dernieres(b), 'a-de'));
+  g.append(card('Nuage de mots', 'Mots les plus fréquents dans les publications (taille = fréquence).', cloud(rows.map((r) => r.texte), COL[b]), 'a-nu'));
+  g.append(card('Localisation des plaintes', 'Nombre de publications par localité ; plus la bulle est grosse, plus il y a de plaintes.', localisation(rows, COL[b]), 'a-lo'));
+  p.append(g);
+  const sorted = rows.slice().sort((a, z) => (z.jaime + 3 * z.com + 2 * z.part) - (a.jaime + 3 * a.com + 2 * a.part));
+  const wall = el('div', 'pubs');
+  sorted.forEach((r) => {
+    const c = el('article', 'pub');
+    const band = el('div', 'band ' + r.origine); band.append(el('span', null, (r.origine === 'h' ? 'REMONTÉE HUMAINE' : 'REMONTÉE AUTOMATISÉE') + ' · ' + r.pf));
+    const tg = el('span'); if (r.com > 50) tg.append(el('span', 'tag alert', '+50 COMM.')); if (r.auto) tg.append(el('span', 'tag', 'AUSSI AUTOMATIQUE')); band.append(tg);
+    c.append(band);
+    const vis = el('div', 'vis'); if (r.img) { const im = el('img'); im.src = r.img; im.alt = 'Visuel de la publication de ' + r.auteur; im.loading = 'lazy'; vis.append(im); } c.append(vis);
+    const t = el('div', 'txt');
+    t.append(el('div', 'who', r.auteur));
+    t.append(el('div', 'when', [r.publiee !== 'non disponible' ? 'publiée le ' + r.publiee : null, r.remontee ? 'remontée le ' + r.remontee : null].filter(Boolean).join(' · ') + ' UTC'));
+    t.append(el('div', null, r.texte));
+    const nums = el('div', 'nums'); nums.append(document.createTextNode(`J'aime ${fmt(r.jaime)} · `)); nums.append(el('span', r.com > 50 ? 'alert' : '', `Commentaires ${fmt(r.com)}`), document.createTextNode(` · Partages ${fmt(r.part)}` + (r.vues ? ` · Vues ${fmt(r.vues)}` : '')));
+    t.append(nums, el('div', 'meta2', `${r.theme} · ${r.lieu} · sentiment ${r.sentiment.toLowerCase()}`), link(r.lien));
+    c.append(t); wall.append(c);
+  });
+  p.append(card('Publications observées', `${n} publications, classées par engagement.`, wall));
+}
+
+function renderOff(b) {
+  const p = document.getElementById('p-O' + b); p.replaceChildren();
+  p.append(el('p', 'lead', DATA.fenetre_comm));
+  {
+    const cs = DATA.commentaires[b] || [], offs = DATA.officiels[b] || [], n = cs.length, neg = cs.filter((c) => c.sentiment === 'Négatif').length;
+    p.append(tiles([['Publications officielles suivies', offs.length], ['Commentaires analysés', n], ['Commentaires négatifs', Math.round(100 * neg / Math.max(1, n)) + ' %', 'neg'], ['Localités citées', new Set(cs.map((c) => c.lieu).filter((l) => l !== 'Non localisé')).size]]));
+    const g = el('div', 'dash off');
+    const sent = ['Négatif', 'Neutre', 'Positif'].map((s) => [s, cs.filter((c) => c.sentiment === s).length]).filter((e) => e[1]);
+    g.append(card('Tonalité des commentaires', null, pie(sent), 'a-se'));
+    g.append(card('Thématiques des commentaires', 'Part des commentaires, en % (nombre).', bars(count(cs, 'theme'), n, COL[b], true), 'a-th'));
+    g.append(card('Nuage de mots', 'Mots les plus fréquents dans les commentaires.', cloud(cs.map((c) => c.texte), COL[b]), 'a-nu'));
+    g.append(card('Localisation des plaintes', 'Localités citées dans les commentaires.', localisation(cs, COL[b]), 'a-lo'));
+    p.append(g);
+    const can = el('div', 'canaux'); (DATA.canaux[b] || []).forEach(([l, u]) => can.append(link(u, l)));
+    p.append(card('Canaux officiels suivis', 'X : lecture non disponible avec le plan actuel.', can));
+    const wall = el('div', 'pubs');
+    offs.forEach((o) => {
+      const c = el('article', 'pub'); const band = el('div', 'band o'); band.append(el('span', null, 'CANAL OFFICIEL · ' + o.canal.split(' · ')[0])); c.append(band);
+      const vis = el('div', 'vis'); const im = el('img'); im.alt = 'Visuel de la publication ' + o.canal; im.loading = 'lazy'; im.referrerPolicy = 'no-referrer';
+      if (o.vignette) im.onerror = () => { im.onerror = null; im.src = o.carte; }; im.src = o.vignette || o.carte; vis.append(im); c.append(vis);
+      const t = el('div', 'txt'); t.append(el('div', 'who', o.canal.split(' · ')[1]), el('div', 'when', 'publiée le ' + o.date + ' UTC'), el('div', null, o.texte));
+      t.append(el('div', 'nums', `J'aime ${fmt(o.jaime)} · Commentaires ${fmt(o.com)} · Partages ${fmt(o.part)}` + (o.vues ? ` · Vues ${fmt(o.vues)}` : '')));
+      t.append(o.lien ? link(o.lien) : el('span', 'nd', 'lien non disponible')); c.append(t); wall.append(c);
+    });
+    p.append(card(`Publications des canaux officiels ${b}`, 'Dernières publications relevées, avec leur lien.', wall));
+  }
+}
+
+function trend(hist, b, key, label, color, unit) {
+  const W = 320, H = 150, pl = 30, pb = 26, pt = 18, max = Math.max(1, ...hist.map((h) => h[b][key])) * 1.15;
+  const s = sv('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': label });
+  s.append(sv('line', { x1: pl, y1: H - pb, x2: W - 6, y2: H - pb, stroke: 'var(--line)' }));
+  const step = (W - pl - 16) / Math.max(1, hist.length - 1);
+  const pts = hist.map((h, i) => [hist.length > 1 ? pl + 8 + i * step : (W + pl) / 2, H - pb - (h[b][key] / max) * (H - pb - pt)]);
+  if (pts.length > 1) s.append(sv('polyline', { points: pts.map((q) => q.join(',')).join(' '), fill: 'none', stroke: color, 'stroke-width': 2.5 }));
+  pts.forEach(([x, y], i) => {
+    s.append(sv('circle', { cx: x, cy: y, r: 4, fill: color }));
+    const v = sv('text', { x, y: y - 8, 'text-anchor': 'middle', style: 'font-weight:700;fill:var(--fg)' }); v.textContent = hist[i][b][key] + (unit || ''); s.append(v);
+    const d = sv('text', { x, y: H - 8, 'text-anchor': 'middle' }); d.textContent = hist[i].jour_fr.slice(0, 5); s.append(d);
+  });
+  const box = el('div', 'trend'); box.append(el('p', 'note', label), s); return box;
+}
+function renderHist() {
+  const p = document.getElementById('p-HIST'); p.replaceChildren(); const H = DATA.historique;
+  p.append(el('p', 'lead', `Suivi jour par jour depuis le ${H[0].jour_fr}. Chaque soir, le bulletin du jour est archivé (page figée et rapport PDF). Les courbes s'allongent au fil des jours.`));
+  const g = el('div', 'grid');
+  ['SODECI', 'CIE'].forEach((b) => {
+    const box = el('div', 'trends');
+    box.append(trend(H, b, 'n', 'Publications', COL[b]), trend(H, b, 'neg', 'Sentiment négatif (%)', '#C62828', ' %'), trend(H, b, 'inter', 'Interactions', COL[b]), trend(H, b, 'comm', 'Commentaires sur les pages officielles', COL[b]));
+    g.append(card(b, null, box));
+  });
+  p.append(g);
+  const tw = el('div', 'tscroll'); const tb = el('table', 'hist');
+  tb.innerHTML = '<thead><tr><th>Jour</th><th>SODECI<br>publications</th><th>SODECI<br>% négatif</th><th>SODECI<br>thème dominant</th><th>CIE<br>publications</th><th>CIE<br>% négatif</th><th>CIE<br>thème dominant</th><th>Bulletin</th></tr></thead>';
+  const body = el('tbody');
+  H.slice().reverse().forEach((h) => {
+    const tr = el('tr'); [h.jour_fr, h.SODECI.n, h.SODECI.neg + ' %', h.SODECI.theme, h.CIE.n, h.CIE.neg + ' %', h.CIE.theme].forEach((v) => tr.append(el('td', null, String(v))));
+    const td = el('td'); td.append(link(h.archive, 'Page'), document.createTextNode(' · '), link(h.pdf, 'PDF')); tr.append(td); body.append(tr);
+  });
+  tb.append(body); tw.append(tb); p.append(card('Bulletins précédents', null, tw));
+}
+
+['SODECI', 'CIE'].forEach(render);
+['SODECI', 'CIE'].forEach(renderOff);
+renderHist();
+const HASH = { SODECI: 'sodeci', CIE: 'cie', OSODECI: 'canaux-sodeci', OCIE: 'canaux-cie', HIST: 'historique' };
+function show(b) {
+  document.querySelectorAll('.panel').forEach((s) => { s.hidden = s.id !== 'p-' + b; });
+  document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.b === b)));
+  if (location.hash !== '#' + HASH[b]) history.replaceState(null, '', '#' + HASH[b]);
+}
+document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => show(t.dataset.b)));
+{ const h = location.hash.slice(1).toLowerCase(); const k = Object.keys(HASH).find((x) => HASH[x] === h); if (k) show(k); }
+</script>
+</body>
+</html>
