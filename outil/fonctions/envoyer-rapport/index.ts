@@ -1,11 +1,9 @@
 // Fonction « envoyer-rapport » : récupère le rapport quotidien chiffré déposé dans le dépôt,
 // le range dans le stockage « rapports » (onglet Rapports de la page) et l'envoie par e-mail (Gmail SMTP).
 import postgres from "npm:postgres@3.4.4";
-import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import nodemailer from "npm:nodemailer@6.9.14";
 
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 1 });
-const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 const DEPOT = "https://raw.githubusercontent.com/VeilleCharlySierra/Veille-quotidienne/main/envoi/";
 
 const hex = (h: string) => new Uint8Array(h.match(/../g)!.map((b) => parseInt(b, 16)));
@@ -41,12 +39,16 @@ Deno.serve(async (req) => {
       return Response.json({ ok: false, raison: "rapport absent", email: m });
     }
     const brut = new Uint8Array(await r.arrayBuffer());
+    if (brut.length < 1000) throw new Error("fichier reçu trop court (" + brut.length + " octets)");
     const [{ valeur: cle }] = await sql`select valeur from prive.cles where nom = 'cle_rapport'`;
     const k = await crypto.subtle.importKey("raw", hex(cle), "AES-GCM", false, ["decrypt"]);
     const pdf = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: brut.slice(0, 12) }, k, brut.slice(12)));
 
-    const up = await sb.storage.from("rapports").upload(fichier, pdf, { contentType: "application/pdf", upsert: true });
-    if (up.error) throw new Error("stockage : " + up.error.message);
+    const cle_srv = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const up = await fetch(Deno.env.get("SUPABASE_URL") + "/storage/v1/object/rapports/" + fichier, {
+      method: "POST", body: pdf,
+      headers: { Authorization: "Bearer " + cle_srv, apikey: cle_srv, "Content-Type": "application/pdf", "x-upsert": "true" } });
+    if (!up.ok) throw new Error("stockage " + up.status + " : " + (await up.text()).slice(0, 200));
     await sql`delete from public.rapports_journaliers where jour = ${jour}`;
     await sql`insert into public.rapports_journaliers(jour, fichier, cree_le) values (${jour}, ${fichier}, now())`;
 
