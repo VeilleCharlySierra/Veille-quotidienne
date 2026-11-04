@@ -12,6 +12,16 @@ const journal = (type: string, detail: string) =>
   sql`insert into public.journal(le, type, par, detail) values (now(), ${type}, 'envoi automatique', ${detail})`;
 
 async function courriel(dest: string[], sujet: string, texte: string, pj?: { filename: string; content: Uint8Array }) {
+  // 1) Script Google du compte Gmail de la veille (gratuit, sans SMS ni domaine)
+  const gs = await sql`select (select valeur from prive.cles where nom = 'url_gmail_script') as url, (select valeur from prive.cles where nom = 'jeton_gmail') as jeton`;
+  if (gs[0].url) {
+    const r = await fetch(gs[0].url, { method: "POST", headers: { "Content-Type": "application/json" }, redirect: "follow",
+      body: JSON.stringify({ jeton: gs[0].jeton, to: dest, subject: sujet, text: texte,
+        filename: pj?.filename, b64: pj ? encodeBase64(pj.content) : undefined }) });
+    const t = (await r.text()).trim();
+    if (t !== "ok") throw new Error("script Gmail : " + r.status + " " + t.slice(0, 150));
+    return "e-mail envoyé à " + dest.join(", ");
+  }
   const rk = Deno.env.get("RESEND_API_KEY");
   if (rk) {
     // Resend (offre gratuite) : expéditeur sur le domaine vérifié, défini par le secret RESEND_FROM
@@ -24,7 +34,7 @@ async function courriel(dest: string[], sujet: string, texte: string, pj?: { fil
     return "e-mail envoyé à " + dest.join(", ");
   }
   const user = Deno.env.get("GMAIL_USER"), pass = Deno.env.get("GMAIL_APP_PASSWORD");
-  if (!user || !pass) return "envoi e-mail non configuré (clé Resend absente)";
+  if (!user || !pass) return "envoi e-mail non configuré (script Gmail non installé)";
   const t = nodemailer.createTransport({ host: "smtp.gmail.com", port: 465, secure: true, auth: { user, pass: pass.replace(/\s/g, "") } });
   await t.sendMail({ from: `Veille e-réputation Viral <${user}>`, to: dest.join(", "), subject: sujet, text: texte,
     attachments: pj ? [{ filename: pj.filename, content: pj.content, contentType: "application/pdf" }] : [] });
