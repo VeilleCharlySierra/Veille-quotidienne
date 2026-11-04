@@ -2,6 +2,8 @@
 #  python3 captures.py paquet <dossier_images> <nom_paquet.bin> <clé>
 #      dossier_images contient des fichiers <id>__fb.jpg | <id>__x.jpg | <id>__reel.jpg (capture du navigateur à l'échelle 0,6 :
 #      820 x 385 environ) ; ils sont recadrés sur la publication puis chiffrés dans envoi/<nom_paquet.bin>.
+#  python3 captures.py recadrer <dossier_images> <dossier_sortie>
+#      recadre <id>__fb.jpg | __x.jpg | __reel.jpg (captures du navigateur) en <dossier_sortie>/<id>.jpg (pour le rapport).
 #  python3 captures.py extraire <dossier_sortie> <clé>
 #      déchiffre tous les paquets envoi/captures_*.bin dans <dossier_sortie>/<id>.jpg (pour le rapport).
 import sys, os, io, json, base64, glob
@@ -25,6 +27,17 @@ def paquet(dossier, nom, cle):
     open(out, 'wb').write(n + AESGCM(bytes.fromhex(cle)).encrypt(n, json.dumps(d).encode(), None))
     print(len(d), 'captures ->', out)
 
+FRACTIONS = {'fb': (0.239, 0.145, 0.751, 0.852), 'x': (0.232, 0.078, 0.668, 0.597), 'reel': (0.359, 0.109, 0.588, 0.974)}
+
+def recadrer(dossier, sortie):
+    os.makedirs(sortie, exist_ok=True); n = 0
+    for f in sorted(glob.glob(os.path.join(dossier, '*__*.jpg'))):
+        pid, typ = os.path.basename(f)[:-4].split('__')
+        im = Image.open(f).convert('RGB'); w, h = im.size
+        x0, y0, x1, y1 = FRACTIONS.get(typ, FRACTIONS['fb'])
+        im.crop((int(x0 * w), int(y0 * h), int(x1 * w), int(y1 * h))).save(os.path.join(sortie, pid + '.jpg'), quality=88); n += 1
+    print(n, 'captures recadrées dans', sortie)
+
 def extraire(sortie, cle):
     os.makedirs(sortie, exist_ok=True); n = 0
     for f in sorted(glob.glob(os.path.join(RACINE, 'envoi', 'captures_*.bin'))):
@@ -36,4 +49,5 @@ def extraire(sortie, cle):
 
 if __name__ == '__main__':
     if sys.argv[1] == 'paquet': paquet(sys.argv[2], sys.argv[3], sys.argv[4])
+    elif sys.argv[1] == 'recadrer': recadrer(sys.argv[2], sys.argv[3])
     else: extraire(sys.argv[2], sys.argv[3])

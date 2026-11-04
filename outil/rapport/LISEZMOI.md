@@ -1,38 +1,46 @@
-# Rapport quotidien de veille (envoi automatique à 06h00 UTC)
+# Rapport quotidien de veille
 
-Chaîne :
-1. **05h07 UTC** – tâche planifiée « Rapport quotidien 06h CIE SODECI » : extrait les publications, rédige la synthèse,
-   construit le PDF (`build.py`), le chiffre (`chiffrer.py`) et le pousse dans `envoi/rapport_<AAAA-MM-JJ>.bin`.
-2. **06h00 UTC** – tâche `envoi_rapport_06h` de la base : appelle la fonction `envoyer-rapport`, qui déchiffre le PDF,
-   le range dans l'onglet Rapports de la page et l'envoie par e-mail (Resend) aux adresses de
-   `parametres.destinataires_rapport` (liste JSON). Si le fichier manque, un e-mail « non disponible » part et un incident est journalisé.
+Chaîne (aucune écriture dans GitHub : les tâches planifiées n'en ont pas le droit) :
+1. **04h52 UTC** – tâche planifiée « Rapport quotidien 06h CIE SODECI » (liée à l'ordinateur de veille, avec Chrome) :
+   extrait les publications, rédige la synthèse, prend les captures, construit le PDF (`build.py`), le dépose par la page
+   `depot.html` (mode rapport), puis l'envoie dans le groupe WhatsApp d'alerte.
+2. **06h00 UTC** – tâche `envoi_rapport_06h` de la base : la fonction `envoyer-rapport` reprend le PDF déposé dans le
+   stockage et l'envoie par e-mail (script Gmail) aux adresses de `parametres.destinataires_rapport`.
+   Si le rapport du jour n'a pas été déposé, un e-mail « non disponible » part et un incident est journalisé.
 
-## Procédure de la tâche de 05h07 (jour J = date UTC du jour)
+## Procédure de la tâche du matin (jour J = date UTC du jour)
 
-Période : de J-1 06h00 à J 06h00 UTC (sauf consigne contraire), selon la date de publication (voir extraire.sql).
+Période : de J-1 06h00 à J 06h00 UTC, selon la date de publication (voir extraire.sql ; :FIN = J 06h00).
 
-1. `cd` dans le dépôt, `git pull`.
-2. Extraire les données avec l'outil Supabase `execute_sql` (projet `vtpfgzrlyqdjrulotxni`) : requête de `extraire.sql`,
-   `:DEBUT` / `:FIN` remplacés. Enregistrer la sortie brute dans un fichier puis
-   `python3 outil/rapport/lire_resultat.py <sortie> <dossier>/data.json`.
-3. Lire toutes les publications (texte, thème, lieu, sentiment, engagement) et écrire `<dossier>/synthese.json` :
+1. Cloner le dépôt public (lecture seule) : `git clone https://github.com/VeilleCharlySierra/Veille-quotidienne.git`.
+   Travailler dans un dossier `<dossier>` hors du dépôt.
+2. Données : outil Supabase `execute_sql` (projet `vtpfgzrlyqdjrulotxni`), requête de `extraire.sql` avec `:DEBUT` / `:FIN`
+   remplacés. Enregistrer la sortie brute dans un fichier puis `python3 outil/rapport/lire_resultat.py <sortie> <dossier>/data.json`.
+3. Synthèse : lire toutes les publications (texte, thème, lieu, sentiment, engagement) et écrire `<dossier>/synthese.json` :
    ```json
-   {"jour": "AAAA-MM-JJ", "periode": "du JJ/MM/AAAA à 06h00 au JJ/MM/AAAA à 06h00 UTC",
+   {"jour": "AAAA-MM-JJ", "periode": "publications du JJ/MM/AAAA à 06h00 au JJ/MM/AAAA à 06h00 UTC (date de publication)",
     "periode_courte": "JJ/MM 06h00 – JJ/MM 06h00 UTC",
     "faits": [["Titre court", "texte"], ...],          // 3 à 5 puces « Ce qui s'est passé »
-    "attention": [["Titre court", "texte"], ...],      // 3 à 5 puces « Points d'attention »
+    "attention": [["Titre court", "texte"], ...],      // 3 à 5 puces « Points d'attention » (dont les points d'attention actifs de la base)
     "marques": {"CIE": [["Titre", "texte"], ...], "SODECI": [...]}}   // 3 à 5 puces par marque
    ```
-4. Captures : `python3 outil/rapport/captures.py extraire <dossier>/captures <clé>` (clé de l'étape 5) ; chaque fiche
-   reprend `<dossier>/captures/<id>.jpg` si elle existe, sinon le texte. Pour une publication du rapport sans capture,
-   l'ouvrir dans Chrome (onglet à part), capture d'écran save_to_disk à l'échelle 0,6, copier en `<dossier>/brut/<id>__fb.jpg`
-   (ou `__x`, `__reel`), puis `captures.py paquet <dossier>/brut captures_<jour>_rapport.bin <clé>` et relancer `extraire`.
-   `python3 outil/rapport/build.py <dossier>` → `<dossier>/Rapport_de_veille_quotidien_JJMMAAAA.pdf`.
-   Vérifier visuellement 3 ou 4 pages (pdftoppm) et que le PDF ne contient pas le mot « Apify » (`pdftotext … | grep -i apify`).
-5. Clé : `select valeur from prive.cles where nom = 'cle_rapport'` (via `execute_sql`). Ne jamais l'écrire dans un fichier du dépôt ni dans un message.
-   `python3 outil/rapport/chiffrer.py <pdf> <AAAA-MM-JJ> <clé>`.
-6. Supprimer les `envoi/rapport_*.bin` de plus de 3 jours, `git add envoi`, commit « Rapport quotidien du JJ/MM/AAAA », `git push`.
-   Ne jamais committer le PDF en clair, data.json ni synthese.json.
+4. Captures pour le rapport (Chrome, un onglet à toi, jamais l'onglet WhatsApp) : pour chaque publication de data.json, ouvrir son
+   lien, attendre 4 s, `computer screenshot` avec `save_to_disk=true` et `scale=0.6`, copier le fichier enregistré en
+   `<dossier>/brut/<id>__fb.jpg` (Facebook), `__x.jpg` (X) ou `__reel.jpg` (reel, vidéo, TikTok) ; enchaîner 5 publications par
+   `browser_batch` ; ignorer « Ce contenu n'est pas disponible » et les articles de presse.
+   Puis `python3 outil/rapport/captures.py recadrer <dossier>/brut <dossier>/captures` : chaque fiche reprend
+   `<dossier>/captures/<id>.jpg`, sinon le texte.
+5. `python3 outil/rapport/build.py <dossier>` → `<dossier>/Rapport_de_veille_quotidien_JJMMAAAA.pdf`.
+   Vérifier 3 ou 4 pages en image (pdftoppm) et l'absence du mot « Apify » (`pdftotext … - | grep -ic apify` = 0).
+6. Dépôt : jeton = `select valeur from prive.cles where nom='jeton_envoi'` (jamais dans un message, un fichier ou une adresse).
+   Onglet Chrome : `https://veillecharlysierra.github.io/Veille-quotidienne/depot.html?mode=rapport&jour=<AAAA-MM-JJ>`,
+   `javascript_tool` : `window.JETON='<jeton>'`, `find` « file input », `file_upload` du PDF sur ce champ, attendre 10 s,
+   `window.RESULTAT` doit commencer par « OK ». Contrôle : `select * from rapports_journaliers where jour = J`.
+7. WhatsApp : envoyer le PDF dans le groupe `parametres.whatsapp_groupe_alerte` selon `outil/whatsapp/envoyer_un_fichier.md`,
+   puis le message « 📄 Rapport quotidien de veille CIE / SODECI du JJ/MM/AAAA. Aussi sur la plateforme, onglet Rapports :
+   https://veillecharlysierra.github.io/Veille-quotidienne/ ». Journal : (now(), 'Rapport', 'envoi WhatsApp',
+   'Rapport du JJ/MM/AAAA envoyé dans WhatsApp (groupe <nom>)').
+8. Fermer les onglets ouverts (sauf WhatsApp).
 
 ## Règles de rédaction (obligatoires)
 - Analyste rigoureux et sans parti pris : titres et textes **neutres et factuels**, uniquement ce que disent les publications ; aucune déduction, aucun contenu inventé.
@@ -43,5 +51,5 @@ Période : de J-1 06h00 à J 06h00 UTC (sauf consigne contraire), selon la date 
 - Les communiqués des canaux officiels ne sont pas comptés ; un commentaire de soutien à l'auteur compte comme neutre.
 - Si une information n'est pas vérifiable, l'écrire (« non vérifiable », « non précisé »).
 
-## Essai manuel de l'envoi
-`select prive.lancer_envoi_rapport('AAAA-MM-JJ'::date, true);` (false = rangement dans l'onglet Rapports sans e-mail).
+## Essai manuel de l'envoi par e-mail
+`select prive.lancer_envoi_rapport('AAAA-MM-JJ'::date, true);` (false = sans e-mail).
