@@ -439,12 +439,12 @@ function inTr(r){const b=REF.getTime()-T*86400000,a=b-86400000;return r.t.getTim
 let T=0;let attLinks=new Set();
 function dk(r){const m=/(\d\d)\/(\d\d) (\d\d)h(\d\d)/.exec(r.remontee||'');return m?m[2]+m[1]+m[3]+m[4]:''}
 function pubSel(){const q=$('#q').value.toLowerCase(),p=$('#fp').value,t=$('#ft').value,l=$('#fl').value,mi=+$('#fi').value,so=$('#fs').value;
- return allRows().filter(r=>inTr(r)&&r.marque===M&&!r.suivi&&(!p||r.pf===p)&&(!t||r.theme===t)&&(!l||r.lieu===l)&&inter(r)>=mi&&(!q||(r.auteur+' '+r.texte).toLowerCase().includes(q))).sort((a,b)=>so==='d'?dk(b).localeCompare(dk(a)):inter(b)-inter(a))}
+ return allRows().filter(r=>inTr(r)&&r.marque===M&&!r.suivi&&!r.pa&&(!p||r.pf===p)&&(!t||r.theme===t)&&(!l||r.lieu===l)&&inter(r)>=mi&&(!q||(r.auteur+' '+r.texte).toLowerCase().includes(q))).sort((a,b)=>so==='d'?dk(b).localeCompare(dk(a)):inter(b)-inter(a))}
 function fillSel(){const base=allRows().filter(r=>inTr(r)&&r.marque===M);
  [['#ft','Toutes thématiques','theme'],['#fl','Toutes localités','lieu']].forEach(([id,lab,k])=>{const v=$(id).value;const vals=[...new Set(base.map(r=>r[k]))].sort((a,b)=>a.localeCompare(b,'fr'));
   $(id).innerHTML=`<option value="">${lab}</option>`+vals.map(x=>`<option>${esc(x)}</option>`).join('');if(vals.includes(v))$(id).value=v})}
 function pubsR(){const L=pubSel();
- $('#pubtxt').textContent=`${M} · ${L.length} publication(s) remontée(s) ${TRL[T]}${REF<Date.now()-3600000?' (avant le '+fh(REF)+', dernières données disponibles)':''}. Les publications suivies n’y figurent plus : elles sont dans l’onglet Publications suivies. Les publications ordinaires restent 72 h ; les points d’attention, une semaine.`;
+ $('#pubtxt').textContent=`${M} · ${L.length} publication(s) remontée(s) ${TRL[T]}${REF<Date.now()-3600000?' (avant le '+fh(REF)+', dernières données disponibles)':''}. Les publications suivies et les points d’attention n’y figurent plus : ils sont dans leur onglet. Les publications ordinaires restent 72 h.`;
  $('#cards').innerHTML=L.map(r=>`<article class="pc">${r.img?`<img loading="lazy" src="${r.img}" alt="Capture de la publication" onclick="zoom(this.src)">`:''}<div class="b">
   <div class="h"><span class="tag">${esc(r.pf)}</span>${r.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(r.sentiment)+'</span>'}${attLinks.has((r.lien||'').replace(/\/$/,''))?'<span class="tag alerte">Point d’attention</span>':''}${r.suivi?'<span class="tag">Suivie</span>':''}${r.neuf?'<span class="tag neuf" title="Remontée au dernier passage">● Nouveau</span>':''}</div>
   <div class="a">${esc(r.auteur)}</div><div class="x">${esc(r.texte)}</div>
