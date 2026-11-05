@@ -53,11 +53,11 @@ header.top .wrap{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;ju
 .pass.next{opacity:1;font-weight:700}.pass.next i{background:#FFC857;border-color:#FFC857}
 nav.tabs{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 nav.tabs .wrap{display:flex;gap:2px;overflow-x:auto;align-items:center}
-nav.tabs button.t{background:none;border:0;border-bottom:3px solid transparent;padding:12px 14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav.tabs button.t{background:none;border:0;border-bottom:3px solid transparent;padding:11px 11px;font-size:.95rem;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
 nav.tabs button.t.on{color:var(--fg);border-color:var(--red)}
 nav.tabs .badge{background:var(--red);color:#fff;border-radius:10px;font-size:.72rem;padding:0 6px;margin-left:4px}
-.mtabs{display:flex;gap:8px;margin-left:auto;padding-left:12px}
-.mtabs button{border:2px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 14px;font-weight:700;cursor:pointer;color:var(--muted)}
+.mtabs{display:flex;gap:6px;margin-left:10px}
+.mtabs button{border:1.5px solid #fff8;background:#fff;border-radius:6px;padding:1px 10px;font-size:.78rem;font-weight:700;cursor:pointer;color:#555}
 .mtabs button.on[data-m=CIE]{background:var(--cie);border-color:var(--cie);color:#fff}
 .mtabs button.on[data-m=SODECI]{background:var(--sodeci);border-color:var(--sodeci);color:#fff}
 main{padding-block:18px 48px}
@@ -151,7 +151,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 #zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;place-items:center;z-index:20;padding:16px;cursor:zoom-out}
 #zoom img{max-width:100%;max-height:100%;border-radius:6px}
 #toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--panel);padding:10px 16px;border-radius:8px;font-size:.9rem;display:none;z-index:30;max-width:calc(100% - 32px)}
-@media (max-width:700px){nav.tabs .wrap{flex-wrap:wrap}.mtabs{margin-left:0;padding:0 0 8px;width:100%}.mtabs button{flex:1}}
+@media (max-width:700px){nav.tabs .wrap{flex-wrap:wrap}.mtabs{margin-left:0}}
 .capture .bar,.capture .noprint{display:none!important}
 </style>
 </head>
@@ -176,18 +176,17 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
     <b id="moi"></b>
     <button onclick="sortir()">Déconnexion</button></div>
 </div></header>
-<div class="passes"><div class="wrap" id="passes"></div></div>
+<div class="passes"><div class="wrap"><span id="passes" style="display:contents"></span><div class="mtabs" id="mtabs"><button data-m="CIE" class="on">CIE</button><button data-m="SODECI">SODECI</button></div><span id="passd" style="margin-left:auto"></span></div></div>
 <nav class="tabs"><div class="wrap">
   <button class="t on" data-t="bord">Tableau de bord</button>
   <button class="t" data-t="pubs">Publications</button>
-  <button class="t" data-t="att">Points d'attention <span class="badge" id="nbatt"></span></button>
-  <button class="t" data-t="suiv">Publications suivies <span class="badge" id="nbsuiv"></span></button>
-  <button class="t" data-t="pan">Pannes <span class="badge" id="nbpan"></span></button>
+  <button class="t" data-t="att">Points d'attention</button>
+  <button class="t" data-t="suiv">Publications suivies</button>
+  <button class="t" data-t="pan">Pannes</button>
   <button class="t" data-t="off">Canaux officiels</button>
   <button class="t" data-t="rap">Rapports</button>
   <button class="t" data-t="adm" id="tadm">Administration</button>
-  <button class="t" data-t="jour" id="tjour">Journal d'activité</button>
-  <div class="mtabs" id="mtabs"><button data-m="CIE" class="on">CIE</button><button data-m="SODECI">SODECI</button></div>
+  <button class="t" data-t="jour" id="tjour">Journal</button>
 </div></nav>
 
 <main class="wrap">
@@ -239,7 +238,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 
 <!-- PUBLICATIONS SUIVIES -->
 <section class="tab" id="suiv">
-  <div class="small">Publications remontées et des canaux officiels mises en suivi (20 au maximum par marque). Leurs chiffres sont relus à chaque passage. Une publication suivie peut aussi être mise en point d'attention.</div>
+  <div class="small"><b id="nbsuiv"></b> Publications remontées et des canaux officiels mises en suivi (20 au maximum par marque). Leurs chiffres sont relus à chaque passage. Une publication suivie peut aussi être mise en point d'attention.</div>
   <h3>À décider <span class="small">(suivi automatique : contenu non vérifiable, 15 au maximum, retiré automatiquement après 24 h sans décision)</span></h3>
   <div class="cards" id="suiva"></div>
   <h3>Suivies</h3>
@@ -373,7 +372,7 @@ async function charger(){
 }
 function passesR(){const L=D.passages;const last=L[0];const h=[0,3,6,9,12,15,18,21];const auj=isoD(new Date());const faits=new Set(L.filter(x=>isoD(new Date(x.debut))===auj&&x.statut!=='échec').map(x=>Math.floor(new Date(x.debut).getUTCHours()/3)*3));const nd0=new Date(),nm=nd0.getUTCHours()*60+nd0.getUTCMinutes();const next=h.find(x=>x*60+47>nm)??0;
  let s='<span>Passages du jour :</span>'+h.map(x=>`<span class="pass ${faits.has(x)?'ok':(x===next?'next':'')}"><i></i>${String(x).padStart(2,'0')}h</span>`).join('');
- s+=`<span style="margin-left:auto">${last?'Dernier passage : '+fh(last.debut)+' UTC':'Aucun passage enregistré pour l’instant'}${next!=null?' · prochain passage vers '+String(next).padStart(2,'0')+'h47':''}</span>`;$('#passes').innerHTML=s}
+ $('#passd').innerHTML=`${last?'Dernier passage : '+fh(last.debut)+' UTC':'Aucun passage enregistré pour l’instant'}${next!=null?' · prochain passage vers '+String(next).padStart(2,'0')+'h47':''}`;$('#passes').innerHTML=s}
 async function demarrer(){let {data:{session}}=await SB.auth.getSession();try{const k='veille_connexion_le';if(session){const t=+localStorage.getItem(k)||0;if(!t)localStorage.setItem(k,Date.now());else if(Date.now()-t>7*86400000){localStorage.removeItem(k);await SB.auth.signOut();session=null;setTimeout(()=>{const m=document.getElementById('lmsg');if(m)m.textContent='Par sécurité, une nouvelle connexion est demandée tous les 7 jours. Demandez un lien de connexion.'},0)}}else localStorage.removeItem(k)}catch(e){}if(!session){$('#login').hidden=false;const h=new URLSearchParams(location.hash.slice(1)+'&'+location.search.slice(1));if(h.get('error_code')||h.get('error')){$('#lmsg').textContent=/expired|invalid/i.test((h.get('error_code')||'')+(h.get('error_description')||''))?'Ce lien a déjà servi ou a expiré (chaque nouvelle demande remplace la précédente). Demandez un seul nouveau lien et cliquez-le une seule fois, dans l’heure.':'Connexion impossible : '+(h.get('error_description')||h.get('error'));history.replaceState(null,'',location.pathname)}return}
  MOI=session.user.email.toLowerCase();const {data:u}=await SB.from('utilisateurs').select('*').eq('email',MOI).maybeSingle();
  if(!u){$('#login').hidden=false;$('#lmsg').textContent='Cette adresse n’est pas autorisée.';await SB.auth.signOut();return}
@@ -464,7 +463,7 @@ function suivR(){const AU=(D.pubs||[]).filter(r=>r.sauto&&r.marque===M);
   <div class="m">${esc(r.sautoM)} · publiée le ${r.pub?esc(r.pub):'(date non disponible)'} · retrait automatique le ${esc(r.sautoFin)}</div>
   <div class="st"><span><b>${nf(r.jaime)}</b> j'aime</span><span><b>${nf(r.com)}</b> comm.</span><span><b>${nf(r.part)}</b> partages</span>${r.vues?`<span><b>${nf(r.vues)}</b> vues</span>`:''}</div>
   <div class="bar">${r.lien?`<a href="${esc(r.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:''}<button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="decider(${r.id},'suivre')">Garder en suivi</button><button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="decider(${r.id},'att')">Mettre en point d'attention</button><button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="decider(${r.id},'retirer')">Retirer</button></div></div></article>`).join('')||'<div class="empty">Aucune publication à décider.</div>';
- const A=D.suivies||[];const L=A.filter(r=>r.marque===M).sort((u,v)=>urgence((D.R&&D.R[v.id])||[{jaime:v.jaime,com:v.com,part:v.part}])-urgence((D.R&&D.R[u.id])||[{jaime:u.jaime,com:u.com,part:u.part}]));const nAU=(D.pubs||[]).filter(r=>r.sauto).length;const nM=m=>A.filter(r=>r.marque===m).length;$('#nbsuiv').textContent=(A.length||nAU)?'CIE '+nM('CIE')+'/20 · SODECI '+nM('SODECI')+'/20'+(nAU?' · '+nAU+' à décider':''):'';
+ const A=D.suivies||[];const L=A.filter(r=>r.marque===M).sort((u,v)=>urgence((D.R&&D.R[v.id])||[{jaime:v.jaime,com:v.com,part:v.part}])-urgence((D.R&&D.R[u.id])||[{jaime:u.jaime,com:u.com,part:u.part}]));const nAU=(D.pubs||[]).filter(r=>r.sauto).length;const nM=m=>A.filter(r=>r.marque===m).length;$('#nbsuiv').textContent='Suivies : CIE '+nM('CIE')+'/20 · SODECI '+nM('SODECI')+'/20'+(nAU?' · '+nAU+' à décider':'')+'.';
  $('#suivc').innerHTML=L.map(r=>{const rel=(D.R&&D.R[r.id])||[];const last=rel.length?rel[rel.length-1]:null;return`<article class="pc">${r.img?`<img loading="lazy" src="${r.img}" alt="Capture de la publication" onclick="zoom(this.src)">`:''}<div class="b"><div class="h"><span class="tag">${esc(r.pf)}</span><span class="tag">Suivie</span>${r.officiel?'<span class="tag">Canal officiel</span>':''}${r.pa?'<span class="tag alerte">Point d’attention</span>':''}</div>
   <div class="a">${esc(r.auteur)}</div><div class="x">${esc(r.texte)}</div>
   <div class="m">${esc(r.theme)} · ${esc(r.lieu)} · publiée le ${r.pub?esc(r.pub):'(date non disponible)'} · dernier passage ${last?esc(last.h):'en attente du prochain passage'}</div>
@@ -497,7 +496,7 @@ function thCard(t){const ev=t.evol;return`<div class="thc" data-k="${esc(t.theme
  <div class="small">Relevés : ${t.releves.map(r=>esc(r.h)+' : '+r.n).join(' · ')}</div></div>`}
 function urgence(rel){const it=r=>(r.jaime||0)+(r.com||0)+(r.part||0);const n=rel.length;if(!n)return 0;const d=it(rel[n-1]),p=n>1?it(rel[n-2]):d;return d+3*Math.max(0,d-p)}
 function attR(){const A=D.att.filter(a=>a.marque===M),TH=D.themes_att.filter(t=>t.marque===M).slice(0,5);
- $('#nbatt').textContent=D.att.filter(a=>a.actif).length+D.themes_att.length;
+
  const k=(l,v,s)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
  $('#attk').innerHTML=k('Publications',A.length,'actives ou closes depuis moins de 24 h')+k('En cours de suivi',A.filter(a=>a.actif).length,'relevés toutes les 1 ou 2 h')+k('Thématiques',TH.length,'en point d’attention')+k('Commentaires suivis',nf(A.reduce((t,a)=>t+(a.releves[a.releves.length-1].com||0),0)),'au dernier relevé');
  $('#attl').innerHTML=A.map(attCard).join('')||'<div class="empty">Aucune publication en point d’attention (les alertes closes sont retirées après 24 h).</div>';
@@ -622,7 +621,7 @@ function panAbj(L){const G=D.geo,pts=L.filter(([t])=>G.lieux[t]&&G.lieux[t].abj)
 function panR(){const zs=[...new Set((D.pannes||[]).filter(x=>x.marque===M).map(x=>x.zone||'Sans zone'))].sort(),zv=$('#panz').value;
  $('#panz').innerHTML='<option value="">Toutes</option>'+zs.map(z=>`<option${z===zv?' selected':''}>${esc(z)}</option>`).join('');
  const X=panSel(),cnt={};X.forEach(x=>{const c=x.commune||x.detail;cnt[c]=(cnt[c]||0)+1});const L=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
- $('#nbpan').textContent=(D.pannes||[]).filter(x=>x.marque===M&&new Date(x.le)>=Date.now()-86400000).length||'';
+
  const k=(l,v)=>`<span style="border:1px solid var(--line,#ddd);border-top:3px solid var(--brand);border-radius:8px;padding:4px 12px;background:var(--card,#fff);white-space:nowrap"><b style="font-size:17px">${v}</b> <span class="small">${l}</span></span>`;
  $('#pank').innerHTML=k('signalements',X.length)+k('localités',L.length);
  carte(L,'#pancarte');$('#panabj').innerHTML=panAbj(L);
