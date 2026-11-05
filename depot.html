@@ -17,13 +17,13 @@
 </head>
 <body>
 <h1>Dépôt de la veille (usage interne)</h1>
-<p>Page utilisée par les tâches automatiques pour ranger une capture d'écran ou le rapport du jour. Elle ne fait rien sans jeton.</p>
+<p>Page utilisée par les tâches automatiques pour ranger une capture d'écran ou le rapport du jour. Le dépôt n'est accepté que s'il a été ouvert juste avant par la tâche (20 minutes, un seul usage).</p>
 <input type="file" id="fichier" accept="image/*,application/pdf">
 <div id="etat">En attente d'un fichier.</div>
 <img id="apercu" alt="" hidden>
 <script>
 // Paramètres : ?mode=capture&id=<id publication>&jour=AAAA-MM-JJ&type=fb|x|reel|aucun  ou  ?mode=rapport&jour=AAAA-MM-JJ
-// Le jeton n'est jamais dans l'adresse : la tâche le place dans window.JETON (javascript_tool) avant le dépôt.
+// Aucun jeton : la tâche ouvre le dépôt dans la base (prive.ouvrir_depot) juste avant de choisir le fichier.
 const P = new URLSearchParams(location.search);
 const FONCTION = 'https://vtpfgzrlyqdjrulotxni.supabase.co/functions/v1/deposer';
 // cadres en fraction de la capture (écran du navigateur) : fenêtre de publication Facebook, publication X, reel
@@ -42,7 +42,6 @@ async function recadrer(f, type) {
 document.getElementById('fichier').addEventListener('change', async (ev) => {
   const f = ev.target.files[0]; if (!f) return;
   try {
-    if (!window.JETON) return etat('ÉCHEC : jeton absent', 'ko');
     const mode = P.get('mode'), jour = P.get('jour') || '';
     let corps = f;
     if (mode === 'capture') {
@@ -51,7 +50,7 @@ document.getElementById('fichier').addEventListener('change', async (ev) => {
     }
     etat('Envoi en cours…');
     const r = await fetch(FONCTION, { method: 'POST', body: corps, headers: {
-      'x-jeton': window.JETON, 'x-mode': mode || '', 'x-id': P.get('id') || '', 'x-jour': jour,
+      ...(window.JETON ? { 'x-jeton': window.JETON } : {}), 'x-mode': mode || '', 'x-id': P.get('id') || '', 'x-jour': jour,
       'content-type': mode === 'rapport' ? 'application/pdf' : 'image/jpeg' } });
     const j = await r.json().catch(() => ({}));
     if (j.ok) etat('OK : ' + (j.chemin || j.fichier), 'ok'); else etat('ÉCHEC : ' + (j.erreur || r.status), 'ko');

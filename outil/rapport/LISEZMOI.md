@@ -32,9 +32,10 @@ Période : de J-1 06h00 à J 06h00 UTC, selon la date de publication (voir extra
    `<dossier>/captures/<id>.jpg`, sinon le texte.
 5. `python3 outil/rapport/build.py <dossier>` → `<dossier>/Rapport_de_veille_quotidien_JJMMAAAA.pdf`.
    Vérifier 3 ou 4 pages en image (pdftoppm) et l'absence du mot « Apify » (`pdftotext … - | grep -ic apify` = 0).
-6. Dépôt : jeton = `select valeur from prive.cles where nom='jeton_envoi'` (jamais dans un message, un fichier ou une adresse).
-   Onglet Chrome : `https://veillecharlysierra.github.io/Veille-quotidienne/depot.html?mode=rapport&jour=<AAAA-MM-JJ>`,
-   `javascript_tool` : `window.JETON='<jeton>'`, `find` « file input », `file_upload` du PDF sur ce champ, attendre 10 s,
+6. Dépôt (aucun jeton ni clé saisi dans une page) : ouvrir le dépôt dans la base avec
+   `select prive.ouvrir_depot('rapport', array['<AAAA-MM-JJ>']);` (valable 20 minutes, un seul dépôt), puis onglet Chrome :
+   `https://veillecharlysierra.github.io/Veille-quotidienne/depot.html?mode=rapport&jour=<AAAA-MM-JJ>`,
+   `find` « file input », `file_upload` du PDF sur ce champ, attendre 10 s,
    `window.RESULTAT` doit commencer par « OK ». Contrôle : `select * from rapports_journaliers where jour = J`.
 7. WhatsApp : envoyer le PDF dans le groupe `parametres.whatsapp_groupe_alerte` selon `outil/whatsapp/envoyer_un_fichier.md`,
    puis le message « 📄 Rapport quotidien de veille CIE / SODECI du JJ/MM/AAAA. Aussi sur la plateforme, onglet Rapports :

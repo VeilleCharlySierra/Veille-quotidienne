@@ -1,6 +1,8 @@
 // Fonction « deposer » : reçoit depuis la page depot.html (ouverte dans Chrome sur l'ordinateur de veille)
 // une capture d'écran de publication ou le PDF du rapport, et la range dans le stockage.
-//   en-têtes : x-jeton (jeton_envoi), x-mode (capture | rapport), x-id (id publication), x-jour (AAAA-MM-JJ)
+//   en-têtes : x-mode (capture | rapport), x-id (id publication), x-jour (AAAA-MM-JJ)
+//   Autorisation : un dépôt ouvert juste avant par la tâche (select prive.ouvrir_depot(...) : 20 min, un seul usage),
+//   aucun jeton dans la page. L'en-tête x-jeton (jeton_envoi) reste accepté pour les essais manuels.
 import postgres from "npm:postgres@3.4.4";
 
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 1 });
@@ -29,12 +31,20 @@ async function ranger(bucket: string, chemin: string, corps: Uint8Array, type: s
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
-    const [{ valeur: jeton }] = await sql`select valeur from prive.cles where nom = 'jeton_envoi'`;
-    if (req.headers.get("x-jeton") !== jeton) return rep({ ok: false, erreur: "refusé" }, 403);
-    const mode = req.headers.get("x-mode"), jour = req.headers.get("x-jour") || "";
+    const mode = req.headers.get("x-mode") || "", jour = req.headers.get("x-jour") || "";
     if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) return rep({ ok: false, erreur: "jour invalide" }, 400);
+    const cle = mode === "capture" ? String(Number(req.headers.get("x-id")) || "") : jour;
+    const [{ valeur: jeton }] = await sql`select valeur from prive.cles where nom = 'jeton_envoi'`;
+    const jx = req.headers.get("x-jeton");
+    if (!(jx && jx === jeton)) {
+      const ouvert = await sql`delete from prive.depots_ouverts where mode = ${mode} and cle = ${cle}
+                               and ouvert_le > now() - interval '20 minutes' returning 1`;
+      if (!ouvert.length) return rep({ ok: false, erreur: "refusé : aucun dépôt ouvert pour " + mode + " " + cle }, 403);
+    }
     const corps = new Uint8Array(await req.arrayBuffer());
     if (corps.length < 500) return rep({ ok: false, erreur: "fichier vide" }, 400);
+    if (mode === "capture" && (corps[0] !== 0xff || corps[1] !== 0xd8 || corps.length > 3_000_000)) return rep({ ok: false, erreur: "image JPEG attendue" }, 400);
+    if (mode === "rapport" && (String.fromCharCode(...corps.slice(0, 4)) !== "%PDF" || corps.length > 15_000_000)) return rep({ ok: false, erreur: "PDF attendu" }, 400);
     if (mode === "capture") {
       const id = Number(req.headers.get("x-id"));
       if (!id) return rep({ ok: false, erreur: "id manquant" }, 400);
