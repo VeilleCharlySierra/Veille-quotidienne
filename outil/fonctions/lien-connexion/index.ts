@@ -1,6 +1,8 @@
 // Fonction « lien-connexion » : envoie à un utilisateur autorisé son lien de connexion à la plateforme
 // par le script Gmail de la veille (le service d'e-mail gratuit de Supabase n'écrit qu'aux membres du projet).
-// Appel : par un administrateur connecté (Authorization: Bearer <jeton de session>) ou par la base (x-jeton).
+// Appel : par la base (x-jeton), par un administrateur connecté (Authorization: Bearer <jeton de session>),
+// ou par la page de connexion (sans compte) : le lien part alors uniquement à l'adresse demandée, si elle est
+// dans la liste des utilisateurs, 3 fois par heure au plus.
 import postgres from "npm:postgres@3.4.4";
 
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 1 });
@@ -13,18 +15,22 @@ const rep = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
-    let par = "base";
+    let par = "base", admin = true;
     const [{ valeur: jeton }] = await sql`select valeur from prive.cles where nom = 'jeton_envoi'`;
     if (req.headers.get("x-jeton") !== jeton) {
-      const a = req.headers.get("authorization") || "";
-      const u = await fetch(URL_SB + "/auth/v1/user", { headers: { Authorization: a, apikey: SRV } });
-      if (!u.ok) return rep({ ok: false, erreur: "non connecté" }, 401);
-      const moi = (await u.json()).email?.toLowerCase();
-      const r = await sql`select 1 from public.utilisateurs where lower(email) = ${moi} and role in ('admin','super')`;
-      if (!r.length) return rep({ ok: false, erreur: "réservé aux administrateurs" }, 403);
-      par = moi;
+      admin = false; par = "page de connexion";
+      const u = await fetch(URL_SB + "/auth/v1/user", { headers: { Authorization: req.headers.get("authorization") || "", apikey: SRV } });
+      if (u.ok) {
+        const moi = (await u.json()).email?.toLowerCase();
+        if ((await sql`select 1 from public.utilisateurs where lower(email) = ${moi} and role in ('admin','super')`).length) { admin = true; par = moi; }
+      }
     }
     const { email, a } = await req.json();
+    if (a && !admin) return rep({ ok: false, erreur: "réservé aux administrateurs" }, 403);
+    if (!admin) {
+      const [{ n }] = await sql`select count(*)::int n from public.journal where type = 'Administration' and detail like ${"Lien de connexion de " + String(email || "").trim().toLowerCase() + " %"} and le > now() - interval '1 hour'`;
+      if (n >= 3) return rep({ ok: false, erreur: "trop de liens demandés" }, 429);
+    }
     // a : remettre le lien à un super administrateur (qui le transmet lui-même) si l'e-mail n'arrive pas chez la personne
     const relais = a ? String(a).trim().toLowerCase() : "";
     if (relais && !(await sql`select 1 from public.utilisateurs where lower(email) = ${relais} and role = 'super'`).length)
@@ -40,7 +46,7 @@ Deno.serve(async (req) => {
     if (!lien) return rep({ ok: false, erreur: "lien non généré : " + JSON.stringify(gj).slice(0, 200) }, 500);
     const gs = await sql`select (select valeur from prive.cles where nom = 'url_gmail_script') as url, (select valeur from prive.cles where nom = 'jeton_gmail') as jeton`;
     const nom = ok[0].nom ? " " + ok[0].nom : "";
-    const texte = (relais ? `Lien de connexion de ${e} à lui transmettre (valable une heure, un seul usage ; ne pas l'ouvrir vous-même, sinon il ne servira plus) :\n\n${lien}\n\n---\n\n` : "") + `Bonjour${nom},\n\nVoici votre lien personnel de connexion à la plateforme de veille e-réputationnelle CIE / SODECI (Viral SARL) :\n\n${lien}\n\nCe lien est valable une heure et ne sert qu'une fois. Par la suite, vous pourrez demander un nouveau lien à l'administrateur.\nAdresse de la plateforme : ${SITE}\n\nViral SARL – document confidentiel`;
+    const texte = (relais ? `Lien de connexion de ${e} à lui transmettre (valable une heure, un seul usage ; ne pas l'ouvrir vous-même, sinon il ne servira plus) :\n\n${lien}\n\n---\n\n` : "") + `Bonjour${nom},\n\nVoici votre lien personnel de connexion à la plateforme de veille e-réputationnelle CIE / SODECI (Viral SARL) :\n\n${lien}\n\nCe lien est valable une heure et ne sert qu'une fois. Pour vous reconnecter plus tard, saisissez votre adresse sur la page de la plateforme : un nouveau lien vous sera envoyé.\nAdresse de la plateforme : ${SITE}\n\nViral SARL – document confidentiel`;
     const m = await fetch(gs[0].url, { method: "POST", headers: { "Content-Type": "application/json" }, redirect: "follow",
       body: JSON.stringify({ jeton: gs[0].jeton, to: [relais || e], subject: (relais ? "À transmettre à " + e + " – " : "") + "Votre accès à la plateforme de veille CIE / SODECI", text: texte }) });
     const t = (await m.text()).trim();
