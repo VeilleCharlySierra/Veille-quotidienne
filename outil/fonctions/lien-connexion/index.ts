@@ -24,7 +24,11 @@ Deno.serve(async (req) => {
       if (!r.length) return rep({ ok: false, erreur: "réservé aux administrateurs" }, 403);
       par = moi;
     }
-    const { email } = await req.json();
+    const { email, a } = await req.json();
+    // a : remettre le lien à un super administrateur (qui le transmet lui-même) si l'e-mail n'arrive pas chez la personne
+    const relais = a ? String(a).trim().toLowerCase() : "";
+    if (relais && !(await sql`select 1 from public.utilisateurs where lower(email) = ${relais} and role = 'super'`).length)
+      return rep({ ok: false, erreur: "relais réservé à un super administrateur" }, 400);
     const e = String(email || "").trim().toLowerCase();
     const ok = await sql`select nom from public.utilisateurs where lower(email) = ${e}`;
     if (!ok.length) return rep({ ok: false, erreur: "adresse absente de la liste des utilisateurs" }, 400);
@@ -36,12 +40,12 @@ Deno.serve(async (req) => {
     if (!lien) return rep({ ok: false, erreur: "lien non généré : " + JSON.stringify(gj).slice(0, 200) }, 500);
     const gs = await sql`select (select valeur from prive.cles where nom = 'url_gmail_script') as url, (select valeur from prive.cles where nom = 'jeton_gmail') as jeton`;
     const nom = ok[0].nom ? " " + ok[0].nom : "";
-    const texte = `Bonjour${nom},\n\nVoici votre lien personnel de connexion à la plateforme de veille e-réputationnelle CIE / SODECI (Viral SARL) :\n\n${lien}\n\nCe lien est valable une heure et ne sert qu'une fois. Par la suite, vous pourrez demander un nouveau lien à l'administrateur.\nAdresse de la plateforme : ${SITE}\n\nViral SARL – document confidentiel`;
+    const texte = (relais ? `Lien de connexion de ${e} à lui transmettre (valable une heure, un seul usage ; ne pas l'ouvrir vous-même, sinon il ne servira plus) :\n\n${lien}\n\n---\n\n` : "") + `Bonjour${nom},\n\nVoici votre lien personnel de connexion à la plateforme de veille e-réputationnelle CIE / SODECI (Viral SARL) :\n\n${lien}\n\nCe lien est valable une heure et ne sert qu'une fois. Par la suite, vous pourrez demander un nouveau lien à l'administrateur.\nAdresse de la plateforme : ${SITE}\n\nViral SARL – document confidentiel`;
     const m = await fetch(gs[0].url, { method: "POST", headers: { "Content-Type": "application/json" }, redirect: "follow",
-      body: JSON.stringify({ jeton: gs[0].jeton, to: [e], subject: "Votre accès à la plateforme de veille CIE / SODECI", text: texte }) });
+      body: JSON.stringify({ jeton: gs[0].jeton, to: [relais || e], subject: (relais ? "À transmettre à " + e + " – " : "") + "Votre accès à la plateforme de veille CIE / SODECI", text: texte }) });
     const t = (await m.text()).trim();
     if (t !== "ok") return rep({ ok: false, erreur: "e-mail : " + t.slice(0, 150) }, 500);
-    await sql`insert into public.journal(le, type, par, detail) values (now(), 'Administration', ${par}, ${"Lien de connexion envoyé à " + e})`;
+    await sql`insert into public.journal(le, type, par, detail) values (now(), 'Administration', ${par}, ${"Lien de connexion de " + e + " envoyé à " + (relais || e)})`;
     return rep({ ok: true });
   } catch (err) {
     return rep({ ok: false, erreur: (err as Error).message }, 500);
