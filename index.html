@@ -268,8 +268,8 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
   <div class="small">Publications des pages et comptes officiels relevées automatiquement à chaque passage. Elles sont <b>affichées seulement</b>. Le suivi statistique (chiffres et commentaires toutes les 6 heures) démarre uniquement si : sujet sensible, plus de 30 commentaires ou 100 partages au contrôle 6 h après publication, ou clic sur « Suivre cette publication ».</div>
   <div class="grid g2"><div class="panel"><h3>Canaux officiels</h3><div class="tw"><table id="offs"></table></div><div id="offc" style="margin-top:10px"></div></div>
   <div class="panel"><h3>Sens des commentaires (publications suivies)</h3><div id="offsens"></div><h3 style="margin-top:16px">Publication suivie la plus engageante</h3><div id="offtop"></div></div></div>
-  <div><h3>Publications en suivi statistique</h3><div class="cards" id="offsv"></div></div>
-  <div><h3>Autres publications officielles <span class="small">(affichage seul)</span></h3><div class="cards" id="offp"></div></div>
+  <div hidden><div class="cards" id="offsv"></div></div>
+  <div><h3>Publications officielles <span class="small">(affichage seul ; celles qui sont suivies ou en point d'attention ont changé de catégorie et sont dans leur onglet)</span></h3><div class="cards" id="offp"></div></div>
   <div hidden><div id="offw"></div><table id="offt"></table></div>
 </section>
 
@@ -365,7 +365,7 @@ async function charger(){
  D.att.forEach(a=>{a.urg=urgence(a.releves)});D.att.sort((u,v)=>(v.actif-u.actif)||(v.urg-u.urg));
  D.themes_att=(th.data||[]).filter(t=>t.actif).map(t=>{const xs=P.filter(x=>x.type==='remontee'&&x.marque===t.marque&&x.theme===t.theme&&new Date(x.remontee_le)>=new Date(t.depuis));const rel=t.releves||[];const n=rel.length;
   return{marque:t.marque,theme:t.theme,raison:t.raison||'Thématique en alerte',depuis:fh(t.depuis),n:xs.length,inter:xs.reduce((s,x)=>s+(x.jaime||0)+(x.com||0)+(x.part||0),0),neg:xs.length?Math.round(100*xs.filter(x=>x.sentiment==='Négatif').length/xs.length):0,evol:n>1&&rel[n-2].n?Math.round(100*(rel[n-1].n-rel[n-2].n)/rel[n-2].n):null,releves:rel.slice(-6)}});
- const off=P.filter(x=>x.type==='officiel');['CIE','SODECI'].forEach(m=>{D.officiels[m]=off.filter(x=>x.marque===m).map(x=>({id:String(x.id),canal:x.plateforme+' · '+(x.auteur||''),date:x.publiee_le?fh(x.publiee_le):'(date non disponible)',rem:fh(x.remontee_le),der:(R[x.id]&&R[x.id].length)?R[x.id][R[x.id].length-1].h:fh(x.remontee_le),suivi:x.suivi_stats,motif:x.suivi_motif,texte:x.texte,jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,lien:x.lien,img:urls[x.capture]||''}));
+ const off=P.filter(x=>x.type==='officiel');['CIE','SODECI'].forEach(m=>{D.officiels[m]=off.filter(x=>x.marque===m).map(x=>({id:String(x.id),canal:x.plateforme+' · '+(x.auteur||''),date:x.publiee_le?fh(x.publiee_le):'(date non disponible)',rem:fh(x.remontee_le),der:(R[x.id]&&R[x.id].length)?R[x.id][R[x.id].length-1].h:fh(x.remontee_le),suivi:x.suivi_stats,pa:x.point_attention,motif:x.suivi_motif,texte:x.texte,jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,lien:x.lien,img:urls[x.capture]||''}));
   const ids=new Set(off.filter(x=>x.marque===m).map(x=>x.id));D.comm_off[m]=(cm.data||[]).filter(c=>ids.has(c.publication_id)).map(c=>({pid:String(c.publication_id),date:c.publie_le?fh(c.publie_le):'',auteur:c.auteur,texte:c.texte,sentiment:c.sentiment,theme:c.theme,lieu:c.lieu}))});
  D.fenetre_comm='Commentaires publiés sous les publications des canaux officiels relevées (conservées 48 h, sauf points d’attention).';
  D.passages=ps.data||[];D.rapports={};(rj.data||[]).forEach(r=>D.rapports[r.jour]=r.fichier);
@@ -439,12 +439,12 @@ function inTr(r){const b=REF.getTime()-T*86400000,a=b-86400000;return r.t.getTim
 let T=0;let attLinks=new Set();
 function dk(r){const m=/(\d\d)\/(\d\d) (\d\d)h(\d\d)/.exec(r.remontee||'');return m?m[2]+m[1]+m[3]+m[4]:''}
 function pubSel(){const q=$('#q').value.toLowerCase(),p=$('#fp').value,t=$('#ft').value,l=$('#fl').value,mi=+$('#fi').value,so=$('#fs').value;
- return allRows().filter(r=>inTr(r)&&r.marque===M&&(!p||r.pf===p)&&(!t||r.theme===t)&&(!l||r.lieu===l)&&inter(r)>=mi&&(!q||(r.auteur+' '+r.texte).toLowerCase().includes(q))).sort((a,b)=>so==='d'?dk(b).localeCompare(dk(a)):inter(b)-inter(a))}
+ return allRows().filter(r=>inTr(r)&&r.marque===M&&!r.suivi&&(!p||r.pf===p)&&(!t||r.theme===t)&&(!l||r.lieu===l)&&inter(r)>=mi&&(!q||(r.auteur+' '+r.texte).toLowerCase().includes(q))).sort((a,b)=>so==='d'?dk(b).localeCompare(dk(a)):inter(b)-inter(a))}
 function fillSel(){const base=allRows().filter(r=>inTr(r)&&r.marque===M);
  [['#ft','Toutes thématiques','theme'],['#fl','Toutes localités','lieu']].forEach(([id,lab,k])=>{const v=$(id).value;const vals=[...new Set(base.map(r=>r[k]))].sort((a,b)=>a.localeCompare(b,'fr'));
   $(id).innerHTML=`<option value="">${lab}</option>`+vals.map(x=>`<option>${esc(x)}</option>`).join('');if(vals.includes(v))$(id).value=v})}
 function pubsR(){const L=pubSel();
- $('#pubtxt').textContent=`${M} · ${L.length} publication(s) remontée(s) ${TRL[T]}${REF<Date.now()-3600000?' (avant le '+fh(REF)+', dernières données disponibles)':''}. Les publications ordinaires restent 72 h ; les points d’attention, une semaine.`;
+ $('#pubtxt').textContent=`${M} · ${L.length} publication(s) remontée(s) ${TRL[T]}${REF<Date.now()-3600000?' (avant le '+fh(REF)+', dernières données disponibles)':''}. Les publications suivies n’y figurent plus : elles sont dans l’onglet Publications suivies. Les publications ordinaires restent 72 h ; les points d’attention, une semaine.`;
  $('#cards').innerHTML=L.map(r=>`<article class="pc">${r.img?`<img loading="lazy" src="${r.img}" alt="Capture de la publication" onclick="zoom(this.src)">`:''}<div class="b">
   <div class="h"><span class="tag">${esc(r.pf)}</span>${r.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(r.sentiment)+'</span>'}${attLinks.has((r.lien||'').replace(/\/$/,''))?'<span class="tag alerte">Point d’attention</span>':''}${r.suivi?'<span class="tag">Suivie</span>':''}${r.neuf?'<span class="tag neuf" title="Remontée au dernier passage">● Nouveau</span>':''}</div>
   <div class="a">${esc(r.auteur)}</div><div class="x">${esc(r.texte)}</div>
@@ -588,7 +588,7 @@ async function pdfPubs(){if(!libs())return;const L=pubSel();if(!L.length)return 
  livrer(d,'Rapport_publications_'+M+'.pdf');log('Rapport','Rapport publications '+M)}
 
 async function suivre(id,on=true){const isOff=(D.officiels[M]||[]).some(o=>o.id==String(id));const {error}=await SB.from('publications').update(on?{suivi_stats:true,suivi_motif:'Demandé par '+MOI}:{suivi_stats:false,suivi_motif:null}).eq('id',id);if(error)return toast('Action refusée : '+error.message);log('Alerte',(on?'Suivi statistique demandé':'Suivi statistique arrêté')+' pour la publication officielle n° '+id);await charger();attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));tout();toast(on?(isOff?'Publication suivie : chiffres et commentaires relevés toutes les 6 heures.':'Publication suivie : chiffres relus à chaque passage (onglet Publications suivies).'):'Suivi arrêté : la publication reste affichée.')}
-function offR(){const P=D.officiels[M]||[],S=P.filter(o=>o.suivi),A=P.filter(o=>!o.suivi);const sid=new Set(S.map(o=>o.id));const C=(D.comm_off[M]||[]).filter(c=>!c.pid||sid.has(c.pid));const neg=C.filter(c=>c.sentiment==='Négatif').length;
+function offR(){const P=D.officiels[M]||[],S=P.filter(o=>o.suivi),A=P.filter(o=>!o.suivi&&!o.pa);const sid=new Set(S.map(o=>o.id));const C=(D.comm_off[M]||[]).filter(c=>!c.pid||sid.has(c.pid));const neg=C.filter(c=>c.sentiment==='Négatif').length;
  const k=(l,v,s)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
  $('#offk').innerHTML=k('Publications officielles',P.length,'relevées sur la période')+k('En suivi statistique',S.length,S.length?'critère atteint ou suivi demandé':'aucune pour l’instant')+k('Commentaires analysés',C.length,C.length?Math.round(100*neg/C.length)+' % négatifs':'sur les publications suivies')+k('Interactions suivies',S.length?nf(S.reduce((t,o)=>t+inter(o),0)):'–','sur les publications suivies');
  const canaux={};P.forEach(o=>{const c=canaux[o.canal]=canaux[o.canal]||{n:0,s:0};c.n++;if(o.suivi)c.s++});
