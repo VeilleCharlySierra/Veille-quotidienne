@@ -166,6 +166,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
     <input type="email" id="lemail" required placeholder="prenom.nom@exemple.ci" aria-label="Adresse e-mail">
     <button class="primary" type="submit">Recevoir le lien de connexion</button>
     <p class="small" id="lmsg" role="status"></p>
+    <div id="lconf" hidden><p style="margin:0"><b>Votre lien de connexion est prêt.</b></p><button class="primary" type="button" onclick="confirmerConnexion()">Ouvrir ma session</button></div>
   </form>
 </div>
 
@@ -335,6 +336,10 @@ const BC={CIE:'#E87400',SODECI:'#00A04A'};
 let M='CIE';let DERP=null;
 function toast(t){try{if(WIN&&!/Génération/.test(t)){WIN.close();WIN=null}}catch(e){}const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',3500)}
 const RL={user:'Utilisateur',admin:'Admin',super:'Super admin'};
+async function confirmerConnexion(){const tk=new URLSearchParams(location.search).get('connexion');$('#lmsg').textContent='Ouverture de la session…';
+ const {error}=await SB.auth.verifyOtp({token_hash:tk,type:'magiclink'});
+ if(error){$('#lconf').hidden=true;$('#lemail').required=true;history.replaceState(null,'',location.pathname);$('#lmsg').textContent='Ce lien a déjà servi ou a expiré. Saisissez votre adresse ci-dessus pour en recevoir un nouveau.';return}
+ history.replaceState(null,'',location.pathname);location.reload()}
 async function fnErr(er){try{const j=await er.context.json();return j.erreur||er.message}catch(x){return er.message}}
 async function envoyerLien(){const e=$('#lemail').value.trim().toLowerCase();$('#lmsg').textContent='Envoi du lien…';
  const {data:dl,error:el}=await SB.functions.invoke('lien-connexion',{body:{email:e}});const error=el?{message:await fnErr(el)}:(dl&&!dl.ok?{message:dl.erreur||'erreur'}:null);
@@ -375,7 +380,7 @@ async function charger(){
 function passesR(){const L=D.passages;const last=L[0];const h=[0,3,6,9,12,15,18,21];const auj=isoD(new Date());const faits=new Set(L.filter(x=>isoD(new Date(x.debut))===auj&&x.statut!=='échec').map(x=>Math.floor(new Date(x.debut).getUTCHours()/3)*3));const nd0=new Date(),nm=nd0.getUTCHours()*60+nd0.getUTCMinutes();const next=h.find(x=>x*60+47>nm)??0;
  let s='<span>Passages du jour :</span>'+h.map(x=>`<span class="pass ${faits.has(x)?'ok':(x===next?'next':'')}"><i></i>${String(x).padStart(2,'0')}h</span>`).join('');
  $('#passd').innerHTML=`${last?'Dernier passage : '+fh(last.debut)+' UTC':'Aucun passage enregistré pour l’instant'}${next!=null?' · prochain passage vers '+String(next).padStart(2,'0')+'h47':''}`;$('#passes').innerHTML=s}
-async function demarrer(){let {data:{session}}=await SB.auth.getSession();try{const k='veille_connexion_le';if(session){const t=+localStorage.getItem(k)||0;if(!t)localStorage.setItem(k,Date.now());else if(Date.now()-t>7*86400000){localStorage.removeItem(k);await SB.auth.signOut();session=null;setTimeout(()=>{const m=document.getElementById('lmsg');if(m)m.textContent='Par sécurité, une nouvelle connexion est demandée tous les 7 jours. Demandez un lien de connexion.'},0)}}else localStorage.removeItem(k)}catch(e){}if(!session){$('#login').hidden=false;const h=new URLSearchParams(location.hash.slice(1)+'&'+location.search.slice(1));if(h.get('error_code')||h.get('error')){$('#lmsg').textContent=/expired|invalid/i.test((h.get('error_code')||'')+(h.get('error_description')||''))?'Ce lien a déjà servi ou a expiré (chaque nouvelle demande remplace la précédente). Demandez un seul nouveau lien et cliquez-le une seule fois, dans l’heure.':'Connexion impossible : '+(h.get('error_description')||h.get('error'));history.replaceState(null,'',location.pathname)}return}
+async function demarrer(){let {data:{session}}=await SB.auth.getSession();try{const k='veille_connexion_le';if(session){const t=+localStorage.getItem(k)||0;if(!t)localStorage.setItem(k,Date.now());else if(Date.now()-t>7*86400000){localStorage.removeItem(k);await SB.auth.signOut();session=null;setTimeout(()=>{const m=document.getElementById('lmsg');if(m)m.textContent='Par sécurité, une nouvelle connexion est demandée tous les 7 jours. Demandez un lien de connexion.'},0)}}else localStorage.removeItem(k)}catch(e){}if(!session){$('#login').hidden=false;const tk=new URLSearchParams(location.search).get('connexion');if(tk){$('#lconf').hidden=false;$('#lemail').required=false}const h=new URLSearchParams(location.hash.slice(1)+'&'+location.search.slice(1));if(h.get('error_code')||h.get('error')){$('#lmsg').textContent=/expired|invalid/i.test((h.get('error_code')||'')+(h.get('error_description')||''))?'Ce lien a déjà servi ou a expiré (chaque nouvelle demande remplace la précédente). Demandez un seul nouveau lien et cliquez-le une seule fois, dans l’heure.':'Connexion impossible : '+(h.get('error_description')||h.get('error'));history.replaceState(null,'',location.pathname)}return}
  MOI=session.user.email.toLowerCase();const {data:u}=await SB.from('utilisateurs').select('*').eq('email',MOI).maybeSingle();
  if(!u){$('#login').hidden=false;$('#lmsg').textContent='Cette adresse n’est pas autorisée.';await SB.auth.signOut();return}
  ROLE=u.role;$('#moi').textContent=(u.nom||MOI)+' · '+RL[ROLE];$('#login').hidden=true;$('#app').hidden=false;$('#cards').innerHTML='<div class="empty" style="grid-column:1/-1">Chargement…</div>';

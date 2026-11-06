@@ -42,11 +42,14 @@ Deno.serve(async (req) => {
       headers: { Authorization: "Bearer " + SRV, apikey: SRV, "Content-Type": "application/json" },
       body: JSON.stringify({ type: "magiclink", email: e, options: { redirect_to: SITE } }) });
     const gj = await g.json();
-    const lien = gj.action_link || gj.properties?.action_link;
+    // Le lien mène à la page, qui demande un clic sur « Ouvrir ma session » : les filtres de sécurité des messageries
+    // (qui ouvrent les liens reçus pour les vérifier) ne consomment donc plus le lien à usage unique.
+    const hache = gj.hashed_token || gj.properties?.hashed_token;
+    const lien = hache ? SITE + "?connexion=" + encodeURIComponent(hache) : "";
     if (!lien) return rep({ ok: false, erreur: "lien non généré : " + JSON.stringify(gj).slice(0, 200) }, 500);
     const gs = await sql`select (select valeur from prive.cles where nom = 'url_gmail_script') as url, (select valeur from prive.cles where nom = 'jeton_gmail') as jeton`;
     const nom = ok[0].nom ? " " + ok[0].nom : "";
-    const texte = (relais ? `Lien de connexion de ${e} à lui transmettre (valable une heure, un seul usage ; ne pas l'ouvrir vous-même, sinon il ne servira plus) :\n\n${lien}\n\n---\n\n` : "") + `Bonjour${nom},\n\nVoici votre lien personnel de connexion à la plateforme de veille e-réputationnelle CIE / SODECI (Viral SARL) :\n\n${lien}\n\nCe lien est valable une heure et ne sert qu'une fois. Pour vous reconnecter plus tard, saisissez votre adresse sur la page de la plateforme : un nouveau lien vous sera envoyé.\nAdresse de la plateforme : ${SITE}\n\nViral SARL – document confidentiel`;
+    const texte = (relais ? `Lien de connexion de ${e} à lui transmettre (valable une heure, un seul usage ; ne pas l'ouvrir vous-même, sinon il ne servira plus) :\n\n${lien}\n\n---\n\n` : "") + `Bonjour${nom},\n\nVoici votre lien personnel de connexion à la plateforme de veille e-réputationnelle CIE / SODECI (Viral SARL) :\n\n${lien}\n\nCe lien est valable une heure : ouvrez-le puis cliquez sur « Ouvrir ma session ». Pour vous reconnecter plus tard, saisissez votre adresse sur la page de la plateforme : un nouveau lien vous sera envoyé.\nAdresse de la plateforme : ${SITE}\n\nViral SARL – document confidentiel`;
     const m = await fetch(gs[0].url, { method: "POST", headers: { "Content-Type": "application/json" }, redirect: "follow",
       body: JSON.stringify({ jeton: gs[0].jeton, to: [relais || e], subject: (relais ? "À transmettre à " + e + " – " : "") + "Votre accès à la plateforme de veille CIE / SODECI", text: texte }) });
     const t = (await m.text()).trim();
