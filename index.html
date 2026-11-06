@@ -655,6 +655,11 @@ function panImprimer(){const X=panSel(),per=$('#panp').selectedOptions[0].textCo
 ['panp','pans','panz'].forEach(i=>document.addEventListener('change',e=>{if(e.target&&e.target.id===i)panR()}));
 function tout(){bord();fillSel();pubsR();attR();suivR();panR();offR();chkR()}
 $('#ram').onchange=chkR;
+// Rafraîchissement automatique des données : toutes les 10 minutes, et au retour sur l'onglet si les données ont plus de 5 minutes
+let MAJ=Date.now();
+async function rafraichir(){if($('#app').hidden)return;try{MAJ=Date.now();REF=new Date();await charger();tout()}catch(e){}}
+setInterval(()=>{if(document.visibilityState==='visible')rafraichir()},600000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-MAJ>300000)rafraichir()});
 demarrer();
 </script>
 </body>
