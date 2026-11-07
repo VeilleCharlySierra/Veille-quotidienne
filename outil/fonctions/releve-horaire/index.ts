@@ -20,7 +20,12 @@ async function acteur(nom: string, input: unknown, plafond: number): Promise<any
 const n = (v: unknown) => (typeof v === "number" && isFinite(v) ? Math.round(v) : null);
 const idTweet = (u: string) => (u.match(/status\/(\d+)/) || [])[1] || "";
 const idTiktok = (u: string) => (u.match(/video\/(\d+)/) || [])[1] || "";
-const propre = (u: string) => String(u || "").split("?")[0].replace(/\/$/, "").replace("web.facebook.com", "www.facebook.com").replace("m.facebook.com", "www.facebook.com");
+// adresse normalisée ; pour permalink.php / story.php, l'identifiant de la publication est dans les paramètres : on le garde
+const propre = (u: string) => {
+  const t = String(u || "").replace("web.facebook.com", "www.facebook.com").replace("m.facebook.com", "www.facebook.com");
+  const f = (t.match(/story_fbid=([^&]+)/) || [])[1];
+  return (t.split("?")[0].replace(/\/$/, "")) + (f ? "#" + f : "");
+};
 
 Deno.serve(async (req) => {
   try {
@@ -49,15 +54,16 @@ Deno.serve(async (req) => {
           const it = await acteur("apify/facebook-posts-scraper",
             { startUrls: fb.map((p) => ({ url: p.lien })), resultsLimit: 1 }, 0.01 + 0.006 * fb.length);
           for (const p of fb) {
-            const o = it.find((x) => propre(x.inputUrl) === propre(p.lien)) || it.find((x) => propre(x.url) === propre(p.lien));
-            if (o) res.push({ id: p.id, jaime: n(o.likes), com: n(o.comments), part: n(o.shares), vues: n(o.viewsCount ?? o.videoPostViewCount) });
+            const o = it.find((x) => [x.facebookUrl, x.inputUrl, x.url].some((u) => u && propre(u) === propre(p.lien)));
+            if (o) res.push({ id: p.id, jaime: n(o.likes ?? o.likers?.count ?? o.unified_reactors?.count), com: n(o.comments ?? o.total_comment_count),
+              part: n(o.shares), vues: n(o.viewsCount ?? o.videoPostViewCount) });
           }
         } catch (e) { erreurs.push("Facebook : " + (e as Error).message); }
       })(),
       (async () => {
         if (!tk.length) return;
         try {
-          const it = await acteur("clockworks/tiktok-scraper", { postURLs: tk.map((p) => p.lien), resultsPerPage: 1 }, 0.01 + 0.006 * tk.length);
+          const it = await acteur("clockworks/tiktok-scraper", { postURLs: tk.map((p) => p.lien), resultsPerPage: 1 }, 0.5);
           for (const p of tk) {
             const o = it.find((x) => String(x.id) === idTiktok(p.lien));
             if (o) res.push({ id: p.id, jaime: n(o.diggCount), com: n(o.commentCount), part: n(o.shareCount), vues: n(o.playCount) });
