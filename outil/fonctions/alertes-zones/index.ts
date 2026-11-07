@@ -1,6 +1,7 @@
 // Fonction « alertes-zones » : après chaque passage, envoie (1) les détections de termes surveillés aux destinataires du rapport et (2) à chaque responsable de zone les nouveaux signalements
 // de sa zone : toutes les nouvelles publications remontées citant ses localités, et les commentaires signalant une coupure sous les points d'attention et publications suivies,
 // avec le lien de la publication (publication commentée pour un commentaire). Rien n'est envoyé s'il n'y a rien de nouveau.
+// Après la bascule (parametres.pannes_cie_externe.actif), les responsables de zone CIE sont servis par la plateforme de signalement.
 import postgres from "npm:postgres@3.4.4";
 
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 1 });
@@ -42,8 +43,12 @@ Deno.serve(async (req) => {
         where pa.source = 'commentaire' and pa.releve_le > ${depuis}
       ) x where email_responsable is not null
       order by zone, le desc`;
+    // Bascule : quand les pannes CIE sont gérées par la plateforme de signalement, c'est elle qui écrit aux responsables de zone CIE
+    const [{ conf }] = await sql`select coalesce((select valeur from public.parametres where cle = 'pannes_cie_externe'), '{}') as conf`;
+    const cieExterne = JSON.parse(conf).actif === true;
     const parZone = new Map<string, typeof lignes>();
     for (const l of lignes) {
+      if (cieExterne && l.marque === "CIE") continue;
       const k = l.marque + "|" + l.zone + "|" + l.email_responsable;
       if (!parZone.has(k)) parZone.set(k, [] as unknown as typeof lignes);
       parZone.get(k)!.push(l);
