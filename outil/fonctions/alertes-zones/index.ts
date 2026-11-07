@@ -1,5 +1,5 @@
 // Fonction « alertes-zones » : après chaque passage, envoie (1) les détections de termes surveillés aux destinataires du rapport et (2) à chaque responsable de zone les nouveaux signalements
-// de coupure de sa zone (publications remontées + commentaires des points d'attention et publications suivies),
+// de sa zone : toutes les nouvelles publications remontées citant ses localités, et les commentaires signalant une coupure sous les points d'attention et publications suivies,
 // avec le lien de la publication (publication commentée pour un commentaire). Rien n'est envoyé s'il n'y a rien de nouveau.
 import postgres from "npm:postgres@3.4.4";
 
@@ -25,11 +25,23 @@ Deno.serve(async (req) => {
     const corps = await req.json().catch(() => ({}));
     const envoyer = corps.envoyer !== false;
     const [{ depuis }] = await sql`select coalesce((select valeur::timestamptz from public.parametres where cle = 'dernier_envoi_zones'), now() - interval '3 hours') as depuis`;
+    // (a) toutes les nouvelles publications remontées citant une localité de la zone (toutes thématiques) ;
+    // (b) les commentaires signalant une coupure sous les points d'attention et publications suivies (vue pannes).
     const lignes = await sql`
-      select p.*, z.email_responsable from public.pannes p
-      join public.zones z on z.marque = p.marque and z.nom = p.zone
-      where p.releve_le > ${depuis} and z.email_responsable is not null
-      order by p.zone, p.le desc`;
+      select * from (
+        select 'publication'::text as source, p.id, p.marque::text as marque, p.plateforme, p.texte, p.theme, p.lieu as detail,
+               coalesce(p.publiee_le, p.remontee_le) as le, p.lien, public.commune_de(p.lieu) as commune, z.nom as zone, z.email_responsable
+        from public.publications p
+        join public.zones z on z.marque = p.marque
+          and exists (select 1 from unnest(z.localites) l(l) where public.commune_de(l.l) = public.commune_de(p.lieu))
+        where p.type = 'remontee' and p.cree_le > ${depuis} and public.commune_de(p.lieu) is not null
+        union all
+        select 'commentaire', pa.id, pa.marque::text, pa.plateforme, pa.texte, 'Signalement de coupure (commentaire)', pa.detail,
+               pa.le, pa.lien, pa.commune, pa.zone, z.email_responsable
+        from public.pannes pa join public.zones z on z.marque = pa.marque and z.nom = pa.zone
+        where pa.source = 'commentaire' and pa.releve_le > ${depuis}
+      ) x where email_responsable is not null
+      order by zone, le desc`;
     const parZone = new Map<string, typeof lignes>();
     for (const l of lignes) {
       const k = l.marque + "|" + l.zone + "|" + l.email_responsable;
@@ -40,18 +52,19 @@ Deno.serve(async (req) => {
     for (const [k, ls] of parZone) {
       const [marque, zone, email] = k.split("|");
       const nbC = ls.filter((l) => l.source === "commentaire").length;
-      const texte = `Bonjour,\n\nNouveaux signalements de coupure dans la zone ${zone} (${marque}) depuis le dernier passage de veille :\n` +
-        `${ls.length} signalement(s), dont ${nbC} en commentaire.\n\n` +
-        ls.map((l, i) => `${i + 1}. ${l.commune} – ${l.detail}\n   Date : ${fmt(new Date(l.le))} UTC · ${l.source === "commentaire" ? "Commentaire" : "Publication"} · ${l.plateforme}\n` +
+      const nbCoup = ls.filter((l) => /^Coupure|coupure/.test(l.theme || "")).length;
+      const texte = `Bonjour,\n\nNouveaux éléments sur les localités de la zone ${zone} (${marque}) depuis le dernier envoi :\n` +
+        `${ls.length - nbC} publication(s) remontée(s) citant vos localités (toutes thématiques) et ${nbC} commentaire(s) signalant une coupure ; ${nbCoup} élément(s) concernent une coupure.\n\n` +
+        ls.map((l, i) => `${i + 1}. ${l.commune} – ${l.detail}\n   Thématique : ${l.theme || "non classée"}\n   Date : ${fmt(new Date(l.le))} UTC · ${l.source === "commentaire" ? "Commentaire" : "Publication"} · ${l.plateforme}\n` +
           `   Extrait : « ${String(l.texte || "").replace(/\s+/g, " ").slice(0, 220)} »\n` +
           `   Lien${l.source === "commentaire" ? " (publication commentée)" : ""} : ${l.lien || "non disponible"}`).join("\n\n") +
-        `\n\nTous les signalements et la carte : plateforme de veille, onglet Pannes\nhttps://veillecharlysierra.github.io/Veille-quotidienne/\n\nViral SARL – document confidentiel`;
+        `\n\nToutes les publications : plateforme de veille (onglets Publications et Pannes)\nhttps://veillecharlysierra.github.io/Veille-quotidienne/\n\nViral SARL – document confidentiel`;
       if (envoyer) {
         try {
-          await courriel([email], `Veille ${marque} – coupures signalées zone ${zone} (${ls.length})`, texte);
-          bilan.push(`${zone} : ${ls.length} signalement(s) envoyés à ${email}`);
+          await courriel([email], `Veille ${marque} – nouveautés sur la zone ${zone} (${ls.length})`, texte);
+          bilan.push(`${zone} : ${ls.length} élément(s) envoyés à ${email}`);
         } catch (e) { bilan.push(`${zone} : échec e-mail (${(e as Error).message})`); }
-      } else bilan.push(`${zone} : ${ls.length} signalement(s) (essai, sans e-mail)`);
+      } else bilan.push(`${zone} : ${ls.length} élément(s) (essai, sans e-mail)`);
     }
     // Termes surveillés : un e-mail groupé aux destinataires du rapport pour les détections pas encore envoyées
     const at = await sql`select * from public.alertes_termes where mail_envoye_le is null order by marque, terme, trouve_le`;

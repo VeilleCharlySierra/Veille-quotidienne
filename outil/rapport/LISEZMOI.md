@@ -10,7 +10,7 @@ Chaîne (aucune écriture dans GitHub : les tâches planifiées n'en ont pas le 
 
 ## Procédure de la tâche du matin (jour J = date UTC du jour)
 
-Période : de J-1 06h00 à J 06h00 UTC, selon la date de publication (voir extraire.sql ; :FIN = J 06h00).
+Période : de J-1 06h00 UTC jusqu'au moment de l'extraction (vers 05h00), selon la date de publication (voir extraire.sql ; :FIN = J 06h00, mais les données s'arrêtent à l'heure de l'extraction : c'est cette heure réelle qui est écrite dans le PDF).
 
 1. Cloner le dépôt public (lecture seule) : `git clone https://github.com/VeilleCharlySierra/Veille-quotidienne.git`.
    Travailler dans un dossier `<dossier>` hors du dépôt.
@@ -18,8 +18,8 @@ Période : de J-1 06h00 à J 06h00 UTC, selon la date de publication (voir extra
    remplacés. Enregistrer la sortie brute dans un fichier puis `python3 outil/rapport/lire_resultat.py <sortie> <dossier>/data.json`.
 3. Synthèse : lire toutes les publications (texte, thème, lieu, sentiment, engagement) et écrire `<dossier>/synthese.json` :
    ```json
-   {"jour": "AAAA-MM-JJ", "periode": "publications du JJ/MM/AAAA à 06h00 au JJ/MM/AAAA à 06h00 UTC (date de publication)",
-    "periode_courte": "JJ/MM 06h00 – JJ/MM 06h00 UTC",
+   {"jour": "AAAA-MM-JJ", "periode": "publications du JJ/MM/AAAA à 06h00 au JJ/MM/AAAA à <HHhMM> UTC (date de publication ; <HHhMM> = heure réelle de l'extraction des données, jamais une heure postérieure)",
+    "periode_courte": "JJ/MM 06h00 – JJ/MM <HHhMM> UTC",
     "faits": [["Titre court", "texte"], ...],          // 3 à 5 puces « Ce qui s'est passé »
     "attention": [["Titre court", "texte"], ...],      // 3 à 5 puces « Points d'attention » (dont les points d'attention actifs de la base)
     "marques": {"CIE": [["Titre", "texte"], ...], "SODECI": [...]}}   // 3 à 5 puces par marque
@@ -51,6 +51,7 @@ Période : de J-1 06h00 à J 06h00 UTC, selon la date de publication (voir extra
 - Une publication qui atteint le seuil de commentaires des points d'attention (table criteres, attention_commentaires ; 150 par défaut), remontée ou canal officiel, est signalée dans les points d'attention.
 - Les communiqués des canaux officiels ne sont pas comptés ; un commentaire de soutien à l'auteur compte comme neutre.
 - Si une information n'est pas vérifiable, l'écrire (« non vérifiable », « non précisé »).
+- Tout ce qui est écrit dans le rapport doit être exact et avoir réellement eu lieu (périodes, heures, chiffres, envois) : aucune formulation approximative ou anticipée.
 
 ## Essai manuel de l'envoi par e-mail
 `select prive.lancer_envoi_rapport('AAAA-MM-JJ'::date, true);` (false = sans e-mail).
