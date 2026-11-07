@@ -156,7 +156,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 </style>
 </head>
 <body class="CIE">
-<div class="demo" id="demo">Semaine de test : passages automatiques toutes les 3 heures, rapport quotidien par e-mail à 06h00 UTC.</div>
+<div class="demo" id="demo">Semaine de test : veille continue, rapport quotidien par e-mail.</div>
 
 <div id="login">
   <form class="card-login" onsubmit="event.preventDefault();envoyerLien()">
@@ -233,14 +233,14 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
   <div class="grid g4" id="attk"></div>
   <div class="attwrap">
     <div class="grid" id="attl"></div>
-    <aside class="panel side"><h3>Thématiques en point d'attention</h3><div id="thl"></div><p class="note">5 thématiques au plus. Évolution : variation du nombre de publications entre les deux derniers relevés.</p></aside>
+    <aside class="panel side"><h3>Thématiques en point d'attention</h3><div id="thl"></div><p class="note">5 thématiques au plus. Évolution : variation récente du nombre de publications.</p></aside>
   </div>
 </section>
 
 <!-- PUBLICATIONS SUIVIES -->
 <section class="tab" id="suiv">
-  <div class="small"><b id="nbsuiv"></b> Publications remontées et des canaux officiels mises en suivi (20 au maximum par marque). Leurs chiffres sont relus à chaque passage. Une publication suivie qui passe en point d'attention change de catégorie : elle quitte cet onglet et apparaît dans Points d'attention.</div>
-  <h3>À décider <span class="small">(suivi automatique : contenu non vérifiable, 15 au maximum, retiré automatiquement après 24 h sans décision)</span></h3>
+  <div class="small"><b id="nbsuiv"></b> Publications remontées et des canaux officiels mises en suivi (20 au maximum par marque). Une publication suivie qui passe en point d'attention change de catégorie : elle quitte cet onglet et apparaît dans Points d'attention.</div>
+  <h3>À décider <span class="small">(contenu à vérifier avant décision)</span></h3>
   <div class="cards" id="suiva"></div>
   <h3>Suivies</h3>
   <div class="cards" id="suivc"></div>
@@ -267,7 +267,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 <!-- CANAUX OFFICIELS -->
 <section class="tab" id="off">
   <div class="grid g4" id="offk"></div>
-  <div class="small">Publications des pages et comptes officiels relevées automatiquement à chaque passage. Elles sont <b>affichées seulement</b>. Le suivi statistique (chiffres relus à chaque passage, nouveaux commentaires lus toutes les 6 heures s’il y en a) démarre uniquement si : sujet sensible, plus de 30 commentaires ou plus de 100 partages au contrôle 6 h après publication (seuils réglables dans l'Administration), ou clic sur « Suivre cette publication ».</div>
+  <div class="small">Publications des pages et comptes officiels, relevées automatiquement. Elles sont <b>affichées seulement</b>. Le suivi statistique démarre automatiquement selon les critères de surveillance, ou par un clic sur « Suivre cette publication ».</div>
   <div class="grid g2"><div class="panel"><h3>Canaux officiels</h3><div class="tw"><table id="offs"></table></div><div id="offc" style="margin-top:10px"></div></div>
   <div class="panel"><h3>Sens des commentaires (publications suivies)</h3><div id="offsens"></div><h3 style="margin-top:16px">Publication suivie la plus engageante</h3><div id="offtop"></div></div></div>
   <div hidden><div class="cards" id="offsv"></div></div>
@@ -278,7 +278,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 <!-- RAPPORTS -->
 <section class="tab" id="rap">
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(290px,1fr))">
-    <div class="panel rep"><h3>Rapport journalier</h3><p class="small" style="margin:0">Publications du jour précédent à partir de 06h00 UTC jusqu'à la construction du rapport, vers 05h00 UTC le jour choisi (heure exacte indiquée dans le PDF) ; envoyé automatiquement par e-mail à 06h00 UTC.</p>
+    <div class="panel rep"><h3>Rapport journalier</h3><p class="small" style="margin:0">Publications des dernières 24 heures (période exacte indiquée dans le PDF) ; envoyé automatiquement chaque matin par e-mail.</p>
       <div class="row"><input type="date" id="rj"><button class="primary" onclick="pdfJour()">Télécharger le PDF</button></div></div>
     <div class="panel rep"><h3>Rapport personnalisé</h3><p class="small" style="margin:0">Copie du tableau de bord pour la période et la marque choisies.</p>
       <div class="row"><input type="date" id="rp1"> → <input type="date" id="rp2"></div>
@@ -302,7 +302,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
   <div class="panel"><h3>Termes surveillés <span class="small">(10 au maximum par marque)</span></h3><p class="small" style="margin:0 0 8px">Toute publication remontée ou tout commentaire enregistré qui contient un de ces termes déclenche une alerte WhatsApp (groupe d'alerte et Kks) et un e-mail aux destinataires du rapport. Majuscules et accents ne comptent pas. Un astérisque à la fin accepte toutes les fins de mot : « électrocut* » trouve électrocution, électrocuté, électrocutée…</p><div id="termes"></div>
     <form class="inl" onsubmit="event.preventDefault();addTerme()"><select id="tm"><option>CIE</option><option>SODECI</option></select><input id="tt" placeholder="Mot ou expression" required maxlength="60" style="flex:1"><button class="primary">Ajouter</button></form>
     <h4 style="margin:14px 0 6px">Dernières détections</h4><div class="tw"><table id="termesd"></table></div></div>
-  <div class="panel"><h3>Zones et responsables (alertes localités)</h3><p class="small" style="margin:0 0 8px">Après chaque passage (envoi vers 01h25, 04h25, 07h25… UTC), s'il y a du nouveau, le responsable reçoit par e-mail les nouvelles publications remontées citant ses localités (toutes thématiques) et les commentaires signalant une coupure sous les points d'attention et les publications suivies, avec leurs liens.</p><div class="tw"><table id="zones"></table></div>
+  <div class="panel"><h3>Zones et responsables (alertes localités)</h3><p class="small" style="margin:0 0 8px">S'il y a du nouveau, le responsable reçoit par e-mail les nouvelles publications remontées citant ses localités (toutes thématiques) et les commentaires signalant une coupure sous les points d'attention et les publications suivies, avec leurs liens.</p><div class="tw"><table id="zones"></table></div>
     <form class="inl" onsubmit="event.preventDefault();addZone()"><select id="zm"><option>CIE</option><option>SODECI</option></select><input id="zn" placeholder="Zone" required><input id="zl" placeholder="Localités (séparées par des virgules)" required style="flex:2"><input type="email" id="zr" placeholder="E-mail du responsable" required style="flex:1"><button class="primary">Ajouter</button></form></div>
   <div class="panel"><h3>Destinataires des envois automatiques</h3><p class="small" style="margin:0 0 8px">Liste lue dans la base : c'est exactement ce qui est envoyé aujourd'hui.</p><div class="tw"><table id="dest"></table></div></div>
   <div class="panel"><h3>Sources suivies (collecte automatisée)</h3><div class="tw"><table id="sources"></table></div>
@@ -366,13 +366,13 @@ async function charger(){
  const R={};(rl.data||[]).forEach(r=>{(R[r.publication_id]=R[r.publication_id]||[]).push({h:fh(r.releve_le),jaime:r.jaime,com:r.com,part:r.part})});D.R=R;
  const sem=Date.now()-7*86400000;
  const j24=Date.now()-86400000;
- D.att=P.filter(x=>x.point_attention&&(x.statut_alerte!=='Alerte close'||!x.surveillance_finie_le)).map(x=>({id:x.id,type:'pub',marque:x.marque,pf:x.plateforme,auteur:x.auteur||'',titre:x.texte||x.lien||'',lien:x.lien,img:urls[x.capture]||'',raisons:x.motifs&&x.motifs.length?x.motifs:['Point d’attention'],depuis:fh(x.attention_depuis||x.remontee_le),pub:x.publiee_le?fh(x.publiee_le):'',statut:x.statut_alerte||'Suivi toutes les heures',actif:x.statut_alerte!=='Alerte close',officiel:x.type==='officiel',clos:x.alerte_close_le?fh(x.alerte_close_le):'',epingle:!!x.epingle,sens:x.sens,mots:x.mots,releves:(R[x.id]&&R[x.id].length)?R[x.id]:[{h:fh(x.remontee_le),jaime:x.jaime,com:x.com,part:x.part}]}));
+ D.att=P.filter(x=>x.point_attention&&(x.statut_alerte!=='Alerte close'||!x.surveillance_finie_le)).map(x=>({id:x.id,type:'pub',marque:x.marque,pf:x.plateforme,auteur:x.auteur||'',titre:x.texte||x.lien||'',lien:x.lien,img:urls[x.capture]||'',raisons:x.motifs&&x.motifs.length?x.motifs:['Point d’attention'],depuis:fh(x.attention_depuis||x.remontee_le),pub:x.publiee_le?fh(x.publiee_le):'',statut:({'Suivi toutes les heures':'Suivi renforcé','Suivi toutes les 2 heures':'Suivi régulier'})[x.statut_alerte||'Suivi toutes les heures']||x.statut_alerte,actif:x.statut_alerte!=='Alerte close',officiel:x.type==='officiel',clos:x.alerte_close_le?fh(x.alerte_close_le):'',epingle:!!x.epingle,sens:x.sens,mots:x.mots,releves:(R[x.id]&&R[x.id].length)?R[x.id]:[{h:fh(x.remontee_le),jaime:x.jaime,com:x.com,part:x.part}]}));
  D.att.forEach(a=>{a.urg=urgence(a.releves)});D.att.sort((u,v)=>(v.epingle-u.epingle)||(v.actif-u.actif)||(v.urg-u.urg));
  D.themes_att=(th.data||[]).filter(t=>t.actif).map(t=>{const xs=P.filter(x=>x.type==='remontee'&&x.marque===t.marque&&x.theme===t.theme&&new Date(x.remontee_le)>=new Date(t.depuis));const rel=t.releves||[];const n=rel.length;
   return{marque:t.marque,theme:t.theme,raison:t.raison||'Thématique en alerte',depuis:fh(t.depuis),n:xs.length,inter:xs.reduce((s,x)=>s+(x.jaime||0)+(x.com||0)+(x.part||0),0),neg:xs.length?Math.round(100*xs.filter(x=>x.sentiment==='Négatif').length/xs.length):0,evol:n>1&&rel[n-2].n?Math.round(100*(rel[n-1].n-rel[n-2].n)/rel[n-2].n):null,releves:rel.slice(-6)}});
  const off=P.filter(x=>x.type==='officiel');['CIE','SODECI'].forEach(m=>{D.officiels[m]=off.filter(x=>x.marque===m).map(x=>({id:String(x.id),canal:x.plateforme+' · '+(x.auteur||''),date:x.publiee_le?fh(x.publiee_le):'(date non disponible)',rem:fh(x.remontee_le),der:(R[x.id]&&R[x.id].length)?R[x.id][R[x.id].length-1].h:fh(x.remontee_le),suivi:x.suivi_stats,pa:x.point_attention,motif:x.suivi_motif,texte:x.texte,jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,lien:x.lien,img:urls[x.capture]||''}));
   const ids=new Set(off.filter(x=>x.marque===m).map(x=>x.id));D.comm_off[m]=(cm.data||[]).filter(c=>ids.has(c.publication_id)).map(c=>({pid:String(c.publication_id),date:c.publie_le?fh(c.publie_le):'',auteur:c.auteur,texte:c.texte,sentiment:c.sentiment,theme:c.theme,lieu:c.lieu}))});
- D.fenetre_comm='Commentaires publiés sous les publications des canaux officiels relevées (conservées 48 h, sauf points d’attention).';
+ D.fenetre_comm='Commentaires publiés sous les publications des canaux officiels relevées.';
  D.passages=ps.data||[];D.rapports={};(rj.data||[]).forEach(r=>D.rapports[r.jour]=r.fichier);
 }
 function passesR(){const L=D.passages;const last=L[0];const h=[0,3,6,9,12,15,18,21];const auj=isoD(new Date());const faits=new Set(L.filter(x=>isoD(new Date(x.debut))===auj&&x.statut!=='échec').map(x=>Math.floor(new Date(x.debut).getUTCHours()/3)*3));const nd0=new Date(),nm=nd0.getUTCHours()*60+nd0.getUTCMinutes();const next=h.find(x=>x*60+47>nm)??0;
@@ -461,7 +461,7 @@ function actPub(r){if(typeof r.id!=='number')return'';const b=(t,f)=>`<button cl
  return (r.suivi?b('Arrêter le suivi',`suivre(${r.id},false)`):b('Suivre cette publication',`suivre(${r.id})`))+(r.pa?'':b("Mettre en point d'attention",`mettreAtt(${r.id})`))}
 async function decider(id,c){const u=c==='suivre'?{suivi_auto:false,suivi_stats:true,suivi_motif:'Gardée après suivi automatique par '+MOI}:c==='att'?{suivi_auto:false,point_attention:true,motifs:['Ajout manuel par '+MOI],statut_alerte:'Suivi toutes les heures',attention_depuis:new Date().toISOString()}:{suivi_auto:false,suivi_auto_motif:'Retirée par '+MOI};
  const {error}=await SB.from('publications').update(u).eq('id',id);if(error)return toast('Action refusée : '+error.message);log('Alerte','Suivi automatique n° '+id+' : '+(c==='suivre'?'gardé en suivi':c==='att'?'mis en point d’attention':'retiré'));await charger();attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));tout();toast(c==='retirer'?'Publication retirée du suivi.':'Décision enregistrée.')}
-async function mettreAtt(id){const {error}=await SB.from('publications').update({point_attention:true,motifs:['Ajout manuel par '+MOI],statut_alerte:'Suivi toutes les heures',attention_depuis:new Date().toISOString()}).eq('id',id);if(error)return toast('Action refusée : '+error.message);log('Alerte','Point d’attention ajouté manuellement pour la publication n° '+id);await charger();attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));tout();toast('Mise en point d’attention : relevée à chaque passage.')}
+async function mettreAtt(id){const {error}=await SB.from('publications').update({point_attention:true,motifs:['Ajout manuel par '+MOI],statut_alerte:'Suivi toutes les heures',attention_depuis:new Date().toISOString()}).eq('id',id);if(error)return toast('Action refusée : '+error.message);log('Alerte','Point d’attention ajouté manuellement pour la publication n° '+id);await charger();attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));tout();toast('Mise en point d’attention.')}
 function suivR(){const AU=(D.pubs||[]).filter(r=>r.sauto&&r.marque===M);
  $('#suiva').innerHTML=AU.map(r=>`<article class="pc">${r.img?`<img loading="lazy" src="${r.img}" alt="Capture de la publication" onclick="zoom(this.src)">`:''}<div class="b"><div class="h"><span class="tag">${esc(r.pf)}</span><span class="tag alerte">À décider</span></div>
   <div class="a">${esc(r.auteur)}</div><div class="x">${esc(r.texte)}</div>
@@ -487,7 +487,7 @@ function evoInter(rel){const R=rel.slice(-6).map(r=>({h:r.h,v:(r.jaime||0)+(r.co
  else s+=`<span class="d">Total j'aime + commentaires + partages · un seul relevé</span>`;return`<div class="ib">${s}</div>`}
 function attCard(a){const last=a.releves[a.releves.length-1];const S=a.sens||null;
  return`<article class="att ${a.actif?'':'off'}" data-k="${esc(a.lien)}">${a.img?`<img src="${a.img}" alt="Capture" onclick="zoom(this.src)" style="cursor:zoom-in">`:`<div class="ph">${esc(a.pf)}</div>`}
- <div style="display:grid;gap:8px;min-width:0;align-content:start"><div class="h">${a.raisons.map(x=>`<span class="tag alerte">${esc(x)}</span>`).join('')}<span class="tag">${esc(a.pf)}</span>${a.officiel?'<span class="tag">Canal officiel</span>':''}${a.epingle?'<span class="tag alerte" title="Épinglé par un administrateur : jamais clos automatiquement">📌 Épinglé</span>':''}<span class="statut ${a.actif?'on':''}">${esc(a.statut)}${!a.actif&&a.clos?' le '+esc(a.clos)+' · 2 contrôles à 6 h d’intervalle, puis retrait si toujours sans évolution':''}</span></div>
+ <div style="display:grid;gap:8px;min-width:0;align-content:start"><div class="h">${a.raisons.map(x=>`<span class="tag alerte">${esc(x)}</span>`).join('')}<span class="tag">${esc(a.pf)}</span>${a.officiel?'<span class="tag">Canal officiel</span>':''}${a.epingle?'<span class="tag alerte" title="Épinglé par un administrateur : jamais clos automatiquement">📌 Épinglé</span>':''}<span class="statut ${a.actif?'on':''}">${esc(a.statut)}${!a.actif&&a.clos?' le '+esc(a.clos):''}</span></div>
  <div class="top"><span style="font-weight:700">${esc(a.auteur)} – ${esc(a.titre)}</span>${a.lien?`<a class="noprint small" href="${esc(a.lien)}" target="_blank" rel="noopener">Voir la publication</a>`:''}<span class="adm-only noprint" style="margin-left:auto;display:flex;gap:6px"><button class="ghostb" style="padding:2px 8px;font-size:.78rem" onclick="epinglerAtt(${a.id},${!a.epingle})">${a.epingle?'Désépingler':'📌 Épingler'}</button><button class="ghostb" style="padding:2px 8px;font-size:.78rem" onclick="retirerAtt(${a.id})">Retirer des points d'attention</button></span></div>
  <div class="small">Publiée le ${a.pub?esc(a.pub):'(date non disponible)'} · dernier relevé ${esc(last.h)} : <b>${nf(last.jaime)}</b> j'aime, <b>${nf(last.com)}</b> commentaires, <b>${nf(last.part)}</b> partages</div>
  <div class="viz"><div class="col"><div><div class="k">Sens des commentaires</div>${S?`<div class="sens"><span style="width:${S.neg}%;background:var(--bad)"></span><span style="width:${S.neu}%;background:var(--neutral)"></span><span style="width:${S.pos}%;background:var(--good)"></span></div>
@@ -503,8 +503,8 @@ function urgence(rel){const it=r=>(r.jaime||0)+(r.com||0)+(r.part||0);const n=re
 function attR(){const A=D.att.filter(a=>a.marque===M),TH=D.themes_att.filter(t=>t.marque===M).slice(0,5);
 
  const k=(l,v,s)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
- $('#attk').innerHTML=k('Publications',A.length,'actives ou closes en cours de contrôle')+k('En cours de suivi',A.filter(a=>a.actif).length,'relevés chaque heure ou toutes les 2 h selon leur statut')+k('Thématiques',TH.length,'en point d’attention')+k('Commentaires suivis',nf(A.reduce((t,a)=>t+(a.releves[a.releves.length-1].com||0),0)),'au dernier relevé');
- $('#attl').innerHTML=A.map(attCard).join('')||'<div class="empty">Aucune publication en point d’attention (les alertes closes sont retirées après 24 h).</div>';
+ $('#attk').innerHTML=k('Publications',A.length,'actives ou closes en cours de contrôle')+k('En cours de suivi',A.filter(a=>a.actif).length,'suivi actif')+k('Thématiques',TH.length,'en point d’attention')+k('Commentaires suivis',nf(A.reduce((t,a)=>t+(a.releves[a.releves.length-1].com||0),0)),'au dernier relevé');
+ $('#attl').innerHTML=A.map(attCard).join('')||'<div class="empty">Aucune publication en point d’attention.</div>';
  $$('#attl .adm-only').forEach(e=>e.hidden=ROLE==='user');
  $('#thl').innerHTML=TH.map(thCard).join('')||'<p class="small">Aucune thématique en point d’attention.</p>'}
 
@@ -512,9 +512,9 @@ function pfDe(u){return /tiktok/i.test(u)?'TikTok':/(x|twitter)\.com/i.test(u)?'
 async function epinglerAtt(id,on){if(on&&D.att.filter(a=>a.marque===M&&a.epingle).length>=3)return toast('Limite de 3 points épinglés pour '+M+' : désépinglez-en un avant.');
  if(!confirm(on?'Épingler ce point d’attention ? Il restera suivi et ne sera jamais clos automatiquement, jusqu’à ce qu’un administrateur le désépingle (3 au plus par marque).':'Désépingler ce point d’attention ? Il pourra de nouveau être clos automatiquement selon les critères.'))return;
  const {error}=await SB.rpc('epingler',{p_id:id,p_on:on});if(error)return toast('Action impossible : '+error.message);await charger();tout();toast(on?'Point d’attention épinglé.':'Point d’attention désépinglé.')}
-async function retirerAtt(id){if(!confirm('Retirer cette publication des points d’attention ? Elle retourne dans sa catégorie d’origine. Pendant 48 h, ses chiffres restent surveillés : si elle devient virale ou franchit un critère, elle repassera automatiquement en point d’attention.'))return;const {error}=await SB.rpc('retirer_attention',{p_id:id});if(error)return toast('Retrait impossible : '+error.message);await charger();tout();toast('Publication retirée des points d’attention.')}
+async function retirerAtt(id){if(!confirm('Retirer cette publication des points d’attention ? Elle retourne dans sa catégorie d’origine et reste surveillée : si elle franchit un critère, elle repassera automatiquement en point d’attention.'))return;const {error}=await SB.rpc('retirer_attention',{p_id:id});if(error)return toast('Retrait impossible : '+error.message);await charger();tout();toast('Publication retirée des points d’attention.')}
 async function addAtt(u,o){if(!u)return;const {error}=await SB.from('publications').insert({marque:M,type:'remontee',plateforme:o?o.canal.split(' · ')[0]:pfDe(u),auteur:o?(o.canal.split(' · ')[1]||o.canal):null,texte:o?o.texte:null,lien:u,jaime:o?o.jaime:null,com:o?o.com:null,part:o?o.part:null,vues:o?o.vues:null,point_attention:true,ajout_manuel:true,motifs:['Ajout manuel'],statut_alerte:'En attente du premier relevé',attention_depuis:new Date().toISOString()});
- if(error)return toast(/duplicate/i.test(error.message)?'Cette publication est déjà suivie.':'Ajout impossible : '+error.message);log('Alerte','Point d’attention ajouté manuellement : '+u);if($('#au'))$('#au').value='';await charger();attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));tout();toast('Ajouté aux points d’attention : il sera relevé au prochain passage.')}
+ if(error)return toast(/duplicate/i.test(error.message)?'Cette publication est déjà suivie.':'Ajout impossible : '+error.message);log('Alerte','Point d’attention ajouté manuellement : '+u);if($('#au'))$('#au').value='';await charger();attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));tout();toast('Ajouté aux points d’attention.')}
 
 // ---------- Administration ----------
 async function admCharger(){const q=await Promise.all([SB.from('utilisateurs').select('*').order('ajoute_le'),SB.from('haters').select('*').order('ajoute_le'),SB.from('zones').select('*').order('marque'),SB.from('sources_suivies').select('*').order('plateforme'),ROLE==='super'?SB.from('journal').select('*').order('le',{ascending:false}).limit(200):{data:[]},SB.from('termes_surveilles').select('*').order('marque').order('ajoute_le'),SB.from('alertes_termes').select('*').order('trouve_le',{ascending:false}).limit(30),SB.from('criteres').select('*').order('ordre')]);
@@ -523,13 +523,13 @@ let CR=[],DEST=null;
 async function destR(){if(!DEST){const {data}=await SB.rpc('destinataires');DEST=data||{}}const d=DEST||{},l=a=>(a||[]).map(esc).join('<br>')||'<span class="small">aucun</span>';
  const z=(d.zones||[]).map(x=>`${esc(x.marque)} · ${esc(x.zone)} : ${esc(x.email)}`).join('<br>')||'<span class="small">aucune zone</span>';
  $('#dest').innerHTML='<tr><th>Envoi</th><th>Canal</th><th>Destinataires</th></tr>'+
- `<tr><td>Rapport quotidien (06h00 UTC)</td><td>E-mail</td><td>${l(d.rapport)}</td></tr>`+
- `<tr><td>Rapport quotidien (vers 05h15 UTC)</td><td>WhatsApp</td><td>Groupe « ${esc(d.groupe||'')} »</td></tr>`+
- `<tr><td>Alertes points d'attention, thématiques, publications qui deviennent virales</td><td>WhatsApp (à chaque passage)</td><td>Groupe « ${esc(d.groupe||'')} » et Kks</td></tr>`+
- `<tr><td>Termes surveillés</td><td>WhatsApp (au passage) et e-mail (après le passage)</td><td>Groupe « ${esc(d.groupe||'')} », Kks ; e-mail : ${l(d.rapport)}</td></tr>`+
- `<tr><td>Message du dispositif après chaque passage (RAS ou incident)</td><td>WhatsApp et e-mail</td><td>Kks ; e-mail : ${l(d.incidents)}</td></tr>`+
- `<tr><td>Alerte « aucun passage depuis 4 h » (envoyée par le serveur)</td><td>E-mail</td><td>${l(d.incidents)}</td></tr>`+
- `<tr><td>Nouveautés sur les localités des zones</td><td>E-mail (après chaque passage, s'il y a du nouveau)</td><td>${z}</td></tr>`}
+ `<tr><td>Rapport quotidien</td><td>E-mail</td><td>${l(d.rapport)}</td></tr>`+
+ `<tr><td>Rapport quotidien</td><td>WhatsApp</td><td>Groupe « ${esc(d.groupe||'')} »</td></tr>`+
+ `<tr><td>Alertes points d'attention, thématiques, publications qui deviennent virales</td><td>WhatsApp</td><td>Groupe « ${esc(d.groupe||'')} » et Kks</td></tr>`+
+ `<tr><td>Termes surveillés</td><td>WhatsApp et e-mail</td><td>Groupe « ${esc(d.groupe||'')} », Kks ; e-mail : ${l(d.rapport)}</td></tr>`+
+ `<tr><td>Message de fonctionnement du dispositif (RAS ou incident)</td><td>WhatsApp et e-mail</td><td>Kks ; e-mail : ${l(d.incidents)}</td></tr>`+
+ `<tr><td>Alerte d’interruption du dispositif</td><td>E-mail</td><td>${l(d.incidents)}</td></tr>`+
+ `<tr><td>Nouveautés sur les localités des zones</td><td>E-mail (s'il y a du nouveau)</td><td>${z}</td></tr>`}
 function criteresR(){let g='';$('#criteres').innerHTML='<tr><th>Critère</th><th>Valeur</th><th>Minimum</th><th></th></tr>'+CR.map(c=>{const h=c.groupe!==g?`<tr><td colspan="4" style="font-weight:700;padding-top:10px">${esc(c.groupe)}</td></tr>`:'';g=c.groupe;
  return h+`<tr><td>${esc(c.libelle)}</td><td style="white-space:nowrap"><input type="number" id="cr_${esc(c.cle)}" value="${Number(c.valeur)}" min="${Number(c.plancher)}" step="1" style="width:110px"> ${esc(c.unite||'')}</td><td class="small">${nf(Number(c.plancher))} ${esc(c.unite||'')}</td><td><button class="ghostb" style="padding:3px 8px;font-size:.8rem" onclick="majCritere('${esc(c.cle)}')">Enregistrer</button></td></tr>`}).join('')}
 async function majCritere(k){const c=CR.find(x=>x.cle===k),v=Number($('#cr_'+k).value);if(!(v>=Number(c.plancher)))return toast('Impossible : la valeur ne peut pas descendre sous '+nf(Number(c.plancher))+' '+(c.unite||'')+' (critère de référence).');
@@ -613,7 +613,7 @@ async function pdfPubs(){if(!libs())return;const L=pubSel();if(!L.length)return 
   y+=rh+8}
  livrer(d,'Rapport_publications_'+M+'.pdf');log('Rapport','Rapport publications '+M)}
 
-async function suivre(id,on=true){const isOff=(D.officiels[M]||[]).some(o=>o.id==String(id));const {error}=await SB.from('publications').update(on?{suivi_stats:true,suivi_motif:'Demandé par '+MOI}:{suivi_stats:false,suivi_motif:null}).eq('id',id);if(error)return toast('Action refusée : '+error.message);log('Alerte',(on?'Suivi statistique demandé':'Suivi statistique arrêté')+' pour la publication officielle n° '+id);await charger();attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));tout();toast(on?(isOff?'Publication suivie : chiffres relus à chaque passage, nouveaux commentaires lus toutes les 6 heures.':'Publication suivie : chiffres relus à chaque passage (onglet Publications suivies).'):'Suivi arrêté : la publication reste affichée.')}
+async function suivre(id,on=true){const isOff=(D.officiels[M]||[]).some(o=>o.id==String(id));const {error}=await SB.from('publications').update(on?{suivi_stats:true,suivi_motif:'Demandé par '+MOI}:{suivi_stats:false,suivi_motif:null}).eq('id',id);if(error)return toast('Action refusée : '+error.message);log('Alerte',(on?'Suivi statistique demandé':'Suivi statistique arrêté')+' pour la publication officielle n° '+id);await charger();attLinks=new Set(D.att.map(a=>(a.lien||'').replace(/\/$/,'')));tout();toast(on?(isOff?'Publication suivie.':'Publication suivie (onglet Publications suivies).'):'Suivi arrêté : la publication reste affichée.')}
 function offR(){const P=D.officiels[M]||[],S=P.filter(o=>o.suivi),A=P.filter(o=>!o.suivi&&!o.pa);const sid=new Set(S.map(o=>o.id));const C=(D.comm_off[M]||[]).filter(c=>!c.pid||sid.has(c.pid));const neg=C.filter(c=>c.sentiment==='Négatif').length;
  const k=(l,v,s)=>`<div class="panel kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
  $('#offk').innerHTML=k('Publications officielles',P.length,'relevées sur la période')+k('En suivi statistique',S.length,S.length?'critère atteint ou suivi demandé':'aucune pour l’instant')+k('Commentaires analysés',C.length,C.length?Math.round(100*neg/C.length)+' % négatifs':'sur les publications suivies')+k('Interactions suivies',S.length?nf(S.reduce((t,o)=>t+inter(o),0)):'–','sur les publications suivies');
@@ -634,7 +634,7 @@ function offR(){const P=D.officiels[M]||[],S=P.filter(o=>o.suivi),A=P.filter(o=>
   <div class="x">${esc(o.texte)}</div><div class="m">Publiée le ${esc(o.date)} · remontée le ${esc(o.rem)}</div>
   <div class="bar">${lk(o)}<button class="ghostb adm-only" style="padding:3px 8px;font-size:.8rem" onclick="suivre(${o.id})">Suivre cette publication</button>${att(o)}</div></div></article>`).join('')||'<div class="empty">Aucune autre publication officielle sur la période.</div>';
  $$('#off .adm-only').forEach(e=>e.hidden=ROLE==='user');
- $('#offw').textContent=S.length?'Commentaires relevés toutes les 6 heures sous les publications en suivi statistique.':'';
+ $('#offw').textContent=S.length?'Commentaires relevés sous les publications en suivi statistique.':'';
  $('#offt').innerHTML=C.length?'<tr><th>Date</th><th>Auteur</th><th>Commentaire</th><th>Sens</th><th>Thème</th><th>Localité</th></tr>'+C.map(c=>`<tr><td style="white-space:nowrap">${esc(c.date)}</td><td>${esc(c.auteur)}</td><td>${esc(c.texte)}</td><td>${c.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(c.sentiment)+'</span>'}</td><td>${esc(c.theme)}</td><td>${esc(c.lieu||'')}</td></tr>`).join(''):'<tr><td class="small">Aucun commentaire : les commentaires ne sont relevés que sur les publications suivies.</td></tr>'}
 function panSel(){const d=+($('#panp').value||7),src=$('#pans').value,z=$('#panz').value,lim=Date.now()-d*86400000;
  return (D.pannes||[]).filter(x=>x.marque===M&&new Date(x.le)>=lim&&(!src||x.source===src)&&(!z||(x.zone||'Sans zone')===z))}

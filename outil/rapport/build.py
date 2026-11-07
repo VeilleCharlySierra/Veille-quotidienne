@@ -197,7 +197,7 @@ def brand_pages(b, col, logo, attention):
         c.setFillColor(col); c.setFont('CB', 18); c.drawCentredString(x + bw / 2, y - 26, nd(v))
         c.setFillColor(black); c.setFont('C', 9); c.drawCentredString(x + bw / 2, y - 42, l)
     y -= 66
-    para(20, y, f"Base : remontées {PERIODE} ; {rep} ; vues : non disponibles. Chiffres d'engagement relevés au dernier passage.", size=8.5, color=GREY)
+    para(20, y, f"Base : remontées {PERIODE} ; {rep} ; vues : non disponibles. Chiffres d'engagement au dernier relevé.", size=8.5, color=GREY)
     newpage(f'Statistiques {b} (suite)')
     lc = collections.Counter(p['lieu'] for p in rs).most_common(12)
     chart_bars(lc, 'Localisation des publications', '#1F6FB2', os.path.join(WD, f'loc_{b}.png'), fmt=lambda v, t: str(v))
@@ -227,7 +227,7 @@ def brand_pages(b, col, logo, attention):
             top = fy + fh - 15
             if (p['com'] or 0) >= 150:
                 c.setFillColor(RED); c.rect(fx + 3, top - 11, 110, 10, stroke=0, fill=1)
-                c.setFillColor(white); c.setFont('CB', 6.5); c.drawString(fx + 6, top - 8.5, 'PLUS DE 150 COMMENTAIRES'); top -= 12
+                c.setFillColor(white); c.setFont('CB', 6.5); c.drawString(fx + 6, top - 8.5, 'FORTE AUDIENCE'); top -= 12
             if p.get('img') and os.path.exists(p['img']):
                 # capture d'écran de la publication
                 img(p['img'], fx + 4, fy + 74, fw - 8, top - (fy + 74) - 2)
