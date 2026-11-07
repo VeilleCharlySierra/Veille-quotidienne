@@ -1,8 +1,9 @@
 // Fonction « api-publications » : accès en lecture seule aux publications CIE qui signalent une panne (thématique « Coupures d'électricité »), pour un système tiers.
 // Authentification : en-tête « x-api-key: <clé> » (ou « Authorization: Bearer <clé> »). Les clés sont créées et révoquées
 // par le super administrateur dans l'Administration ; seule leur empreinte SHA-256 est conservée.
-// Ne renvoie QUE ces publications (ni autres thématiques, ni SODECI, ni commentaires, ni statistiques, ni règles de surveillance).
+// Ne renvoie QUE ces publications (ni autres thématiques, ni SODECI, ni commentaires, ni règles de surveillance).
 // Paramètres (GET) : depuis=<date ISO> (défaut : 24 h), jusqua=<date ISO>, limite=1..500 (défaut 100), apres_id=<id> (pagination).
+// vue=statistiques : chiffres de la période (défaut 7 jours) : total, évolution, par jour, par localité, par plateforme, par sentiment, par heure.
 import postgres from "npm:postgres@3.4.4";
 
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 1 });
@@ -31,6 +32,42 @@ Deno.serve(async (req) => {
     const limite = Math.min(Math.max(parseInt(u.searchParams.get("limite") || "100") || 100, 1), 500);
     const apres = parseInt(u.searchParams.get("apres_id") || "0") || 0;
     const d0 = depuis || new Date(Date.now() - 864e5);
+
+    if (u.searchParams.get("vue") === "statistiques") {
+      // Statistiques des signalements de panne CIE sur la période (défaut : 7 jours), comparées à la période précédente de même durée
+      const fin = jusqua || new Date();
+      const deb = depuis || new Date(fin.getTime() - 7 * 864e5);
+      if (deb >= fin) return rep({ erreur: "période vide : « depuis » doit précéder « jusqua »" }, 400);
+      const avant = new Date(deb.getTime() - (fin.getTime() - deb.getTime()));
+      const base = sql`from public.publications where marque::text = 'CIE' and theme = 'Coupures d''électricité'`;
+      const quand = sql`coalesce(publiee_le, remontee_le, cree_le)`;
+      const [tot] = await sql`select
+          count(*) filter (where ${quand} >= ${deb} and ${quand} < ${fin})::int as signalements,
+          count(*) filter (where ${quand} >= ${avant} and ${quand} < ${deb})::int as periode_precedente,
+          count(distinct nullif(public.commune_de(lieu), 'Non localisé')) filter (where ${quand} >= ${deb} and ${quand} < ${fin})::int as localites
+        ${base}`;
+      const parJour = await sql`select to_char(${quand} at time zone 'UTC', 'YYYY-MM-DD') as jour, count(*)::int as signalements
+        ${base} and ${quand} >= ${deb} and ${quand} < ${fin} group by 1 order by 1`;
+      const parLocalite = await sql`select coalesce(public.commune_de(lieu), 'Non localisé') as localite, count(*)::int as signalements,
+          count(*) filter (where ${quand} >= ${new Date(fin.getTime() - 864e5)})::int as dernieres_24h
+        ${base} and ${quand} >= ${deb} and ${quand} < ${fin} group by 1 order by 2 desc, 1`;
+      const prec = await sql`select coalesce(public.commune_de(lieu), 'Non localisé') as localite, count(*)::int as n
+        ${base} and ${quand} >= ${avant} and ${quand} < ${deb} group by 1`;
+      const mp = new Map(prec.map((r) => [r.localite, r.n]));
+      const parPlateforme = await sql`select plateforme, count(*)::int as signalements ${base} and ${quand} >= ${deb} and ${quand} < ${fin} group by 1 order by 2 desc`;
+      const parSentiment = await sql`select coalesce(sentiment, 'Non classé') as sentiment, count(*)::int as signalements ${base} and ${quand} >= ${deb} and ${quand} < ${fin} group by 1 order by 2 desc`;
+      const parHeure = await sql`select extract(hour from ${quand} at time zone 'UTC')::int as heure_utc, count(*)::int as signalements ${base} and ${quand} >= ${deb} and ${quand} < ${fin} group by 1 order by 1`;
+      await sql`update prive.cles_api set dernier_usage = now(), nb_appels = nb_appels + 1 where id = ${c.id}`;
+      return rep({
+        periode: { depuis: deb.toISOString(), jusqua: fin.toISOString() },
+        signalements: tot.signalements, localites: tot.localites,
+        periode_precedente: tot.periode_precedente,
+        evolution_pct: tot.periode_precedente ? Math.round(100 * (tot.signalements - tot.periode_precedente) / tot.periode_precedente) : null,
+        par_jour: parJour,
+        par_localite: parLocalite.map((r) => ({ ...r, periode_precedente: mp.get(r.localite) || 0 })),
+        par_plateforme: parPlateforme, par_sentiment: parSentiment, par_heure_utc: parHeure,
+      });
+    }
 
     const lignes = await sql`
       select id::int as id, case when type = 'officiel' then 'canal officiel' else 'remontée' end as type,

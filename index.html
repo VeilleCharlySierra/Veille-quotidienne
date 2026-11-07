@@ -304,7 +304,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
     <h4 style="margin:14px 0 6px">Dernières détections</h4><div class="tw"><table id="termesd"></table></div></div>
   <div class="panel"><h3>Zones et responsables (alertes localités)</h3><p class="small" style="margin:0 0 8px">S'il y a du nouveau, le responsable reçoit par e-mail les nouvelles publications remontées citant ses localités (toutes thématiques) et les commentaires signalant une coupure sous les points d'attention et les publications suivies, avec leurs liens.</p><div class="tw"><table id="zones"></table></div>
     <form class="inl" onsubmit="event.preventDefault();addZone()"><select id="zm"><option>CIE</option><option>SODECI</option></select><input id="zn" placeholder="Zone" required><input id="zl" placeholder="Localités (séparées par des virgules)" required style="flex:2"><input type="email" id="zr" placeholder="E-mail du responsable" required style="flex:1"><button class="primary">Ajouter</button></form></div>
-  <div class="panel" id="apip" hidden><h3>Accès API (pannes CIE)</h3><p class="small" style="margin:0 0 8px">Accès en lecture seule, pour un système tiers (par exemple le centre de relation client), aux seules publications CIE qui signalent une panne d’électricité. Rien d’autre ne sort : ni SODECI, ni autres thématiques, ni commentaires, ni statistiques, ni critères de surveillance. Une clé n’est affichée qu’une seule fois, à sa création ; seule son empreinte est conservée. Réservé au super administrateur.</p>
+  <div class="panel" id="apip" hidden><h3>Accès API (pannes CIE)</h3><p class="small" style="margin:0 0 8px">Accès en lecture seule, pour un système tiers (par exemple le centre de relation client), aux seules publications CIE qui signalent une panne d’électricité. Rien d’autre ne sort : ni SODECI, ni autres thématiques, ni commentaires, ni critères de surveillance. Des statistiques de ces signalements sont aussi disponibles (par jour, localité, plateforme, sentiment, heure). Une clé n’est affichée qu’une seule fois, à sa création ; seule son empreinte est conservée. Réservé au super administrateur.</p>
    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><input id="apinom" placeholder="Destinataire (ex. Centre relation client CIE)" style="flex:1;min-width:220px"><button onclick="creerCleApi()">Créer une clé</button></div>
    <div id="apinew"></div><div class="tw"><table id="apil"></table></div>
    <details style="margin-top:8px"><summary class="small">Mode d’emploi pour le système tiers</summary><pre class="small" style="white-space:pre-wrap">GET https://vtpfgzrlyqdjrulotxni.supabase.co/functions/v1/api-publications
@@ -315,7 +315,13 @@ Paramètres facultatifs :
   jusqua=2026-11-08T00:00:00Z
   limite=100                    (1 à 500)
   apres_id=&lt;id&gt;                (page suivante : valeur « apres_id » de la réponse)
-Réponse : { nombre, suite, apres_id, publications: [ { id, type, plateforme, auteur, texte, lieu, sentiment, lien, publiee_le, remontee_le, jaime, commentaires, partages, vues } ] }</pre></details></div>
+Réponse : { nombre, suite, apres_id, publications: [ { id, type, plateforme, auteur, texte, lieu, sentiment, lien, publiee_le, remontee_le, jaime, commentaires, partages, vues } ] }
+
+Statistiques : ajouter vue=statistiques (période par défaut : 7 derniers jours ; depuis / jusqua possibles)
+Réponse : { periode, signalements, localites, periode_precedente, evolution_pct,
+  par_jour: [ { jour, signalements } ],
+  par_localite: [ { localite, signalements, dernieres_24h, periode_precedente } ],
+  par_plateforme, par_sentiment, par_heure_utc }</pre></details></div>
   <div class="panel"><h3>Destinataires des envois automatiques</h3><p class="small" style="margin:0 0 8px">Liste lue dans la base : c'est exactement ce qui est envoyé aujourd'hui.</p><div class="tw"><table id="dest"></table></div></div>
   <div class="panel"><h3>Sources suivies (collecte automatisée)</h3><div class="tw"><table id="sources"></table></div>
     <form class="inl" onsubmit="event.preventDefault();addSource()"><select id="sp"><option>Facebook</option><option>TikTok</option><option>X</option><option>Média en ligne</option></select><input id="sn" placeholder="Nom de la page, du groupe ou du compte" required style="flex:1"><input id="su" placeholder="Lien" style="flex:1"><select id="sc"><option>Média</option><option>Page locale</option><option>Groupe public</option><option>Activiste</option><option>Hater</option><option>Personnalité</option></select><button class="primary">Ajouter</button></form></div>
