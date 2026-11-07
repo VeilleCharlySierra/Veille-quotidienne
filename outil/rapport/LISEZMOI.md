@@ -48,7 +48,7 @@ Période : de J-1 06h00 à J 06h00 UTC, selon la date de publication (voir extra
 - Chaque chiffre cité vient des données (j'aime, commentaires, partages, nombre de publications, localités).
 - Ne jamais mentionner « Apify » : dire « remontée humaine » ou « remontée automatisée ».
 - Seuils de personnalité : plus de 20 000 abonnés (profil Facebook), 5 000 (compte X), 100 000 (page Facebook), 150 000 (TikTok).
-- Une publication de 150 commentaires ou plus (remontée ou canal officiel) est signalée dans les points d'attention.
+- Une publication qui atteint le seuil de commentaires des points d'attention (table criteres, attention_commentaires ; 150 par défaut), remontée ou canal officiel, est signalée dans les points d'attention.
 - Les communiqués des canaux officiels ne sont pas comptés ; un commentaire de soutien à l'auteur compte comme neutre.
 - Si une information n'est pas vérifiable, l'écrire (« non vérifiable », « non précisé »).
 
