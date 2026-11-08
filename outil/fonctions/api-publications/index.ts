@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
   try {
     const cle = (req.headers.get("x-api-key") || (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "")).trim();
     if (!/^vcs_[0-9a-f]{48}$/.test(cle)) return rep({ erreur: "clé d'accès absente ou invalide" }, 401);
-    const [c] = await sql`select id from prive.cles_api where empreinte = ${await sha256(cle)} and actif`;
+    const [c] = await sql`select id from prive.cles_api where empreinte = ${await sha256(cle)} and actif and portee = 'api_pannes'`;
     if (!c) return rep({ erreur: "clé d'accès absente ou invalide" }, 401);
 
     const u = new URL(req.url);
