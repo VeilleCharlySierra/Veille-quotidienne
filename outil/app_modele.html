@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
-:root{--bg:#F4F5F3;--panel:#fff;--fg:#1B1F1C;--muted:#5E6A62;--line:#DFE4E0;--soft:#EEF1EC;--red:#C00000;--theme:#F77D02;--theme2:#E06E00;--theme3:#B85A00;--vert:#029740;--sodeci:#00A04A;--cie:#F77D02;--blue:#1F6FB2;--bad:#C62828;--neutral:#9AA49E;--good:#2E7D32;
+:root{--bg:#F4F5F3;--panel:#fff;--fg:#1B1F1C;--muted:#5E6A62;--line:#DFE4E0;--soft:#EEF1EC;--red:#E06E00;--theme:#F77D02;--theme2:#E06E00;--theme3:#B85A00;--vert:#029740;--sodeci:#00A04A;--cie:#F77D02;--blue:#1F6FB2;--bad:#B4470B;--neutral:#9AA49E;--good:#029740;
 --sans:"Source Sans 3","Segoe UI",Roboto,Arial,sans-serif;--serif:"Source Serif 4",Georgia,serif;--brand:var(--cie);color-scheme:light}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--panel:#1B201D;--fg:#E9EEEA;--muted:#A3AFA7;--line:#2E3631;--soft:#242B26;--neutral:#6F7A73;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#121614;--panel:#1B201D;--fg:#E9EEEA;--muted:#A3AFA7;--line:#2E3631;--soft:#242B26;--neutral:#6F7A73;color-scheme:dark}
@@ -102,7 +102,7 @@ svg text{fill:var(--muted);font-family:var(--sans)}
 .h{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:.78rem}
 .tag{border-radius:4px;padding:1px 6px;font-weight:700;font-size:.74rem;background:var(--soft);color:var(--muted)}
 .tag.CIE{background:var(--cie);color:#fff}.tag.SODECI{background:var(--sodeci);color:#fff}
-.tag.neg{background:#FDE7E7;color:var(--bad)}
+.tag.neg{background:#FDECDF;color:var(--bad)}
 .tag.neuf{background:#E8F4EA;color:#1E7A33;font-weight:700}
 .tag.alerte{background:var(--red);color:#fff}
 .pc .a{font-weight:700}.pc .x{font-size:.92rem}.pc .m{font-size:.8rem;color:var(--muted)}
@@ -122,7 +122,7 @@ aside.side{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow:auto}
 .ib{display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;font-size:.8rem;font-variant-numeric:tabular-nums}
 .ib .t{height:12px;background:var(--soft);border-radius:2px;overflow:hidden}
 .ib .t span{display:block;height:100%;background:var(--brand)}
-.ib .t span.last{background:var(--red)}
+.ib .t span.last{background:var(--theme3)}
 .ib .n{font-weight:700;text-align:right}
 .ib .d{grid-column:1/-1;font-size:.72rem;color:var(--muted)}
 .att .top{display:flex;gap:10px;justify-content:space-between;align-items:baseline;flex-wrap:wrap}
@@ -559,7 +559,7 @@ async function admCharger(){const q=await Promise.all([SB.from('utilisateurs').s
  U=q[0].data||[];H=q[1].data||[];Z=q[2].data||[];SRC=q[3].data||[];J=q[4].data||[];TS=q[5].data||[];TD=q[6].data||[];CR=q[7].data||[];admR()}
 let CR=[],DEST=null;
 async function apiR(){if(ROLE!=='super')return;$('#apip').hidden=false;const {data,error}=await SB.rpc('cles_api');if(error)return;$('#apil').innerHTML='<tr><th>Destinataire</th><th>Clé</th><th>Créée</th><th>Dernier appel</th><th>Appels</th><th></th></tr>'+((data||[]).map(k=>`<tr><td>${esc(k.nom)}</td><td><code>${esc(k.debut)}…</code></td><td>${fh(k.cree_le)}</td><td>${k.dernier_usage?fh(k.dernier_usage):'—'}</td><td>${k.nb_appels}</td><td>${k.actif?`<button class="del" onclick="revoquerCleApi(${k.id})">Révoquer</button>`:'révoquée le '+fh(k.revoquee_le)}</td></tr>`).join('')||'<tr><td colspan="6" class="small">Aucune clé.</td></tr>')}
-async function creerCleApi(){const nom=$('#apinom').value.trim();if(!nom)return toast('Indiquez le destinataire de la clé.');const {data,error}=await SB.rpc('creer_cle_api',{p_nom:nom,p_marques:['CIE']});if(error)return toast('Création impossible : '+error.message);$('#apinom').value='';$('#apinew').innerHTML=`<div class="panel" style="border-color:#c00;margin-bottom:8px"><b>Clé créée pour « ${esc(nom)} » — copiez-la maintenant, elle ne sera plus affichée :</b><br><code style="user-select:all;word-break:break-all">${esc(data)}</code><br><button onclick="navigator.clipboard.writeText('${esc(data)}').then(()=>toast('Clé copiée.'))">Copier</button> <button onclick="$('#apinew').innerHTML=''">Masquer</button></div>`;apiR()}
+async function creerCleApi(){const nom=$('#apinom').value.trim();if(!nom)return toast('Indiquez le destinataire de la clé.');const {data,error}=await SB.rpc('creer_cle_api',{p_nom:nom,p_marques:['CIE']});if(error)return toast('Création impossible : '+error.message);$('#apinom').value='';$('#apinew').innerHTML=`<div class="panel" style="border-color:var(--theme);margin-bottom:8px"><b>Clé créée pour « ${esc(nom)} » — copiez-la maintenant, elle ne sera plus affichée :</b><br><code style="user-select:all;word-break:break-all">${esc(data)}</code><br><button onclick="navigator.clipboard.writeText('${esc(data)}').then(()=>toast('Clé copiée.'))">Copier</button> <button onclick="$('#apinew').innerHTML=''">Masquer</button></div>`;apiR()}
 async function revoquerCleApi(id){if(!confirm('Révoquer cette clé ? Le système qui l’utilise n’aura plus accès aux publications.'))return;const {error}=await SB.rpc('revoquer_cle_api',{p_id:id});if(error)return toast('Révocation impossible : '+error.message);toast('Clé révoquée.');apiR()}
 async function destR(){if(!DEST){const {data}=await SB.rpc('destinataires');DEST=data||{}}const d=DEST||{},l=a=>(a||[]).map(esc).join('<br>')||'<span class="small">aucun</span>';
  const z=(d.zones||[]).map(x=>`${esc(x.marque)} · ${esc(x.zone)} : ${esc(x.email)}`).join('<br>')||'<span class="small">aucune zone</span>';
@@ -600,7 +600,7 @@ async function addSource(){const {error}=await SB.from('sources_suivies').insert
 const clean=s=>String(s??'').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/…/g,'...').replace(/[–—]/g,'-').replace(/ | /g,' ').replace(/[^\x00-\xFF]/g,'');
 function libs(){if(!window.jspdf||!window.html2canvas){toast('Chargement des outils PDF impossible : vérifiez la connexion.');return false}return true}
 let LOGO=null;
-async function entete(d,titre,sous){d.setFillColor(192,0,0);d.rect(0,0,595,64,'F');d.setTextColor(255);d.setFont('helvetica','bold');d.setFontSize(17);d.text(clean(titre),32,34);d.setFont('helvetica','normal');d.setFontSize(10);d.text(clean(sous),32,52);d.setTextColor(30);
+async function entete(d,titre,sous){d.setFillColor(247,125,2);d.rect(0,0,595,64,'F');d.setTextColor(255);d.setFont('helvetica','bold');d.setFontSize(17);d.text(clean(titre),32,34);d.setFont('helvetica','normal');d.setFontSize(10);d.text(clean(sous),32,52);d.setTextColor(30);
  if(!LOGO)LOGO=await imgData('img/logo-viral.jpg');if(LOGO){try{const pr=d.getImageProperties(LOGO);const h=40,w=h*pr.width/pr.height;d.setFillColor(255,255,255);d.roundedRect(595-32-w-8,12,w+8,h,4,4,'F');d.addImage(LOGO,'JPEG',595-32-w-4,14,w,h-4)}catch(e){}}}
 let WIN=null;function preOuvrir(){try{WIN=window.open('','_blank');if(WIN)WIN.document.write('<p style="font-family:sans-serif;padding:20px">Génération du rapport…</p>')}catch(e){WIN=null}}
 function pieds(d){const n=d.internal.getNumberOfPages(),now=new Date(),t=now.toLocaleDateString('fr-FR')+' à '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
