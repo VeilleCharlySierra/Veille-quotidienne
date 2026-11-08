@@ -688,7 +688,7 @@ function offR(){const P=D.officiels[M]||[],S=P.filter(o=>o.suivi),A=P.filter(o=>
 function panSel(){const d=+($('#panp').value||7),src=$('#pans').value,z=$('#panz').value,lim=Date.now()-d*86400000;
  return (D.pannes||[]).filter(x=>x.marque===M&&new Date(x.le)>=lim&&(!src||x.source===src)&&(!z||(x.zone||'Sans zone')===z))}
 // Grand Abidjan : plan schématique des 13 communes (positions relatives respectées, lagune Ébrié), lisible même quand les communes sont proches
-const ABJ={Songon:[52,150],Yopougon:[140,150],'Attécoubé':[228,140],Anyama:[250,32],Abobo:[262,88],'Adjamé':[300,140],Cocody:[388,120],Bingerville:[486,112],Plateau:[300,196],Treichville:[300,262],Marcory:[384,262],Koumassi:[466,248],'Port-Bouët':[420,322]};
+const ABJ={Songon:[52,160],Yopougon:[140,160],'Attécoubé':[212,168],Anyama:[236,34],Abobo:[276,104],'Adjamé':[300,140],Cocody:[388,120],Bingerville:[486,112],Plateau:[300,196],Treichville:[300,262],Marcory:[384,262],Koumassi:[466,248],'Port-Bouët':[420,322]};
 function panAbj(L){const cnt={};L.forEach(([t,n])=>{const k=t==='Cocody (Angré)'?'Cocody':t;if(ABJ[k])cnt[k]=(cnt[k]||0)+n});
  const col=BC[M],halo='stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round"',tot=Object.values(cnt).reduce((a,b)=>a+b,0),mx=Math.max(1,...Object.values(cnt)),r=n=>11+19*Math.sqrt(n/mx);
  let s=`<svg viewBox="0 0 540 360" width="100%" style="max-height:360px" role="img" aria-label="Communes du Grand Abidjan">
