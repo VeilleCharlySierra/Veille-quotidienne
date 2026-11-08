@@ -469,10 +469,13 @@ function bord(){
  $('#lieux').innerHTML=ls.slice(0,10).map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/lm}%"></span></span><span class="n">${v}</span>`).join('')+(nl?`<span class="small" style="grid-column:1/-1">${nl} publication(s) sans localité.</span>`:'');
  carte(ls)}
 function carte(ls,el){el=el||'#carte';const G=D.geo;let abj=0,pts=[];ls.forEach(([t,n])=>{const L=G.lieux[t];if(t==='Abidjan'||(L&&L.abj))abj+=n;else if(L)pts.push([L.xy,n,t])});
- const r=n=>8+Math.sqrt(n)*8,col=BC[M];let s=`<svg viewBox="0 0 622 653" width="100%" style="max-height:300px" role="img" aria-label="Carte des localités citées"><path d="${G.path}" fill="var(--soft)" stroke="var(--line)" stroke-width="2"/>`;
- pts.forEach(([xy,n,t])=>s+=`<circle cx="${xy[0]}" cy="${xy[1]}" r="${r(n)}" fill="${col}" fill-opacity=".55" stroke="${col}"><title>${esc(t)} : ${n}</title></circle>`);
- if(abj){const[x,y]=G.abidjan;s+=`<circle cx="${x}" cy="${y}" r="${r(abj)}" fill="${col}" fill-opacity=".55" stroke="${col}"><title>Grand Abidjan : ${abj}</title></circle><text x="${x+r(abj)+6}" y="${y+6}" font-size="22" font-weight="700">Grand Abidjan · ${abj}</text>`}
- $(el).innerHTML=s+'</svg>'}
+ const r=n=>9+Math.sqrt(n)*8,col=BC[M],halo='stroke="#fff" stroke-width="6" paint-order="stroke" stroke-linejoin="round"';
+ let s=`<svg viewBox="0 0 622 653" width="100%" style="max-height:340px" role="img" aria-label="Carte des localités citées"><path d="${G.path}" fill="var(--soft)" stroke="var(--line)" stroke-width="2"/>`;
+ const tous=pts.map(([xy,n,t])=>({x:xy[0],y:xy[1],n,t}));if(abj){const[x,y]=G.abidjan;tous.push({x,y,n:abj,t:'Grand Abidjan'})}
+ tous.sort((a,b)=>b.n-a.n);
+ tous.forEach(p=>{s+=`<circle cx="${p.x}" cy="${p.y}" r="${r(p.n)}" fill="${col}" fill-opacity=".6" stroke="${col}" stroke-width="2"><title>${esc(p.t)} : ${p.n}</title></circle>`});
+ tous.slice(0,12).forEach(p=>{const rr=r(p.n),gauche=p.x>470;s+=`<text x="${gauche?p.x-rr-6:p.x+rr+6}" y="${p.y+8}" text-anchor="${gauche?'end':'start'}" font-size="24" font-weight="700" fill="var(--fg)" ${halo}>${esc(p.t)} · ${p.n}</text>`});
+ $(el).innerHTML=s+'</svg>'+(tous.length>12?`<div class="small" style="text-align:center">${tous.length-12} autre(s) localité(s) : survoler les points pour le détail.</div>`:'')}
 $$('#per button').forEach(b=>b.onclick=()=>{P=b.dataset.p;$$('#per button').forEach(x=>x.classList.toggle('on',x===b));$('#perc').hidden=P!=='c';bord()});
 $('#d1').onchange=$('#d2').onchange=bord;
 
@@ -680,12 +683,17 @@ function offR(){const P=D.officiels[M]||[],S=P.filter(o=>o.suivi),A=P.filter(o=>
  $('#offt').innerHTML=C.length?'<tr><th>Date</th><th>Auteur</th><th>Commentaire</th><th>Sens</th><th>Thème</th><th>Localité</th></tr>'+C.map(c=>`<tr><td style="white-space:nowrap">${esc(c.date)}</td><td>${esc(c.auteur)}</td><td>${esc(c.texte)}</td><td>${c.sentiment==='Négatif'?'<span class="tag neg">Négatif</span>':'<span class="tag">'+esc(c.sentiment)+'</span>'}</td><td>${esc(c.theme)}</td><td>${esc(c.lieu||'')}</td></tr>`).join(''):'<tr><td class="small">Aucun commentaire : les commentaires ne sont relevés que sur les publications suivies.</td></tr>'}
 function panSel(){const d=+($('#panp').value||7),src=$('#pans').value,z=$('#panz').value,lim=Date.now()-d*86400000;
  return (D.pannes||[]).filter(x=>x.marque===M&&new Date(x.le)>=lim&&(!src||x.source===src)&&(!z||(x.zone||'Sans zone')===z))}
-function panAbj(L){const G=D.geo,pts=L.filter(([t])=>G.lieux[t]&&G.lieux[t].abj);if(!pts.length)return'<div class="empty">Aucune coupure signalée à Abidjan sur la période.</div>';
- const xs=pts.map(([t])=>G.lieux[t].xy),x0=Math.min(...xs.map(a=>a[0]))-6,x1=Math.max(...xs.map(a=>a[0]))+6,y0=Math.min(...xs.map(a=>a[1]))-6,y1=Math.max(...xs.map(a=>a[1]))+6;
- const W=420,H=300,sx=W/Math.max(x1-x0,1),sy=H/Math.max(y1-y0,1),k=Math.min(sx,sy),col=BC[M];
- let s=`<svg viewBox="0 0 ${W} ${H+20}" width="100%" style="max-height:300px" role="img" aria-label="Communes d'Abidjan">`;
- pts.forEach(([t,n])=>{const [x,y]=G.lieux[t].xy,cx=(x-x0)*k,cy=(y-y0)*k+10,r=6+Math.sqrt(n)*6;s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col}" fill-opacity=".5" stroke="${col}"><title>${esc(t)} : ${n}</title></circle><text x="${cx}" y="${cy-r-3}" text-anchor="middle" font-size="12" font-weight="700">${esc(t)} · ${n}</text>`});
- return s+'</svg>'}
+function panAbj(L){const G=D.geo,cnt={};L.forEach(([t,n])=>{if(G.lieux[t]&&G.lieux[t].abj)cnt[t]=(cnt[t]||0)+n});
+ // fond : toutes les communes du Grand Abidjan, nommées, pour situer les signalements
+ const base=Object.keys(G.lieux).filter(t=>G.lieux[t].abj&&t!=='Cocody (Angré)'),xs=base.map(t=>G.lieux[t].xy);
+ const x0=Math.min(...xs.map(a=>a[0])),x1=Math.max(...xs.map(a=>a[0])),y0=Math.min(...xs.map(a=>a[1])),y1=Math.max(...xs.map(a=>a[1]));
+ const W=520,H=330,m=48,k=Math.min((W-2*m)/Math.max(x1-x0,1),(H-2*m)/Math.max(y1-y0,1)),P=t=>{const[x,y]=G.lieux[t].xy;return[m+(x-x0)*k,m+(y-y0)*k]};
+ const pts=base.map(P);const hull=(a=>{a=a.slice().sort((p,q)=>p[0]-q[0]||p[1]-q[1]);const c=(o,p,q)=>(p[0]-o[0])*(q[1]-o[1])-(p[1]-o[1])*(q[0]-o[0]);const lo=[],up=[];for(const p of a){while(lo.length>1&&c(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}for(const p of a.slice().reverse()){while(up.length>1&&c(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p)}return lo.slice(0,-1).concat(up.slice(0,-1))})(pts);
+ const col=BC[M],halo='stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round"',tot=Object.values(cnt).reduce((a,b)=>a+b,0);
+ let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-height:340px" role="img" aria-label="Communes du Grand Abidjan"><path d="M${hull.map(p=>p.join(' ')).join('L')}Z" fill="var(--soft)" stroke="var(--line)" stroke-width="44" stroke-linejoin="round"/><path d="M${hull.map(p=>p.join(' ')).join('L')}Z" fill="var(--soft)"/>`;
+ base.forEach(t=>{if(cnt[t])return;const[x,y]=P(t);s+=`<circle cx="${x}" cy="${y}" r="4" fill="var(--neutral)"/><text x="${x}" y="${y-8}" text-anchor="middle" font-size="12" fill="var(--muted)" ${halo}>${esc(t)}</text>`});
+ Object.entries(cnt).sort((a,b)=>a[1]-b[1]).forEach(([t,n])=>{const[x,y]=P(t),r=11+Math.sqrt(n)*6;s+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${col}" fill-opacity=".85" stroke="#fff" stroke-width="2"><title>${esc(t)} : ${n} signalement(s)</title></circle><text x="${x}" y="${y+5}" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">${n}</text><text x="${x}" y="${y-r-5}" text-anchor="middle" font-size="13" font-weight="700" fill="var(--fg)" ${halo}>${esc(t)}</text>`});
+ return s+`</svg><div class="small" style="text-align:center">${tot?tot+' signalement(s) dans '+Object.keys(cnt).length+' commune(s) du Grand Abidjan':'Aucune coupure signalée à Abidjan sur la période'} · communes en gris : aucun signalement</div>`}
 function panR(){const ext=M==='CIE'&&EXT&&EXT.actif;['pans','panz'].forEach(i=>{const l=$('#'+i).closest('label');if(l)l.style.display=ext?'none':''});$('#panext').hidden=!ext;if(ext)return panExt();
  const zs=[...new Set((D.pannes||[]).filter(x=>x.marque===M).map(x=>x.zone||'Sans zone'))].sort(),zv=$('#panz').value;
  $('#panz').innerHTML='<option value="">Toutes</option>'+zs.map(z=>`<option${z===zv?' selected':''}>${esc(z)}</option>`).join('');
