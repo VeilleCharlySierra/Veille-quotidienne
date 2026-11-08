@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
-:root{--bg:#F4F5F3;--panel:#fff;--fg:#1B1F1C;--muted:#5E6A62;--line:#DFE4E0;--soft:#EEF1EC;--red:#C00000;--theme:#E87400;--theme2:#C45F00;--theme3:#9A4A00;--sodeci:#00A04A;--cie:#E87400;--blue:#1F6FB2;--bad:#C62828;--neutral:#9AA49E;--good:#2E7D32;
+:root{--bg:#F4F5F3;--panel:#fff;--fg:#1B1F1C;--muted:#5E6A62;--line:#DFE4E0;--soft:#EEF1EC;--red:#C00000;--theme:#F77D02;--theme2:#E06E00;--theme3:#B85A00;--sodeci:#00A04A;--cie:#F77D02;--blue:#1F6FB2;--bad:#C62828;--neutral:#9AA49E;--good:#2E7D32;
 --sans:"Source Sans 3","Segoe UI",Roboto,Arial,sans-serif;--serif:"Source Serif 4",Georgia,serif;--brand:var(--cie);color-scheme:light}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--panel:#1B201D;--fg:#E9EEEA;--muted:#A3AFA7;--line:#2E3631;--soft:#242B26;--neutral:#6F7A73;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#121614;--panel:#1B201D;--fg:#E9EEEA;--muted:#A3AFA7;--line:#2E3631;--soft:#242B26;--neutral:#6F7A73;color-scheme:dark}
@@ -24,9 +24,10 @@ a{color:var(--blue)}
 button,input,select{font:inherit;color:inherit}
 .demo{background:#FFF4D6;color:#5A3B00;font-size:.85rem;text-align:center;padding:6px 16px;border-bottom:1px solid #F0D690}
 
-#login{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,var(--theme) 0 22%,var(--theme2) 38%,var(--bg) 38%)}
+#login{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(circle at 20% 15%,#FF9A2E 0,var(--theme) 45%,var(--theme2) 100%)}
 .card-login{background:var(--panel);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.15);padding:28px;width:min(420px,100%);display:grid;gap:14px}
-.card-login img{height:56px;width:auto;justify-self:start;border-radius:6px}
+.card-login img{height:64px;width:auto;justify-self:start;border-radius:6px}
+.card-login .powered img{height:20px}
 .card-login h1{font-family:var(--serif);font-size:1.5rem;margin:0}
 .card-login p{margin:0;color:var(--muted)}
 .card-login input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
@@ -34,7 +35,7 @@ button,input,select{font:inherit;color:inherit}
 .ghostb{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600}
 .small{font-size:.82rem;color:var(--muted)}
 
-header.top{background:linear-gradient(100deg,var(--theme2),var(--theme) 60%,#F08A1E);color:#fff}
+header.top{background:linear-gradient(100deg,var(--theme2),var(--theme) 55%,#FF9A2E);color:#fff}
 header.top .wrap{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:space-between;padding-block:12px}
 .brand{display:flex;gap:12px;align-items:center}
 .brand img{height:46px;border-radius:8px;background:#fff;padding:4px 8px;box-shadow:0 1px 4px rgba(0,0,0,.15)}
@@ -166,7 +167,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 
 <div id="login">
   <form class="card-login" onsubmit="event.preventDefault();envoyerLien()">
-    <img src="img/logo-cie.png" alt="CIE" onerror="this.outerHTML='<span style=&quot;font:800 1.6rem var(--sans);color:var(--theme2);letter-spacing:.06em&quot;>CIE</span>'">
+    <img src="img/logo-cie.jpg" alt="CIE" onerror="this.outerHTML='<span style=&quot;font:800 1.6rem var(--sans);color:var(--theme2);letter-spacing:.06em&quot;>CIE</span>'">
     <h1>Plateforme de Veille<br>Réputation Numérique</h1>
     <p>Accès réservé. Saisissez votre adresse e-mail autorisée : vous recevrez un lien de connexion.</p>
     <input type="email" id="lemail" required placeholder="prenom.nom@exemple.ci" aria-label="Adresse e-mail">
@@ -179,7 +180,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
 
 <div id="app" hidden>
 <header class="top"><div class="wrap">
-  <div class="brand"><img src="img/logo-cie.png" alt="CIE" onerror="this.outerHTML='<span class=&quot;logo-txt&quot;>CIE</span>'"><div><h1>Plateforme de Veille Réputation Numérique</h1></div></div>
+  <div class="brand"><img src="img/logo-cie.jpg" alt="CIE" onerror="this.outerHTML='<span class=&quot;logo-txt&quot;>CIE</span>'"><div><h1>Plateforme de Veille Réputation Numérique</h1></div></div>
   <div class="user"><span>Connecté en tant que</span>
     <b id="moi"></b>
     <button onclick="sortir()">Déconnexion</button>
@@ -361,7 +362,7 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const nf=n=>n==null?'–':n.toLocaleString('fr-FR');
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const inter=r=>(r.jaime||0)+(r.com||0)+(r.part||0);
-const BC={CIE:'#E87400',SODECI:'#00A04A'};
+const BC={CIE:'#F77D02',SODECI:'#00A04A'};
 let M='CIE';let DERP=null;
 function toast(t){try{if(WIN&&!/Génération/.test(t)){WIN.close();WIN=null}}catch(e){}const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',3500)}
 const RL={user:'Utilisateur',admin:'Admin',super:'Super admin'};
@@ -706,7 +707,7 @@ async function panExt(){const d=+($('#panp').value||7),fin=new Date(),deb=new Da
  const S=EXTS,n=v=>typeof v==='number'?v:null,ev=n(S.periode_precedente)?Math.round(100*(S.signalements-S.periode_precedente)/S.periode_precedente):null;
  $('#pank').innerHTML=k('signalements',S.signalements)+k('localités',n(S.localites)??(S.par_localite||[]).length)+(ev!==null?k('vs période précédente',(ev>0?'+':'')+ev+' %'):'')+(n(S.delai_moyen_retablissement_heures)!==null?k('délai moyen de rétablissement',String(S.delai_moyen_retablissement_heures).replace('.',',')+' h'):'');
  $('#panmaj').textContent=S.mis_a_jour_le?'Mis à jour le '+fh(S.mis_a_jour_le)+' UTC.':'';
- const J=S.par_jour||[],mx0=Math.max(1,...J.map(j=>j.signalements||0)),mx=mx0<=4?4:Math.ceil(mx0/4)*4,W=720,H=180,g=34,bw=(W-g-8)/Math.max(J.length,1),col=BC[M]||'#E87400',pl=J.length>16?Math.ceil(J.length/10):1;
+ const J=S.par_jour||[],mx0=Math.max(1,...J.map(j=>j.signalements||0)),mx=mx0<=4?4:Math.ceil(mx0/4)*4,W=720,H=180,g=34,bw=(W-g-8)/Math.max(J.length,1),col=BC[M]||'#F77D02',pl=J.length>16?Math.ceil(J.length/10):1;
  let sv=`<svg viewBox="0 0 ${W} ${H+44}" width="100%" style="max-height:250px" role="img" aria-label="Évolution des signalements de coupure">`;
  [0,.25,.5,.75,1].forEach(f=>{const y=22+H-f*H;sv+=`<line x1="${g}" x2="${W}" y1="${y}" y2="${y}" stroke="currentColor" stroke-opacity=".12"/><text x="${g-6}" y="${y+4}" text-anchor="end" font-size="11" fill="currentColor" fill-opacity=".6">${Math.round(f*mx)}</text>`});
  J.forEach((j,i)=>{const x=g+i*bw+bw*.15,w=bw*.7,h=(j.signalements||0)/mx*H,y0=22+H,lb=String(j.jour||'').slice(8,10)+'/'+String(j.jour||'').slice(5,7);
@@ -730,7 +731,7 @@ async function extRegler(actif){const url=$('#exturl').value.trim(),cle=$('#extc
 function panEvo(X){const d=+($('#panp').value||7),now=Date.now(),pas=d===1?3*3600e3:d===90?7*86400e3:86400e3,n=d===1?8:d===90?13:d;
  const deb=d===1?Math.floor(now/pas)*pas-(n-1)*pas:(()=>{const t=new Date();t.setUTCHours(0,0,0,0);return t.getTime()-(n-1)*pas})();
  const B=Array.from({length:n},(_,i)=>({t:deb+i*pas,p:0,c:0}));X.forEach(x=>{const i=Math.floor((new Date(x.le).getTime()-deb)/pas);if(i>=0&&i<n)B[i][x.source==='commentaire'?'c':'p']++});
- const m0=Math.max(1,...B.map(b=>b.p+b.c)),mx=m0<=4?4:Math.ceil(m0/4)*4,W=720,H=180,g=34,bw=(W-g-8)/n,col=BC[M]||'#E87400';
+ const m0=Math.max(1,...B.map(b=>b.p+b.c)),mx=m0<=4?4:Math.ceil(m0/4)*4,W=720,H=180,g=34,bw=(W-g-8)/n,col=BC[M]||'#F77D02';
  const lab=t=>{const x=new Date(t);return d===1?String(x.getUTCHours()).padStart(2,'0')+'h':String(x.getUTCDate()).padStart(2,'0')+'/'+String(x.getUTCMonth()+1).padStart(2,'0')};
  const pas_l=n>16?Math.ceil(n/10):1;let s=`<svg viewBox="0 0 ${W} ${H+44}" width="100%" style="max-height:250px" role="img" aria-label="Évolution des signalements de coupure">`;
  [0,.25,.5,.75,1].forEach(f=>{const y=22+H-f*H;s+=`<line x1="${g}" x2="${W}" y1="${y}" y2="${y}" stroke="currentColor" stroke-opacity=".12"/><text x="${g-6}" y="${y+4}" text-anchor="end" font-size="11" fill="currentColor" fill-opacity=".6">${Math.round(f*mx)}</text>`});
