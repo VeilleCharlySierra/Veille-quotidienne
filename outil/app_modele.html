@@ -48,7 +48,7 @@ header.top .wrap{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;ju
 .brand .sub{font-size:.9rem;font-weight:700;letter-spacing:.04em;opacity:.95}
 .brand h1{font-family:var(--serif);font-size:clamp(1.15rem,3vw,1.5rem);margin:0;line-height:1.15}
 .brand .sub{font-size:.82rem;opacity:.92}
-.user{display:flex;gap:8px;align-items:center;font-size:.85rem;flex-wrap:wrap}
+.user{display:flex;gap:8px;align-items:center;justify-content:flex-end;font-size:.85rem;flex-wrap:wrap;margin-left:auto;text-align:right}
 .user select{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.6);border-radius:6px;padding:4px 6px}
 .user select option{color:#000}
 .user button{background:#fff;color:var(--theme2);border:0;border-radius:6px;padding:5px 10px;font-weight:700;cursor:pointer}
@@ -174,7 +174,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
     <button class="primary" type="submit">Recevoir le lien de connexion</button>
     <p class="small" id="lmsg" role="status"></p>
     <div id="lconf" hidden><p style="margin:0"><b>Votre lien de connexion est prêt.</b></p><button class="primary" type="button" onclick="confirmerConnexion()">Ouvrir ma session</button></div>
-    <div class="powered">Powered by <img src="img/logo-viral.jpg" alt=""><b>Viral SARL</b></div>
+    <div class="powered">Powered by <img src="img/logo-viral.jpg" alt="Viral SARL"></div>
   </form>
 </div>
 
@@ -184,7 +184,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
   <div class="user"><span>Connecté en tant que</span>
     <b id="moi"></b>
     <button onclick="sortir()">Déconnexion</button>
-    <span class="powered" style="flex-basis:100%;justify-content:flex-end">Powered by <img src="img/logo-viral.jpg" alt=""><b>Viral SARL</b></span></div>
+    <span class="powered" style="flex-basis:100%;justify-content:flex-end">Powered by <img src="img/logo-viral.jpg" alt="Viral SARL"></span></div>
 </div></header>
 <div class="passes"><div class="wrap"><span id="passes" style="display:contents"></span><div class="mtabs" id="mtabs"><button data-m="CIE" class="on">CIE</button><button data-m="SODECI">SODECI</button></div><span id="passd" style="margin-left:auto"></span></div></div>
 <nav class="tabs"><div class="wrap">
