@@ -2,6 +2,9 @@
 // sans Claude ni ordinateur de veille. Elle lance les recherches Facebook, X (et TikTok une fois par jour), écarte ce qui est déjà
 // connu et dépose les nouveautés dans la file « a_classer », avec texte, auteur, date, chiffres et image (pour la capture).
 // Claude n'a plus qu'à classer cette file au passage. Activation : parametres.collecte_serveur.active = true + tâche planifiée.
+// Format retenu (09/11) pour l'activation, tâche planifiée toutes les heures : Facebook par mots-clés toutes les 2 heures (heures paires) ;
+// X toutes les heures ; TikTok : comptes suivis (liste cible d'environ 500 comptes dans sources_suivies) 3 fois par jour (06h, 13h, 20h),
+// seules les vidéos publiées depuis le relevé précédent, plus les hashtags en filet de sécurité une fois par jour (06h).
 // Appel manuel d'essai : corps {"essai": true} (une seule recherche Facebook de 5 résultats, rien n'est modifié dans la rotation).
 import postgres from "npm:postgres@3.4.4";
 
@@ -14,7 +17,9 @@ const MOTS_CIE = ["CIE coupure", "délestage Abidjan", "coupure courant Côte d'
   "cash power", "compteur bloqué", "facture salée"];
 const MOTS_SODECI = ["SODECI eau", "SODECI coupure", "pas d'eau"];
 const X_TERMES = ["CIE coupure", "délestage Abidjan", "\"coupure de courant\" Abidjan", "CIE électricité"];
-const HEURES_SODECI = [3, 12, 21];
+const HEURES_SODECI = [4, 12, 20];
+const HEURES_TIKTOK = [6, 13, 20];
+const HASHTAGS = ["coupuredecourant", "cieci", "delestage", "sodeci"];
 
 async function acteur(nom: string, input: unknown, plafond: number): Promise<any[]> {
   const url = `https://api.apify.com/v2/acts/${nom.replace("/", "~")}/run-sync-get-dataset-items?timeout=120&maxTotalChargeUsd=${plafond.toFixed(3)}`;
@@ -65,6 +70,7 @@ Deno.serve(async (req) => {
 
     const heure = new Date().getUTCHours(), rot = Number(conf.rotation) || 0;
     const fb: [string, string][] = essai ? [[MOTS_CIE[rot % MOTS_CIE.length], "CIE"]]
+      : heure % 2 === 1 ? []
       : HEURES_SODECI.includes(heure)
         ? [[MOTS_CIE[rot % MOTS_CIE.length], "CIE"], [MOTS_SODECI[rot % MOTS_SODECI.length], "SODECI"]]
         : [[MOTS_CIE[(2 * rot) % MOTS_CIE.length], "CIE"], [MOTS_CIE[(2 * rot + 1) % MOTS_CIE.length], "CIE"]];
@@ -86,15 +92,17 @@ Deno.serve(async (req) => {
         } catch (e) { erreurs.push("X : " + (e as Error).message); }
       })(),
       (async () => {
-        if (essai || heure < 5 || heure > 7) return;
-        const [{ fait }] = await sql`select exists(select 1 from public.a_classer where plateforme = 'TikTok' and circuit = 'serveur' and recu_le > now() - interval '20 hours') as fait`;
-        if (fait) return;
+        if (essai || !HEURES_TIKTOK.includes(heure)) return;
         try {
+          const depuis = conf.tiktok_depuis ? new Date(conf.tiktok_depuis) : new Date(Date.now() - 864e5);
           const profils = (await sql`select url from public.sources_suivies where actif and plateforme = 'TikTok' and categorie <> 'hashtag'`)
             .map((r) => (String(r.url).match(/@([^/?]+)/) || [])[1]).filter(Boolean);
-          const it = await acteur("clockworks/tiktok-scraper", { profiles: profils, profileSorting: "latest", oldestPostDateUnified: "1 day", resultsPerPage: 10,
-            hashtags: ["coupuredecourant", "cieci", "delestage", "sodeci"] }, 0.6);
-          it.forEach((o) => { const e = tiktok(o, "TikTok (comptes suivis et hashtags)"); if (e) elements.push(e); });
+          const entree: Record<string, unknown> = { profiles: profils, profileSorting: "latest", oldestPostDateUnified: depuis.toISOString().slice(0, 10), resultsPerPage: 5 };
+          if (heure === HEURES_TIKTOK[0]) entree.hashtags = HASHTAGS;
+          const it = await acteur("clockworks/tiktok-scraper", entree, Math.min(3, 0.1 + profils.length * 0.01));
+          it.filter((o) => !o.createTimeISO || new Date(o.createTimeISO) > depuis)
+            .forEach((o) => { const e = tiktok(o, "TikTok (comptes suivis" + (entree.hashtags ? " et hashtags)" : ")")); if (e) elements.push(e); });
+          conf.tiktok_depuis = new Date().toISOString();
         } catch (e) { erreurs.push("TikTok : " + (e as Error).message); }
       })(),
     ]);
