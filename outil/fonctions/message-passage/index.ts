@@ -1,5 +1,5 @@
 // Fonction « message-passage » : après chaque passage enregistré (déclencheur sur la table passages), envoie par e-mail
-// aux destinataires des incidents le message du dispositif : « ✅ DISPOSITIF RAS » ou « 🚨 ALERTE DISPOSITIF » (incident).
+// aux destinataires des incidents le message « 🚨 ALERTE DISPOSITIF » quand le passage a un incident (le RAS ne part que dans WhatsApp).
 // Les chiffres viennent de la base ; le motif d'un incident reprend le début du compte rendu du passage.
 import postgres from "npm:postgres@3.4.4";
 
@@ -20,6 +20,8 @@ Deno.serve(async (req) => {
     const [a] = await sql`select count(*)::int n from public.publications where point_attention and coalesce(statut_alerte,'') <> 'Alerte close'`;
     const th = await sql`select marque::text, theme from public.themes_alerte where actif order by marque, theme`;
     const incident = /incident/i.test(p.statut || "");
+    // Décision du 09/11 : le RAS part seulement dans WhatsApp (KKS) ; l'e-mail est réservé aux alertes dispositif
+    if (!incident) return Response.json({ ok: true, envoye: false, raison: "RAS : WhatsApp seulement" });
     const motif = String(p.detail || "").split(/Collecte\s*:/)[0].replace(/apify/gi, "collecte automatisée").replace(/\s+/g, " ").trim().slice(0, 600);
     const lien = "https://veillecharlysierra.github.io/Veille-quotidienne/";
     const sujet = incident
