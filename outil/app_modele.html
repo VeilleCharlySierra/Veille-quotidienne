@@ -429,7 +429,7 @@ $$('#mtabs button').forEach(b=>b.onclick=()=>{M=b.dataset.m;$$('#mtabs button').
 function setRole(r){$('#tadm').hidden=r==='user';$$('.so').forEach(o=>o.hidden=r!=='super');$('#tjour').hidden=r!=='super';$$('.adm-only').forEach(e=>e.hidden=r==='user');if((r==='user'&&$('#adm').classList.contains('on'))||(r!=='super'&&$('#jour').classList.contains('on')))$('nav.tabs button.t').click()}
 
 // ---------- outils ----------
-const STOP=new Set(('le la les de des du un une et en à a au aux ce ces cet cette il ils elle elles on nous vous je tu me te se sa son ses leur leurs lui y ne pas plus que qui quoi dont où ou mais donc or ni car pour par sur sous dans avec sans chez entre vers est sont été être avoir ont ai as avons avez fait faire tout tous toute toutes très bien comme quand même aussi encore déjà là ici cela ça ca c d l j n s qu m t si non oui peu trop rien depuis après avant alors moi toi notre nos votre vos mon ma mes ton ta tes va vont doit peut fois chaque autre autres hein svp etc jour jours heures heure h ans an voilà sommes dites jusqu hier toujours port quel quelle quels comment pourquoi faut veut veux tout').split(' '));
+const STOP=new Set(('le la les de des du un une et en à a au aux ce ces cet cette il ils elle elles on nous vous je tu me te se sa son ses leur leurs lui y ne pas plus que qui quoi dont où ou mais donc or ni car pour par sur sous dans avec sans chez entre vers est sont été être avoir ont ai as avons avez fait faire tout tous toute toutes très bien comme quand même aussi encore déjà là ici cela ça ca c d l j n s qu m t si non oui peu trop rien depuis après avant alors moi toi notre nos votre vos mon ma mes ton ta tes va vont doit peut fois chaque autre autres hein svp etc jour jours heures heure h ans an voilà sommes dites jusqu hier toujours port quel quelle quels comment pourquoi faut veut veux tout nommément nommement citée legende légende texte aujourd hui').split(' '));
 const BRANDW=new Set(['cie','sodeci','compagnie','ivoirienne','électricité','electricite','distribution','eau']);
 // Vrai nuage de mots : placement en spirale depuis le centre, tailles selon la fréquence, tous horizontaux, orange CIE ou vert SODECI
 function nuageSVG(el,list){if(!list.length){el.innerHTML='<span class="small">Pas assez de texte.</span>';return}
@@ -481,7 +481,7 @@ function bord(){
  $('#themes').innerHTML=ths.map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/tm}%"></span></span><span class="n">${v}</span>`).join('')||'<span class="small">Aucune donnée.</span>';
  // Nuage : mots fréquents conservés dans les statistiques du jour (textes effacés après une semaine), complétés par les textes des jours pas encore figés
  const SJ={};D.sj.filter(s=>s.marque===M&&s.jour>=a&&s.jour<=b&&s.mots&&Object.keys(s.mots).length).forEach(s=>SJ[s.jour]=s.mots);
- const cc={};Object.values(SJ).forEach(m=>Object.entries(m).forEach(([w,k])=>cc[w]=(cc[w]||0)+k));
+ const cc={};Object.values(SJ).forEach(m=>Object.entries(m).forEach(([w,k])=>{if(!STOP.has(w)&&!BRANDW.has(w))cc[w]=(cc[w]||0)+k}));
  mots(rows.filter(r=>!r.arch&&!SJ[r.jour]).map(r=>r.texte),200).forEach(([w,k])=>cc[w]=(cc[w]||0)+k);
  nuageSVG($('#nuage'),Object.entries(cc).sort((x,y)=>y[1]-x[1]).slice(0,60));
  const li={};rows.forEach(r=>{if(r.lieu&&r.lieu!=='Non localisé')li[r.lieu]=(li[r.lieu]||0)+1});const ls=Object.entries(li).sort((x,y)=>y[1]-x[1]);const lm=Math.max(1,...ls.map(t=>t[1]));

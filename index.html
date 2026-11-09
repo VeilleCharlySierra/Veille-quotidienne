@@ -211,7 +211,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
     <div class="grid g2">
       <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
         <div class="panel"><h3>Thématiques</h3><div class="hb" id="themes"></div></div>
-        <div class="panel" style="flex:1;display:flex;flex-direction:column"><h3>Nuage de mots</h3><div class="cloud" id="nuage" style="flex:1;align-content:center"></div></div>
+        <div class="panel" style="flex:1;display:flex;flex-direction:column"><h3>Nuage de mots</h3><div id="nuage" style="flex:1;min-height:220px;display:flex;align-items:center;justify-content:center"></div></div>
       </div>
       <div class="panel"><h3>Localités citées</h3><div id="carte"></div><div class="hb" id="lieux" style="margin-top:8px"></div></div>
     </div>
@@ -429,8 +429,24 @@ $$('#mtabs button').forEach(b=>b.onclick=()=>{M=b.dataset.m;$$('#mtabs button').
 function setRole(r){$('#tadm').hidden=r==='user';$$('.so').forEach(o=>o.hidden=r!=='super');$('#tjour').hidden=r!=='super';$$('.adm-only').forEach(e=>e.hidden=r==='user');if((r==='user'&&$('#adm').classList.contains('on'))||(r!=='super'&&$('#jour').classList.contains('on')))$('nav.tabs button.t').click()}
 
 // ---------- outils ----------
-const STOP=new Set(('le la les de des du un une et en à a au aux ce ces cet cette il ils elle elles on nous vous je tu me te se sa son ses leur leurs lui y ne pas plus que qui quoi dont où ou mais donc or ni car pour par sur sous dans avec sans chez entre vers est sont été être avoir ont ai as avons avez fait faire tout tous toute toutes très bien comme quand même aussi encore déjà là ici cela ça ca c d l j n s qu m t si non oui peu trop rien depuis après avant alors moi toi notre nos votre vos mon ma mes ton ta tes va vont doit peut fois chaque autre autres hein svp etc jour jours heures heure h ans an voilà sommes dites jusqu hier toujours port quel quelle quels comment pourquoi faut veut veux tout').split(' '));
+const STOP=new Set(('le la les de des du un une et en à a au aux ce ces cet cette il ils elle elles on nous vous je tu me te se sa son ses leur leurs lui y ne pas plus que qui quoi dont où ou mais donc or ni car pour par sur sous dans avec sans chez entre vers est sont été être avoir ont ai as avons avez fait faire tout tous toute toutes très bien comme quand même aussi encore déjà là ici cela ça ca c d l j n s qu m t si non oui peu trop rien depuis après avant alors moi toi notre nos votre vos mon ma mes ton ta tes va vont doit peut fois chaque autre autres hein svp etc jour jours heures heure h ans an voilà sommes dites jusqu hier toujours port quel quelle quels comment pourquoi faut veut veux tout nommément nommement citée legende légende texte aujourd hui').split(' '));
 const BRANDW=new Set(['cie','sodeci','compagnie','ivoirienne','électricité','electricite','distribution','eau']);
+// Vrai nuage de mots : placement en spirale depuis le centre, tailles selon la fréquence, tous horizontaux, orange CIE ou vert SODECI
+function nuageSVG(el,list){if(!list.length){el.innerHTML='<span class="small">Pas assez de texte.</span>';return}
+ el.innerHTML='';const W=Math.max(280,el.clientWidth||600),H=Math.max(200,el.clientHeight||260);
+ const cx=(nuageSVG.c||(nuageSVG.c=document.createElement('canvas'))).getContext('2d');
+ const hi=list[0][1],lo=list[list.length-1][1],COL=M==='SODECI'?'#029740':'#F77F00';
+ const pos=(r)=>{for(let t=0;t<3000;t++){const a=.18*t,d=1.4*a,bx=W/2+d*Math.cos(a)*(W/H)-r.bw/2,by=H/2+d*Math.sin(a)-r.bh/2;
+   if(bx<2||by<2||bx+r.bw>W-2||by+r.bh>H-2){if(d>Math.max(W,H))break;continue}
+   if(!r.boxes.some(b=>bx<b.x+b.w+3&&bx+r.bw+3>b.x&&by<b.y+b.h+2&&by+r.bh+2>b.y))return[bx,by]}return null};
+ for(let k=1;k>.25;k*=.86){const maxF=Math.min(H*.3,W*.13)*k,minF=Math.max(11,maxF*.26),boxes=[],out=[];let ok=true;
+  list.forEach(([w,v],i)=>{if(!ok)return;const f=minF+(maxF-minF)*Math.sqrt((v-lo)/((hi-lo)||1));
+   cx.font=`700 ${f}px 'Source Sans 3',system-ui,sans-serif`;const tw=cx.measureText(w).width,th=f*.9,rot=false;
+   const r={bw:rot?th:tw,bh:rot?tw:th,boxes},p=pos(r);if(!p){if(i<15)ok=false;return}
+   boxes.push({x:p[0],y:p[1],w:r.bw,h:r.bh});out.push({w,v,f,rot,x:p[0]+r.bw/2,y:p[1]+r.bh/2,c:COL})});
+  if(ok){el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Nuage de mots">`+out.map(o=>
+   `<text x="${o.x.toFixed(1)}" y="${o.y.toFixed(1)}" font-size="${o.f.toFixed(1)}" font-weight="700" style="fill:${o.c}" text-anchor="middle" dominant-baseline="central"${o.rot?` transform="rotate(-90 ${o.x.toFixed(1)} ${o.y.toFixed(1)})"`:''}><title>${esc(o.w)} : ${o.v}</title>${esc(o.w)}</text>`).join('')+'</svg>';return}}
+ el.innerHTML=cloudHTML(list,12,30)}
 function mots(texts,n){const c={};texts.forEach(t=>String(t).toLowerCase().replace(/[«»"“”.,;:!?()\[\]…'’\-–—\/#@0-9]/g,' ').split(/\s+/).forEach(w=>{if(w.length>=4&&!STOP.has(w)&&!BRANDW.has(w))c[w]=(c[w]||0)+1}));return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n)}
 function cloudHTML(list,min,max){if(!list.length)return'<span class="small">Pas assez de texte.</span>';const hi=list[0][1],lo=list[list.length-1][1];const sz=v=>min+(max-min)*((v-lo)/((hi-lo)||1));
  const sh=list.map((x,i)=>[x,i]).sort((a,b)=>((a[1]*7)%11)-((b[1]*7)%11));return sh.map(([[w,v],i])=>`<span class="${i%3===2?'alt':''}" style="font-size:${sz(v).toFixed(1)}px" title="${v}">${esc(w)}</span>`).join('')}
@@ -465,9 +481,9 @@ function bord(){
  $('#themes').innerHTML=ths.map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/tm}%"></span></span><span class="n">${v}</span>`).join('')||'<span class="small">Aucune donnée.</span>';
  // Nuage : mots fréquents conservés dans les statistiques du jour (textes effacés après une semaine), complétés par les textes des jours pas encore figés
  const SJ={};D.sj.filter(s=>s.marque===M&&s.jour>=a&&s.jour<=b&&s.mots&&Object.keys(s.mots).length).forEach(s=>SJ[s.jour]=s.mots);
- const cc={};Object.values(SJ).forEach(m=>Object.entries(m).forEach(([w,k])=>cc[w]=(cc[w]||0)+k));
+ const cc={};Object.values(SJ).forEach(m=>Object.entries(m).forEach(([w,k])=>{if(!STOP.has(w)&&!BRANDW.has(w))cc[w]=(cc[w]||0)+k}));
  mots(rows.filter(r=>!r.arch&&!SJ[r.jour]).map(r=>r.texte),200).forEach(([w,k])=>cc[w]=(cc[w]||0)+k);
- $('#nuage').innerHTML=cloudHTML(Object.entries(cc).sort((x,y)=>y[1]-x[1]).slice(0,35),13,38);
+ nuageSVG($('#nuage'),Object.entries(cc).sort((x,y)=>y[1]-x[1]).slice(0,60));
  const li={};rows.forEach(r=>{if(r.lieu&&r.lieu!=='Non localisé')li[r.lieu]=(li[r.lieu]||0)+1});const ls=Object.entries(li).sort((x,y)=>y[1]-x[1]);const lm=Math.max(1,...ls.map(t=>t[1]));
  const nl=rows.filter(r=>r.lieu==='Non localisé').length;
  $('#lieux').innerHTML=ls.slice(0,10).map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/lm}%"></span></span><span class="n">${v}</span>`).join('')+(nl?`<span class="small" style="grid-column:1/-1">${nl} publication(s) sans localité.</span>`:'');
