@@ -431,19 +431,19 @@ function setRole(r){$('#tadm').hidden=r==='user';$$('.so').forEach(o=>o.hidden=r
 // ---------- outils ----------
 const STOP=new Set(('le la les de des du un une et en à a au aux ce ces cet cette il ils elle elles on nous vous je tu me te se sa son ses leur leurs lui y ne pas plus que qui quoi dont où ou mais donc or ni car pour par sur sous dans avec sans chez entre vers est sont été être avoir ont ai as avons avez fait faire tout tous toute toutes très bien comme quand même aussi encore déjà là ici cela ça ca c d l j n s qu m t si non oui peu trop rien depuis après avant alors moi toi notre nos votre vos mon ma mes ton ta tes va vont doit peut fois chaque autre autres hein svp etc jour jours heures heure h ans an voilà sommes dites jusqu hier toujours port quel quelle quels comment pourquoi faut veut veux tout').split(' '));
 const BRANDW=new Set(['cie','sodeci','compagnie','ivoirienne','électricité','electricite','distribution','eau']);
-// Vrai nuage de mots : placement en spirale depuis le centre, tailles selon la fréquence, quelques mots à la verticale, couleurs CIE
+// Vrai nuage de mots : placement en spirale depuis le centre, tailles selon la fréquence, tous horizontaux, orange CIE ou vert SODECI
 function nuageSVG(el,list){if(!list.length){el.innerHTML='<span class="small">Pas assez de texte.</span>';return}
  el.innerHTML='';const W=Math.max(280,el.clientWidth||600),H=Math.max(200,el.clientHeight||260);
  const cx=(nuageSVG.c||(nuageSVG.c=document.createElement('canvas'))).getContext('2d');
- const hi=list[0][1],lo=list[list.length-1][1],COL=['#F77F00','#029740','#B85A00','#3a3a3a','#01703A','#E06E00'];
+ const hi=list[0][1],lo=list[list.length-1][1],COL=M==='SODECI'?'#029740':'#F77F00';
  const pos=(r)=>{for(let t=0;t<3000;t++){const a=.18*t,d=1.4*a,bx=W/2+d*Math.cos(a)*(W/H)-r.bw/2,by=H/2+d*Math.sin(a)-r.bh/2;
    if(bx<2||by<2||bx+r.bw>W-2||by+r.bh>H-2){if(d>Math.max(W,H))break;continue}
    if(!r.boxes.some(b=>bx<b.x+b.w+3&&bx+r.bw+3>b.x&&by<b.y+b.h+2&&by+r.bh+2>b.y))return[bx,by]}return null};
  for(let k=1;k>.25;k*=.86){const maxF=Math.min(H*.3,W*.13)*k,minF=Math.max(11,maxF*.26),boxes=[],out=[];let ok=true;
   list.forEach(([w,v],i)=>{if(!ok)return;const f=minF+(maxF-minF)*Math.sqrt((v-lo)/((hi-lo)||1));
-   cx.font=`700 ${f}px 'Source Sans 3',system-ui,sans-serif`;const tw=cx.measureText(w).width,th=f*.9,rot=i>2&&i%4===3;
+   cx.font=`700 ${f}px 'Source Sans 3',system-ui,sans-serif`;const tw=cx.measureText(w).width,th=f*.9,rot=false;
    const r={bw:rot?th:tw,bh:rot?tw:th,boxes},p=pos(r);if(!p){if(i<15)ok=false;return}
-   boxes.push({x:p[0],y:p[1],w:r.bw,h:r.bh});out.push({w,v,f,rot,x:p[0]+r.bw/2,y:p[1]+r.bh/2,c:COL[i%COL.length]})});
+   boxes.push({x:p[0],y:p[1],w:r.bw,h:r.bh});out.push({w,v,f,rot,x:p[0]+r.bw/2,y:p[1]+r.bh/2,c:COL})});
   if(ok){el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Nuage de mots">`+out.map(o=>
    `<text x="${o.x.toFixed(1)}" y="${o.y.toFixed(1)}" font-size="${o.f.toFixed(1)}" font-weight="700" style="fill:${o.c}" text-anchor="middle" dominant-baseline="central"${o.rot?` transform="rotate(-90 ${o.x.toFixed(1)} ${o.y.toFixed(1)})"`:''}><title>${esc(o.w)} : ${o.v}</title>${esc(o.w)}</text>`).join('')+'</svg>';return}}
  el.innerHTML=cloudHTML(list,12,30)}
