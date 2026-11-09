@@ -396,7 +396,7 @@ async function charger(){
  D.pubs=P.filter(x=>x.type==='remontee').map(row);
  D.suivies=P.filter(x=>x.suivi_stats).map(x=>Object.assign(row(x),{officiel:x.type==='officiel'}));
  const maxT=D.pubs.reduce((m,r)=>r.t>m?r.t:m,new Date(0));REF=(Date.now()-maxT>72*3600000&&D.pubs.length)?new Date(maxT.getTime()+60000):new Date();
- const ser={};(st.data||[]).forEach(s=>{ser[s.jour]=ser[s.jour]||{jour:s.jour,CIE:null,SODECI:null};ser[s.jour][s.marque]={n:s.publications,neg:s.publications?Math.round(100*s.negatives/s.publications):0,inter:s.interactions}});D.serie=Object.values(ser).sort((a,b)=>a.jour.localeCompare(b.jour));
+ D.sj=st.data||[];const ser={};(st.data||[]).forEach(s=>{ser[s.jour]=ser[s.jour]||{jour:s.jour,CIE:null,SODECI:null};ser[s.jour][s.marque]={n:s.publications,neg:s.publications?Math.round(100*s.negatives/s.publications):0,inter:s.interactions}});D.serie=Object.values(ser).sort((a,b)=>a.jour.localeCompare(b.jour));
  const R={};(rl.data||[]).forEach(r=>{(R[r.publication_id]=R[r.publication_id]||[]).push({h:fh(r.releve_le),jaime:r.jaime,com:r.com,part:r.part})});D.R=R;
  const sem=Date.now()-7*86400000;
  const j24=Date.now()-86400000;
@@ -463,7 +463,11 @@ function bord(){
   $('#evosvg').innerHTML=g+'</svg>'}
  const tm=Math.max(1,...ths.map(t=>t[1]));
  $('#themes').innerHTML=ths.map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/tm}%"></span></span><span class="n">${v}</span>`).join('')||'<span class="small">Aucune donnée.</span>';
- $('#nuage').innerHTML=cloudHTML(mots(rows.filter(r=>!r.arch).map(r=>r.texte),35),13,38);
+ // Nuage : mots fréquents conservés dans les statistiques du jour (textes effacés après une semaine), complétés par les textes des jours pas encore figés
+ const SJ={};D.sj.filter(s=>s.marque===M&&s.jour>=a&&s.jour<=b&&s.mots&&Object.keys(s.mots).length).forEach(s=>SJ[s.jour]=s.mots);
+ const cc={};Object.values(SJ).forEach(m=>Object.entries(m).forEach(([w,k])=>cc[w]=(cc[w]||0)+k));
+ mots(rows.filter(r=>!r.arch&&!SJ[r.jour]).map(r=>r.texte),200).forEach(([w,k])=>cc[w]=(cc[w]||0)+k);
+ $('#nuage').innerHTML=cloudHTML(Object.entries(cc).sort((x,y)=>y[1]-x[1]).slice(0,35),13,38);
  const li={};rows.forEach(r=>{if(r.lieu&&r.lieu!=='Non localisé')li[r.lieu]=(li[r.lieu]||0)+1});const ls=Object.entries(li).sort((x,y)=>y[1]-x[1]);const lm=Math.max(1,...ls.map(t=>t[1]));
  const nl=rows.filter(r=>r.lieu==='Non localisé').length;
  $('#lieux').innerHTML=ls.slice(0,10).map(([t,v])=>`<span>${esc(t)}</span><span class="t"><span style="width:${100*v/lm}%"></span></span><span class="n">${v}</span>`).join('')+(nl?`<span class="small" style="grid-column:1/-1">${nl} publication(s) sans localité.</span>`:'');
