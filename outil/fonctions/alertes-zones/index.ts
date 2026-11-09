@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
         ls.map((l, i) => `${i + 1}. ${l.commune} – ${l.detail}\n   Thématique : ${l.theme || "non classée"}\n   Date : ${fmt(new Date(l.le))} UTC · ${l.source === "commentaire" ? "Commentaire" : "Publication"} · ${l.plateforme}\n` +
           `   Extrait : « ${String(l.texte || "").replace(/\s+/g, " ").slice(0, 220)} »\n` +
           `   Lien${l.source === "commentaire" ? " (publication commentée)" : ""} : ${l.lien || "non disponible"}`).join("\n\n") +
-        `\n\nToutes les publications : plateforme de veille (onglets Publications et Pannes)\nhttps://veillecharlysierra.github.io/Veille-quotidienne/\n\nViral SARL – document confidentiel`;
+        `\n\nToutes les publications : plateforme de veille (onglets Publications et Incidents)\nhttps://veillecharlysierra.github.io/Veille-quotidienne/\n\nViral SARL – document confidentiel`;
       if (envoyer) {
         try {
           await courriel([email], `Veille ${marque} – nouveautés sur la zone ${zone} (${ls.length})`, texte);

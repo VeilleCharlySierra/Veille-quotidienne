@@ -190,7 +190,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
   <button class="t" data-t="pubs">Publications</button>
   <button class="t" data-t="att">Points d'attention</button>
   <button class="t" data-t="suiv">Publications suivies</button>
-  <button class="t" data-t="pan">Pannes</button>
+  <button class="t" data-t="pan">Incidents</button>
   <button class="t" data-t="off">Canaux officiels</button>
   <button class="t" data-t="rap">Rapports</button>
   <button class="t" data-t="adm" id="tadm">Administration</button>
@@ -263,7 +263,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
     <button class="ghostb" onclick="panImprimer()">Imprimer les zones de coupure</button>
     <span id="pank" style="display:flex;gap:8px;flex-wrap:wrap"></span>
   </div>
-  <div class="small" id="panext" hidden style="margin-bottom:8px">Pannes CIE : statistiques fournies par la plateforme de signalement (signalements des agents et de la veille des réseaux sociaux). <span id="panmaj"></span></div>
+  <div class="small" id="panext" hidden style="margin-bottom:8px">Incidents CIE : statistiques fournies par la plateforme de signalement (signalements des agents et de la veille des réseaux sociaux). <span id="panmaj"></span></div>
   <div class="panel" style="margin-bottom:12px"><h3>Évolution des signalements</h3><div id="panevo"></div></div>
   <div class="grid2" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
     <div class="panel"><h3>Carte des zones de coupure</h3><div id="pancarte"></div></div>
@@ -314,11 +314,11 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
     <form class="inl" onsubmit="event.preventDefault();addZone()"><select id="zm"><option>CIE</option><option>SODECI</option></select><input id="zn" placeholder="Zone" required><input id="zl" placeholder="Localités (séparées par des virgules)" required style="flex:2"><input type="email" id="zr" placeholder="E-mail du responsable" required style="flex:1"><button class="primary">Ajouter</button></form></div>
   <div class="panel" id="wsp" hidden><h3>Script WhatsApp (circuit rapide)</h3><p class="small" style="margin:0 0 8px">Sur l’ordinateur de veille, un script en lecture seule transmet à la veille, dès leur arrivée, les messages du groupe des équipes : un signalement de coupure avec lien est enregistré tout de suite (« à vérifier »), puis complété au passage suivant. Installation : extension Tampermonkey dans Chrome, puis ouvrir <a href="veille-whatsapp.user.js" target="_blank" rel="noopener">le script</a> et l’installer ; créer la clé ci-dessous et la coller via le menu Tampermonkey « Saisir la clé de la veille ». Créer une nouvelle clé révoque l’ancienne.</p>
    <button onclick="creerCleScript()">Créer la clé du script</button><div id="wsnew" style="margin-top:8px"></div></div>
-  <div class="panel" id="extp" hidden><h3>Pannes CIE : plateforme de signalement</h3><p class="small" style="margin:0 0 8px" id="extst"></p>
+  <div class="panel" id="extp" hidden><h3>Incidents CIE : plateforme de signalement</h3><p class="small" style="margin:0 0 8px" id="extst"></p>
    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><input id="exturl" placeholder="Adresse de l’API de statistiques (https://…)" style="flex:2;min-width:240px"><input id="extcle" type="password" autocomplete="off" style="flex:1;min-width:200px"></div>
    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="ghostb" onclick="extRegler(EXT&&EXT.actif)">Enregistrer l’adresse et la clé</button><button id="extbtn" onclick="extRegler(!(EXT&&EXT.actif))"></button></div>
-   <p class="small" style="margin:6px 0 0">À activer le jour où la plateforme de signalement envoie ses propres e-mails aux responsables de zone : la veille arrête alors les siens pour la CIE (pas de doublon) et l’onglet Pannes CIE affiche les statistiques de la plateforme de signalement. La SODECI n’est pas concernée. La clé est conservée côté serveur et n’est jamais réaffichée.</p></div>
-  <div class="panel" id="apip" hidden><h3>Accès API (pannes CIE)</h3><p class="small" style="margin:0 0 8px">Accès en lecture seule, pour un système tiers (par exemple le centre de relation client), aux seules publications CIE qui signalent une panne d’électricité. Rien d’autre ne sort : ni SODECI, ni autres thématiques, ni commentaires, ni critères de surveillance. Des statistiques de ces signalements sont aussi disponibles (par jour, localité, plateforme, sentiment, heure). Une clé n’est affichée qu’une seule fois, à sa création ; seule son empreinte est conservée. Réservé au super administrateur.</p>
+   <p class="small" style="margin:6px 0 0">À activer le jour où la plateforme de signalement envoie ses propres e-mails aux responsables de zone : la veille arrête alors les siens pour la CIE (pas de doublon) et l’onglet Incidents CIE affiche les statistiques de la plateforme de signalement. La SODECI n’est pas concernée. La clé est conservée côté serveur et n’est jamais réaffichée.</p></div>
+  <div class="panel" id="apip" hidden><h3>Accès API (incidents CIE)</h3><p class="small" style="margin:0 0 8px">Accès en lecture seule, pour un système tiers (par exemple le centre de relation client), aux seules publications CIE qui signalent un incident électrique (coupure). Rien d’autre ne sort : ni SODECI, ni autres thématiques, ni commentaires, ni critères de surveillance. Des statistiques de ces signalements sont aussi disponibles (par jour, localité, plateforme, sentiment, heure). Une clé n’est affichée qu’une seule fois, à sa création ; seule son empreinte est conservée. Réservé au super administrateur.</p>
    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><input id="apinom" placeholder="Destinataire (ex. Centre relation client CIE)" style="flex:1;min-width:220px"><button onclick="creerCleApi()">Créer une clé</button></div>
    <div id="apinew"></div><div class="tw"><table id="apil"></table></div>
    <details style="margin-top:8px"><summary class="small">Mode d’emploi pour le système tiers</summary><pre class="small" style="white-space:pre-wrap">GET https://vtpfgzrlyqdjrulotxni.supabase.co/functions/v1/api-publications
@@ -735,10 +735,10 @@ async function wsR(){if(ROLE!=='super')return;$('#wsp').hidden=false}
 async function creerCleScript(){if(!confirm('Créer une nouvelle clé pour le script WhatsApp ? L’ancienne cessera de fonctionner.'))return;const {data,error}=await SB.rpc('creer_cle_script');if(error)return toast('Création impossible : '+error.message);
  $('#wsnew').innerHTML=`<div class="panel" style="border-color:var(--theme)"><b>Clé du script — à coller maintenant dans Tampermonkey, elle ne sera plus affichée :</b><br><code style="user-select:all;word-break:break-all">${esc(data)}</code><br><button onclick="navigator.clipboard.writeText('${esc(data)}').then(()=>toast('Clé copiée.'))">Copier</button> <button onclick="$('#wsnew').innerHTML=''">Masquer</button></div>`}
 async function extR(){if(ROLE!=='super')return;$('#extp').hidden=false;const e=EXT||{};$('#exturl').value=e.url||'';
- $('#extst').innerHTML=e.actif?'<b style="color:#1a7f37">Bascule activée</b> : les pannes CIE (onglet Pannes, e-mails des responsables de zone CIE) sont gérées par la plateforme de signalement.':'<b>Bascule non activée</b> : les pannes CIE sont encore gérées par la veille (onglet Pannes et e-mails des responsables de zone).';
+ $('#extst').innerHTML=e.actif?'<b style="color:#1a7f37">Bascule activée</b> : les incidents CIE (onglet Incidents, e-mails des responsables de zone CIE) sont gérées par la plateforme de signalement.':'<b>Bascule non activée</b> : les incidents CIE sont encore gérées par la veille (onglet Incidents et e-mails des responsables de zone).';
  $('#extcle').placeholder=e.cle_enregistree?'Clé enregistrée (laisser vide pour la garder)':'Clé d’accès fournie par la plateforme de signalement';$('#extbtn').textContent=e.actif?'Désactiver la bascule':'Activer la bascule'}
 async function extRegler(actif){const url=$('#exturl').value.trim(),cle=$('#extcle').value.trim();
- if(actif&&!confirm('Activer la bascule ? La veille cessera d’envoyer les e-mails CIE aux responsables de zone et l’onglet Pannes CIE affichera les statistiques de la plateforme de signalement.'))return;
+ if(actif&&!confirm('Activer la bascule ? La veille cessera d’envoyer les e-mails CIE aux responsables de zone et l’onglet Incidents CIE affichera les statistiques de la plateforme de signalement.'))return;
  const {error}=await SB.rpc('regler_pannes_cie_externe',{p_actif:actif,p_url:url||null,p_cle:cle||null});$('#extcle').value='';
  if(error)return toast('Réglage refusé : '+error.message);const {data}=await SB.rpc('pannes_cie_externe');EXT=data;EXTS=null;extR();panR();toast(actif?'Bascule activée.':'Réglage enregistré.')}
 // diagramme d'évolution : barres empilées publications / commentaires, par tranche de 3 h (24 h), par jour (7 et 30 jours) ou par semaine (3 mois)
