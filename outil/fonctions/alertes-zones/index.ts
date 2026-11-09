@@ -47,8 +47,10 @@ Deno.serve(async (req) => {
     const [{ conf }] = await sql`select coalesce((select valeur from public.parametres where cle = 'pannes_cie_externe'), '{}') as conf`;
     const cieExterne = JSON.parse(conf).actif === true;
     const parZone = new Map<string, typeof lignes>();
+    // Décision du 09/11 : plus aucun e-mail aux responsables de zone (CIE comme SODECI). Seules les détections de termes surveillés partent encore.
+    const ENVOI_ZONES = false;
     for (const l of lignes) {
-      if (cieExterne && l.marque === "CIE") continue;
+      if (!ENVOI_ZONES || (cieExterne && l.marque === "CIE")) continue;
       const k = l.marque + "|" + l.zone + "|" + l.email_responsable;
       if (!parZone.has(k)) parZone.set(k, [] as unknown as typeof lignes);
       parZone.get(k)!.push(l);
