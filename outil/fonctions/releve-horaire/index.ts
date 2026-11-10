@@ -55,8 +55,10 @@ Deno.serve(async (req) => {
             { startUrls: fb.map((p) => ({ url: p.lien })), resultsLimit: 1 }, 0.01 + 0.006 * fb.length);
           for (const p of fb) {
             const o = it.find((x) => [x.facebookUrl, x.inputUrl, x.url].some((u) => u && propre(u) === propre(p.lien)));
-            if (o) res.push({ id: p.id, jaime: n(o.likes ?? o.likers?.count ?? o.unified_reactors?.count), com: n(o.comments ?? o.total_comment_count),
-              part: n(o.shares), vues: n(o.viewsCount ?? o.videoPostViewCount) });
+            // noms de champs actuels de l'outil (likesCount, commentsCount, sharesCount) et anciens noms en secours
+            if (o) res.push({ id: p.id, jaime: n(o.likesCount ?? o.likes ?? o.likers?.count ?? o.unified_reactors?.count),
+              com: n(o.commentsCount ?? o.comments ?? o.total_comment_count), part: n(o.sharesCount ?? o.shares),
+              vues: n(o.viewsCount ?? o.videoViewCount ?? o.videoPostViewCount) });
           }
         } catch (e) { erreurs.push("Facebook : " + (e as Error).message); }
       })(),
@@ -83,6 +85,8 @@ Deno.serve(async (req) => {
         } catch (e) { erreurs.push("X : " + (e as Error).message); }
       })(),
     ]);
+    // un relevé sans aucun chiffre n'est jamais enregistré (il s'afficherait comme des zéros)
+    for (const r of res.splice(0).filter((x) => [x.jaime, x.com, x.part, x.vues].some((v) => v !== null))) res.push(r);
     for (const r of res) {
       await sql`insert into public.releves(publication_id, releve_le, jaime, com, part, vues) values (${r.id}, now(), ${r.jaime}, ${r.com}, ${r.part}, ${r.vues})`;
       await sql`update public.publications set jaime = coalesce(${r.jaime}, jaime), com = coalesce(${r.com}, com), part = coalesce(${r.part}, part), vues = coalesce(${r.vues}, vues) where id = ${r.id}`;

@@ -380,17 +380,19 @@ async function sortir(){try{localStorage.removeItem('veille_connexion_le')}catch
 const fh=d=>{d=new Date(d);return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+' '+String(d.getUTCHours()).padStart(2,'0')+'h'+String(d.getUTCMinutes()).padStart(2,'0')};
 async function signer(paths){const out={};paths=[...new Set(paths.filter(Boolean))];paths.filter(x=>/^https?:/.test(x)).forEach(x=>out[x]=x);paths=paths.filter(x=>!/^https?:/.test(x));for(let i=0;i<paths.length;i+=100){const {data}=await SB.storage.from('captures').createSignedUrls(paths.slice(i,i+100),43200);(data||[]).forEach(x=>{if(x.signedUrl)out[x.path]=x.signedUrl})}return out}
 let EXT=null,EXTS=null,EXTK='';
+// Lecture complète par pages de 1000 lignes (le serveur ne renvoie jamais plus de 1000 lignes d'un coup)
+async function tout(mk){let out=[];for(let i=0;;i+=1000){const {data,error}=await mk().range(i,i+999);if(error)return{data:out,error};out=out.concat(data||[]);if(!data||data.length<1000)return{data:out}}}
 async function charger(){
  const depuis=new Date(Date.now()-400*86400000).toISOString();
  const [p,st,rl,th,cm,ps,rj,pn]=await Promise.all([
-  SB.from('publications').select('*').gte('remontee_le',depuis).order('remontee_le',{ascending:false}).limit(20000),
-  SB.from('stats_jour').select('*').order('jour'),
-  SB.from('releves').select('*').order('releve_le'),
+  tout(()=>SB.from('publications').select('*').gte('remontee_le',depuis).order('remontee_le',{ascending:false}).order('id')),
+  tout(()=>SB.from('stats_jour').select('*').order('jour').order('marque')),
+  tout(()=>SB.from('releves').select('*').order('releve_le').order('id')),
   SB.from('themes_alerte').select('*').order('depuis',{ascending:false}),
-  SB.from('commentaires').select('*').order('publie_le',{ascending:false}),
+  tout(()=>SB.from('commentaires').select('*').order('publie_le',{ascending:false}).order('id')),
   SB.from('passages').select('*').order('debut',{ascending:false}).limit(20),
   SB.from('rapports_journaliers').select('*'),
-  SB.from('pannes').select('*').gte('le',new Date(Date.now()-92*86400000).toISOString()).order('le',{ascending:false}).limit(20000)]);
+  tout(()=>SB.from('pannes').select('*').gte('le',new Date(Date.now()-92*86400000).toISOString()).order('le',{ascending:false}).order('id'))]);
  const P=p.data||[];const urls=await signer(P.map(x=>x.capture));DERP=(ps.data||[]).length?new Date(ps.data[0].debut):null;
  const row=x=>({id:x.id,sauto:x.suivi_auto,sautoM:x.suivi_auto_motif||'',sautoFin:x.suivi_auto_depuis?fh(new Date(new Date(x.suivi_auto_depuis).getTime()+86400000).toISOString()):'',suivi:x.suivi_stats,pa:x.point_attention,neuf:!!(DERP&&new Date(x.remontee_le)>=DERP),jour:isoD(new Date(x.publiee_le||x.remontee_le)),t:new Date(x.publiee_le||x.remontee_le),pub:x.publiee_le?fh(x.publiee_le):'',marque:x.marque,pf:x.plateforme,arch:!!x.archive_le,auteur:x.auteur||'',texte:x.texte||'',theme:x.theme||'Non classé',lieu:x.lieu||'Non localisé',sentiment:x.sentiment||'Neutre',jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,remontee:fh(x.remontee_le),lien:x.lien,img:urls[x.capture]||''});
  D.pannes=(pn&&pn.data)||[];
@@ -403,7 +405,7 @@ async function charger(){
  const sem=Date.now()-7*86400000;
  const j24=Date.now()-86400000;
  D.att=P.filter(x=>x.point_attention&&(x.statut_alerte!=='Alerte close'||!x.surveillance_finie_le)).map(x=>({id:x.id,type:'pub',marque:x.marque,pf:x.plateforme,auteur:x.auteur||'',titre:x.texte||x.lien||'',lien:x.lien,img:urls[x.capture]||'',raisons:x.motifs&&x.motifs.length?x.motifs:['Point d’attention'],depuis:fh(x.attention_depuis||x.remontee_le),pub:x.publiee_le?fh(x.publiee_le):'',statut:({'Suivi toutes les heures':'Suivi renforcé','Suivi toutes les 2 heures':'Suivi régulier'})[x.statut_alerte||'Suivi toutes les heures']||x.statut_alerte,actif:x.statut_alerte!=='Alerte close',officiel:x.type==='officiel',clos:x.alerte_close_le?fh(x.alerte_close_le):'',epingle:!!x.epingle,sens:x.sens,mots:x.mots,releves:(R[x.id]&&R[x.id].length)?R[x.id]:[{h:fh(x.remontee_le),jaime:x.jaime,com:x.com,part:x.part}]}));
- D.att.forEach(a=>{a.urg=urgence(a.releves)});D.att.sort((u,v)=>(v.epingle-u.epingle)||(v.actif-u.actif)||(v.urg-u.urg));
+ D.att.forEach(a=>{a.urg=urgence(a.releves)});D.att.sort((u,v)=>(v.epingle-u.epingle)||(v.actif-u.actif)||((v.statut==='Suivi renforcé')-(u.statut==='Suivi renforcé'))||(v.urg-u.urg));
  D.themes_att=(th.data||[]).filter(t=>t.actif).map(t=>{const xs=P.filter(x=>x.type==='remontee'&&x.marque===t.marque&&x.theme===t.theme&&new Date(x.remontee_le)>=new Date(t.depuis));const rel=t.releves||[];const n=rel.length;
   return{marque:t.marque,theme:t.theme,raison:t.raison||'Thématique en alerte',depuis:fh(t.depuis),n:xs.length,inter:xs.reduce((s,x)=>s+(x.jaime||0)+(x.com||0)+(x.part||0),0),neg:xs.length?Math.round(100*xs.filter(x=>x.sentiment==='Négatif').length/xs.length):0,evol:n>1&&rel[n-2].n?Math.round(100*(rel[n-1].n-rel[n-2].n)/rel[n-2].n):null,releves:rel.slice(-6)}});
  const h72=Date.now()-72*3600e3;const off=P.filter(x=>x.type==='officiel'&&(x.suivi_stats||x.suivi_auto||x.point_attention||new Date(x.publiee_le||x.remontee_le).getTime()>=h72));['CIE','SODECI'].forEach(m=>{D.officiels[m]=off.filter(x=>x.marque===m).map(x=>({id:String(x.id),canal:x.plateforme+' · '+(x.auteur||''),date:x.publiee_le?fh(x.publiee_le):'(date non disponible)',rem:fh(x.remontee_le),der:(R[x.id]&&R[x.id].length)?R[x.id][R[x.id].length-1].h:fh(x.remontee_le),suivi:x.suivi_stats,pa:x.point_attention,motif:x.suivi_motif,texte:x.texte,jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,lien:x.lien,img:urls[x.capture]||''}));
