@@ -381,18 +381,18 @@ const fh=d=>{d=new Date(d);return String(d.getUTCDate()).padStart(2,'0')+'/'+Str
 async function signer(paths){const out={};paths=[...new Set(paths.filter(Boolean))];paths.filter(x=>/^https?:/.test(x)).forEach(x=>out[x]=x);paths=paths.filter(x=>!/^https?:/.test(x));for(let i=0;i<paths.length;i+=100){const {data}=await SB.storage.from('captures').createSignedUrls(paths.slice(i,i+100),43200);(data||[]).forEach(x=>{if(x.signedUrl)out[x.path]=x.signedUrl})}return out}
 let EXT=null,EXTS=null,EXTK='';
 // Lecture complète par pages de 1000 lignes (le serveur ne renvoie jamais plus de 1000 lignes d'un coup)
-async function tout(mk){let out=[];for(let i=0;;i+=1000){const {data,error}=await mk().range(i,i+999);if(error)return{data:out,error};out=out.concat(data||[]);if(!data||data.length<1000)return{data:out}}}
+async function lireTout(mk){let out=[];for(let i=0;;i+=1000){const {data,error}=await mk().range(i,i+999);if(error)return{data:out,error};out=out.concat(data||[]);if(!data||data.length<1000)return{data:out}}}
 async function charger(){
  const depuis=new Date(Date.now()-400*86400000).toISOString();
  const [p,st,rl,th,cm,ps,rj,pn]=await Promise.all([
-  tout(()=>SB.from('publications').select('*').gte('remontee_le',depuis).order('remontee_le',{ascending:false}).order('id')),
-  tout(()=>SB.from('stats_jour').select('*').order('jour').order('marque')),
-  tout(()=>SB.from('releves').select('*').order('releve_le').order('id')),
+  lireTout(()=>SB.from('publications').select('*').gte('remontee_le',depuis).order('remontee_le',{ascending:false}).order('id')),
+  lireTout(()=>SB.from('stats_jour').select('*').order('jour').order('marque')),
+  lireTout(()=>SB.from('releves').select('*').order('releve_le').order('id')),
   SB.from('themes_alerte').select('*').order('depuis',{ascending:false}),
-  tout(()=>SB.from('commentaires').select('*').order('publie_le',{ascending:false}).order('id')),
+  lireTout(()=>SB.from('commentaires').select('*').order('publie_le',{ascending:false}).order('id')),
   SB.from('passages').select('*').order('debut',{ascending:false}).limit(20),
   SB.from('rapports_journaliers').select('*'),
-  tout(()=>SB.from('pannes').select('*').gte('le',new Date(Date.now()-92*86400000).toISOString()).order('le',{ascending:false}).order('id'))]);
+  lireTout(()=>SB.from('pannes').select('*').gte('le',new Date(Date.now()-92*86400000).toISOString()).order('le',{ascending:false}).order('id'))]);
  const P=p.data||[];const urls=await signer(P.map(x=>x.capture));DERP=(ps.data||[]).length?new Date(ps.data[0].debut):null;
  const row=x=>({id:x.id,sauto:x.suivi_auto,sautoM:x.suivi_auto_motif||'',sautoFin:x.suivi_auto_depuis?fh(new Date(new Date(x.suivi_auto_depuis).getTime()+86400000).toISOString()):'',suivi:x.suivi_stats,pa:x.point_attention,neuf:!!(DERP&&new Date(x.remontee_le)>=DERP),jour:isoD(new Date(x.publiee_le||x.remontee_le)),t:new Date(x.publiee_le||x.remontee_le),pub:x.publiee_le?fh(x.publiee_le):'',marque:x.marque,pf:x.plateforme,arch:!!x.archive_le,auteur:x.auteur||'',texte:x.texte||'',theme:x.theme||'Non classé',lieu:x.lieu||'Non localisé',sentiment:x.sentiment||'Neutre',jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,remontee:fh(x.remontee_le),lien:x.lien,img:urls[x.capture]||''});
  D.pannes=(pn&&pn.data)||[];
