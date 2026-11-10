@@ -24,6 +24,20 @@ Deno.serve(async (req) => {
     if (req.headers.get("x-jeton") !== jeton) return new Response("refusé", { status: 403 });
     const [{ dernier }] = await sql`select max(debut) as dernier from public.passages`;
     const dest: string[] = JSON.parse((await param("destinataires_incidents")) || "[]");
+    // Points d'attention sans relevé chiffré dans les délais (ce que le client verrait) : alerte à l'équipe Viral, une fois par anomalie
+    try {
+      const [{ a }] = await sql`select public.anomalies_points() as a`;
+      const deja = await param("anomalies_points_signalees");
+      if (a && a !== deja) {
+        await courriel(dest, "⚠️ ALERTE DISPOSITIF – relevés en retard sur des points d'attention",
+          `Bonjour,\n\nCes points d'attention n'ont pas de relevé chiffré dans les délais de leur rythme de suivi :\n${a.split(" ; ").join("\n")}\n\n` +
+          `Le relevé horaire est relancé automatiquement chaque heure ; si l'anomalie persiste, vérifier le journal (relevé horaire).\n${"https://veillecharlysierra.github.io/Veille-quotidienne/"}`);
+        await sql`insert into public.journal(le, type, par, detail) values (now(), 'Incident', 'surveillance serveur', ${"Relevés en retard : " + a})`;
+      }
+      if (a !== deja) await poser("anomalies_points_signalees", a || null);
+    } catch (e) {
+      await sql`insert into public.journal(le, type, par, detail) values (now(), 'Incident', 'surveillance serveur', ${"Contrôle des relevés impossible : " + (e as Error).message})`.catch(() => {});
+    }
     const alerte = await param("surveillance_alerte_le");
     const age = (Date.now() - new Date(dernier).getTime()) / 3600e3;
     const lien = "https://veillecharlysierra.github.io/Veille-quotidienne/";
