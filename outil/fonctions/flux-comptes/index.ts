@@ -14,6 +14,8 @@ const nomSecret = NOMS.find((k) => Deno.env.get(k)) ||
 const TOKEN = nomSecret ? Deno.env.get(nomSecret)! : "";
 const DATASET = "gd_lkaxegm826bjpoo9m5";
 const API = "https://api.brightdata.com/datasets/v3";
+// sujets CIE / SODECI : marques, électricité, eau, factures, compteurs, coupures
+const SUJET = /\bcie\b|sodeci|électricit|electricit|(coupure|pas|plus|sans) de courant|délestage|delestage|coupures? d.eau|pénurie d.eau|penurie d.eau|factures? d.(eau|électricité|electricite)|compteur|cash ?power|robinet/i;
 
 const etat = async (v: Record<string, unknown>) => {
   const [a] = await sql`select valeur from public.parametres where cle = 'flux_comptes'`;
@@ -83,6 +85,7 @@ Deno.serve(async (req) => {
     const items: any[] = rs.ok ? await rs.json() : [];
     if (!rs.ok) throw new Error("téléchargement " + rs.status);
     let off = 0, acl = 0, err = 0, vieux = 0;
+    const pa: number[] = [];
     for (const it of items) {
       if (it.error || it.error_code || !it.url) { err++; continue; }
       const src = sources.find((s) => [it.input?.url, it.page_url, it.user_url].some((u) => u && cleSource(u) === cleSource(s.url)))
@@ -106,6 +109,26 @@ Deno.serve(async (req) => {
             ${lien}, ${le}, ${img}, 'automatisee', ${it.likes ?? null}, ${it.num_comments ?? null}, ${it.num_shares ?? null})
           on conflict do nothing returning id`;
         if (r.length) off++;
+      } else if (src.categorie === "Personnalité" && SUJET.test(texte)) {
+        // Règle de base : publication d'une personnalité suivie qui touche à la CIE ou à la SODECI → point d'attention immédiat,
+        // sans attendre le passage (qui la vérifie ensuite : thème, sentiment, localité, captures).
+        const sodeci = /sodeci|\beau\b|robinet|forage|château d.eau/i.test(texte) && !/cie\b|électricit|electricit|courant|délestage/i.test(texte);
+        const theme = /factur|pénalit|penalit|compteur|cash ?power|recharge/i.test(texte) ? "Facturation et compteurs"
+          : /coupure|délestage|delestage|pénurie|penurie/i.test(texte) ? (sodeci ? "Coupures et pénuries d'eau" : "Coupures d'électricité")
+          : "Critique générale";
+        const r = await sql`insert into public.publications(marque, type, plateforme, auteur, texte, theme, sentiment, lien, publiee_le, remontee_le,
+            capture, origine, jaime, com, part, point_attention, motifs, statut_alerte, attention_depuis)
+          values (${sodeci ? "SODECI" : "CIE"}::public.marque, 'remontee', 'Facebook', ${src.nom}, ${texte.slice(0, 1500)}, ${theme}, 'Neutre',
+            ${lien}, ${le}, now(), ${img}, 'automatisee', ${it.likes ?? null}, ${it.num_comments ?? null}, ${it.num_shares ?? null},
+            true, ${["Personnalité publique (compte suivi)"]}, 'En attente du premier relevé', now())
+          on conflict do nothing returning id`;
+        await sql`insert into public.a_classer(source, plateforme, auteur, texte, lien, publiee_le, image, traite)
+          values (${src.nom}, 'Facebook', ${src.nom}, ${texte.slice(0, 1500)}, ${lien}, ${le}, ${img}, true) on conflict (lien) do nothing`;
+        if (r.length) {
+          pa.push(r[0].id);
+          await sql`insert into public.journal(le, type, par, detail) values (now(), 'Classement', 'flux des comptes suivis',
+            ${"Point d'attention immédiat n° " + r[0].id + " : " + src.nom + " (" + theme + ") — à vérifier au passage suivant"})`;
+        }
       } else {
         const r = await sql`insert into public.a_classer(source, plateforme, auteur, texte, lien, publiee_le, image)
           values (${src.nom}, 'Facebook', ${src.nom}, ${texte.slice(0, 1500) || null}, ${lien}, ${le}, ${img}) on conflict (lien) do nothing returning id`;
@@ -113,7 +136,9 @@ Deno.serve(async (req) => {
       }
     }
     const fin = await etat({ statut: "reçu", recu_le: new Date().toISOString(), elements: items.length, officiels: off, a_classer: acl,
-      erreurs_comptes: err, trop_anciens: vieux, erreur: null });
+      erreurs_comptes: err, trop_anciens: vieux, points_attention: pa, erreur: null });
+    // premier relevé chiffré tout de suite pour les nouveaux points d'attention
+    if (pa.length) await sql`select prive.lancer_releve_horaire()`;
     if (items.length && err === items.length) await incident("Collecte des comptes suivis : aucun compte lu (" + err + " erreurs)");
     return Response.json({ ok: true, ...fin });
   } catch (x) {
