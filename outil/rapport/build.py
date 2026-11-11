@@ -81,6 +81,9 @@ def bullet(x, y, key, txt, size=10, width=490):
         first = False; y -= size * 1.3
     return y - 2
 
+def bullet_h(key, txt, size=10, width=490):
+    return len(wrap((key + ' : ' if key else '') + txt, 'C', size, width)) * size * 1.3 + 2
+
 def newpage(title=None, band=True):
     if page[0]: c.showPage()
     page[0] += 1
@@ -145,7 +148,8 @@ def section(y, title, items, size=10):
     if y < 120: newpage('Synthèse de la journée (suite)'); y = H - 52
     c.setFillColor(GREEN); c.setFont('CB', 12); c.drawString(20, y, title); y -= 16
     for k, t in items:
-        if y < 60: newpage('Synthèse de la journée (suite)'); y = H - 52
+        # un point n'est jamais coupé : s'il ne tient pas en entier, il passe sur la page suivante
+        if y - bullet_h(k, t, size, 488) < 30: newpage('Synthèse de la journée (suite)'); y = H - 52
         y = bullet(22, y, k, t, size=size, width=488)
     return y - 4
 
@@ -156,7 +160,7 @@ y -= 4
 sr, sn = stats('SODECI'); cr, cn = stats('CIE')
 nh = sum(p['origine'] == 'remontée humaine' for p in P)
 y = para(20, y, f"{len(cr) + len(sr)} publications retenues après filtrage et dédoublonnage : {len(cr)} sur la CIE et {len(sr)} sur la SODECI "
-         f"(une publication qui cite les deux marques est comptée pour chacune ; {nh} remontées humaines, {len(P) - nh} remontées automatisées). "
+         f"(une publication qui cite les deux marques est comptée pour chacune). "
          f"Sentiment négatif : {pct(cn, len(cr))} % pour la CIE, {pct(sn, len(sr))} % pour la SODECI. Les communiqués des canaux officiels ne sont pas comptés.",
          size=10.5, width=500)
 y -= 8
@@ -211,7 +215,9 @@ def brand_pages(b, col, logo, attention):
     y = H - 360
     c.setFillColor(GREEN); c.setFont('CB', 12); c.drawString(20, y, "Points d'attention"); y -= 16
     for k, t in attention:
-        if y < 40: break
+        # un point n'est jamais coupé ni perdu : s'il ne tient pas en entier, il continue sur une page « (suite) »
+        if y - bullet_h(k, t, 10, 488) < 30:
+            newpage(f"Points d'attention – {b} (suite)"); y = H - 52
         y = bullet(22, y, k, t, size=10, width=488)
     rs2 = sorted(rs, key=inter, reverse=True)
     for i in range(0, len(rs2), 6):
@@ -223,7 +229,7 @@ def brand_pages(b, col, logo, attention):
             fw, fh = 252, 232
             c.setStrokeColor(HexColor('#BFBFBF')); c.setLineWidth(0.6); c.rect(fx, fy, fw, fh, stroke=1, fill=0)
             c.setFillColor(GREEN); c.rect(fx, fy + fh - 13, fw, 13, stroke=0, fill=1)
-            c.setFillColor(white); c.setFont('CB', 7.5); c.drawString(fx + 5, fy + fh - 9.5, f"{p['origine'].upper()} · {p['pf'].upper()}")
+            c.setFillColor(white); c.setFont('CB', 7.5); c.drawString(fx + 5, fy + fh - 9.5, p['pf'].upper())
             top = fy + fh - 15
             if (p['com'] or 0) >= 150:
                 c.setFillColor(RED); c.rect(fx + 3, top - 11, 110, 10, stroke=0, fill=1)

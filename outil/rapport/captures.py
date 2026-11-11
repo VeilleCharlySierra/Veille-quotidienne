@@ -1,6 +1,6 @@
 # Captures d'écran des publications.
 #  python3 captures.py paquet <dossier_images> <nom_paquet.bin> <clé>
-#      dossier_images contient des fichiers <id>__fb.jpg | <id>__x.jpg | <id>__reel.jpg (capture du navigateur à l'échelle 0,6 :
+#      dossier_images contient des fichiers <id>__fb.jpg | <id>__x.jpg | <id>__reel.jpg (capture du navigateur en pleine résolution, scale=1 ; le recadrage se fait en proportions :
 #      820 x 385 environ) ; ils sont recadrés sur la publication puis chiffrés dans envoi/<nom_paquet.bin>.
 #  python3 captures.py recadrer <dossier_images> <dossier_sortie>
 #      recadre <id>__fb.jpg | __x.jpg | __reel.jpg (captures du navigateur) en <dossier_sortie>/<id>.jpg (pour le rapport).

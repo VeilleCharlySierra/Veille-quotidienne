@@ -25,7 +25,7 @@ Période : de J-1 06h00 UTC jusqu'au moment de l'extraction (vers 05h00), selon 
     "marques": {"CIE": [["Titre", "texte"], ...], "SODECI": [...]}}   // 3 à 5 puces par marque
    ```
 4. Captures pour le rapport (Chrome, un onglet à toi, jamais l'onglet WhatsApp) : pour chaque publication de data.json, ouvrir son
-   lien, attendre 4 s, `computer screenshot` avec `save_to_disk=true` et `scale=0.6`, copier le fichier enregistré en
+   lien, attendre 4 s, `computer screenshot` avec `save_to_disk=true` et `scale=1` (pleine résolution : captures nettes ; ne plus réduire), copier le fichier enregistré en
    `<dossier>/brut/<id>__fb.jpg` (Facebook), `__x.jpg` (X) ou `__reel.jpg` (reel, vidéo, TikTok) ; enchaîner 5 publications par
    `browser_batch` ; ignorer « Ce contenu n'est pas disponible » et les articles de presse.
    Puis `python3 outil/rapport/captures.py recadrer <dossier>/brut <dossier>/captures` : chaque fiche reprend
