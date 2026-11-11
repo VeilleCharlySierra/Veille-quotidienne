@@ -38,6 +38,25 @@ Deno.serve(async (req) => {
     } catch (e) {
       await sql`insert into public.journal(le, type, par, detail) values (now(), 'Incident', 'surveillance serveur', ${"Contrôle des relevés impossible : " + (e as Error).message})`.catch(() => {});
     }
+    // Flux et comptes suivis (demande du 11/11, après l'expiration silencieuse de RSS.app) : alerte une fois par anomalie, rappel toutes les 6 h
+    try {
+      const [{ f }] = await sql`select public.anomalies_flux() as f`;
+      const prec = JSON.parse((await param("anomalies_flux_signalees")) || "null");
+      const cle = f ? f.replace(/\d+ ?(h|min)\b/g, "") : null;
+      if (f && (!prec || prec.cle !== cle || Date.now() - new Date(prec.le).getTime() >= 6 * 3600e3)) {
+        await courriel(dest, "⚠️ ALERTE DISPOSITIF – flux et comptes suivis",
+          `Bonjour,\n\nLa collecte des flux et des comptes suivis est en défaut :\n${f.split(" ; ").join("\n")}\n\n` +
+          `Tant que ce défaut dure, les publications des comptes suivis (comptes officiels, personnalités, médias) peuvent ne pas remonter.\n` +
+          `Rappel toutes les 6 heures tant que la situation dure.\n${"https://veillecharlysierra.github.io/Veille-quotidienne/"}`);
+        await sql`insert into public.journal(le, type, par, detail) values (now(), 'Incident', 'surveillance serveur', ${"Flux : " + f})`;
+        await poser("anomalies_flux_signalees", JSON.stringify({ cle, le: new Date().toISOString() }));
+      } else if (!f && prec) {
+        await courriel(dest, "✅ DISPOSITIF RÉTABLI – flux et comptes suivis", `Bonjour,\n\nLa collecte des flux et des comptes suivis fonctionne de nouveau.\n`);
+        await poser("anomalies_flux_signalees", null);
+      }
+    } catch (e) {
+      await sql`insert into public.journal(le, type, par, detail) values (now(), 'Incident', 'surveillance serveur', ${"Contrôle des flux impossible : " + (e as Error).message})`.catch(() => {});
+    }
     const alerte = await param("surveillance_alerte_le");
     const age = (Date.now() - new Date(dernier).getTime()) / 3600e3;
     const lien = "https://veillecharlysierra.github.io/Veille-quotidienne/";
