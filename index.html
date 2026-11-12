@@ -394,7 +394,7 @@ async function charger(){
   SB.from('rapports_journaliers').select('*'),
   lireTout(()=>SB.from('pannes').select('*').gte('le',new Date(Date.now()-92*86400000).toISOString()).order('le',{ascending:false}).order('id'))]);
  const P=p.data||[];const urls=await signer(P.map(x=>x.capture));DERP=(ps.data||[]).length?new Date(ps.data[0].debut):null;
- const row=x=>({id:x.id,sauto:x.suivi_auto,sautoM:x.suivi_auto_motif||'',sautoFin:x.suivi_auto_depuis?fh(new Date(new Date(x.suivi_auto_depuis).getTime()+86400000).toISOString()):'',suivi:x.suivi_stats,pa:x.point_attention,neuf:!!(DERP&&new Date(x.remontee_le)>=DERP),jour:isoD(new Date(x.publiee_le||x.remontee_le)),t:new Date(x.publiee_le||x.remontee_le),pub:x.publiee_le?fh(x.publiee_le):'',marque:x.marque,pf:x.plateforme,arch:!!x.archive_le,auteur:x.auteur||'',texte:x.texte||'',theme:x.theme||'Non classé',lieu:x.lieu||'Non localisé',sentiment:x.sentiment||'Neutre',jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,remontee:fh(x.remontee_le),lien:x.lien,img:urls[x.capture]||''});
+ const row=x=>({id:x.id,sauto:x.suivi_auto,sautoM:x.suivi_auto_motif||'',sautoFin:x.suivi_auto_depuis?fh(new Date(new Date(x.suivi_auto_depuis).getTime()+86400000).toISOString()):'',suivi:x.suivi_stats,pa:x.point_attention,neuf:!!(DERP&&new Date(x.remontee_le)>=DERP&&Date.now()-new Date(x.publiee_le||x.remontee_le).getTime()<=3*3600e3),jour:isoD(new Date(x.publiee_le||x.remontee_le)),t:new Date(x.publiee_le||x.remontee_le),pub:x.publiee_le?fh(x.publiee_le):'',marque:x.marque,pf:x.plateforme,arch:!!x.archive_le,auteur:x.auteur||'',texte:x.texte||'',theme:x.theme||'Non classé',lieu:x.lieu||'Non localisé',sentiment:x.sentiment||'Neutre',jaime:x.jaime,com:x.com,part:x.part,vues:x.vues,remontee:fh(x.remontee_le),lien:x.lien,img:urls[x.capture]||''});
  D.pannes=(pn&&pn.data)||[];
  try{const {data:ex}=await SB.rpc('pannes_cie_externe');EXT=ex||null}catch(e){EXT=null}EXTS=null;
  D.pubs=P.filter(x=>x.type==='remontee').map(row);
@@ -513,7 +513,7 @@ function inTr(r){const b=REF.getTime()-T*86400000,a=b-86400000;return r.t.getTim
 let T=0;let attLinks=new Set();
 function dk(r){const m=/(\d\d)\/(\d\d) (\d\d)h(\d\d)/.exec(r.remontee||'');return m?m[2]+m[1]+m[3]+m[4]:''}
 function pubSel(){const q=$('#q').value.toLowerCase(),p=$('#fp').value,t=$('#ft').value,l=$('#fl').value,mi=+$('#fi').value,so=$('#fs').value;
- return allRows().filter(r=>inTr(r)&&r.marque===M&&!r.suivi&&!r.pa&&(!p||r.pf===p)&&(!t||r.theme===t)&&(!l||r.lieu===l)&&inter(r)>=mi&&(!q||(r.auteur+' '+r.texte).toLowerCase().includes(q))).sort((a,b)=>so==='d'?dk(b).localeCompare(dk(a)):inter(b)-inter(a))}
+ return allRows().filter(r=>inTr(r)&&r.marque===M&&!r.suivi&&!r.pa&&(!p||r.pf===p)&&(!t||r.theme===t)&&(!l||r.lieu===l)&&inter(r)>=mi&&(!q||(r.auteur+' '+r.texte).toLowerCase().includes(q))).sort((a,b)=>so==='d'?((b.t||0)-(a.t||0)):inter(b)-inter(a))}
 function fillSel(){const base=allRows().filter(r=>inTr(r)&&r.marque===M);
  [['#ft','Toutes thématiques','theme'],['#fl','Toutes localités','lieu']].forEach(([id,lab,k])=>{const v=$(id).value;const vals=[...new Set(base.map(r=>r[k]))].sort((a,b)=>a.localeCompare(b,'fr'));
   $(id).innerHTML=`<option value="">${lab}</option>`+vals.map(x=>`<option>${esc(x)}</option>`).join('');if(vals.includes(v))$(id).value=v})}
