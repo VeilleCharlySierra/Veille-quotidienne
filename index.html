@@ -464,7 +464,7 @@ function rangeDays(){if(P==='c')return[$('#d1').value||D.jour,$('#d2').value||D.
 function bord(){
  const[a,b]=rangeDays();const rows=allRows().filter(r=>r.jour>=a&&r.jour<=b&&r.marque===M);const ser=D.serie.filter(s=>s.jour>=a&&s.jour<=b);
  $('#pertxt').textContent=M+' · '+(a===b?'statistiques du '+frd(a)+(a===D.jour?' (aujourd’hui)':''):'du '+frd(a)+' au '+frd(b))+'.';
- const n=ser.reduce((t,s)=>t+(s[M]?s[M].n:0),0);const neg=rows.length?Math.round(100*rows.filter(r=>r.sentiment==='Négatif').length/rows.length):null;
+ const n=rows.length; // même base que les autres indicateurs (publications de la période)const neg=rows.length?Math.round(100*rows.filter(r=>r.sentiment==='Négatif').length/rows.length):null;
  const th={};rows.forEach(r=>th[r.theme]=(th[r.theme]||0)+1);const ths=Object.entries(th).sort((x,y)=>y[1]-x[1]);
  const A=D.att.filter(t=>t.marque===M);
  $('#kpis').innerHTML=`<div class="panel kpi"><span class="l">Publications</span><span class="v">${nf(n)}</span><span class="s">${M}</span></div>
