@@ -470,7 +470,7 @@ function bord(){
  $('#kpis').innerHTML=`<div class="panel kpi"><span class="l">Publications</span><span class="v">${nf(n)}</span><span class="s">${M}</span></div>
  <div class="panel kpi"><span class="l">Publications négatives</span><span class="v">${neg==null?'–':neg+' %'}</span><span class="s">${rows.filter(r=>r.sentiment==='Négatif').length} sur ${rows.length}</span></div>
  <div class="panel kpi"><span class="l">Interactions</span><span class="v">${nf(rows.reduce((t,r)=>t+inter(r),0))}</span><span class="s">j'aime, commentaires, partages</span></div>
- <div class="panel kpi"><span class="l">Points d'attention</span><span class="v">${A.filter(t=>t.actif).length}</span><span class="s">publications en cours${D.themes_att.filter(t=>t.marque===M).length?' · '+D.themes_att.filter(t=>t.marque===M).length+' thématique(s) en alerte':''}</span></div>
+ <div class="panel kpi"><span class="l">Points d'attention</span><span style="display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px"><span style="display:grid"><span class="v">${A.filter(t=>t.actif).length}</span><span class="s">publications</span></span><span style="width:1px;align-self:stretch;background:var(--line)"></span><span style="display:grid"><span class="v">${D.themes_att.filter(t=>t.marque===M).length}</span><span class="s">thématiques</span></span></span></div>
  <div class="panel kpi"><span class="l">Thème dominant</span><span class="v" style="font-size:1.15rem;padding-block:6px">${ths[0]?esc(ths[0][0]):'–'}</span><span class="s">${ths[0]?Math.round(100*ths[0][1]/rows.length)+' % des publications':''}</span></div>`;
  sensInter(rows);
  $('#evo').hidden=a===b;
