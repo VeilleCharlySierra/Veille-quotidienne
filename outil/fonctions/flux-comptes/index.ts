@@ -12,15 +12,17 @@ const NOMS = ["BRIGHTDATA_TOKEN", "BRIGHT_DATA_TOKEN", "BRIGHTDATA_API_KEY", "BR
 const nomSecret = NOMS.find((k) => Deno.env.get(k)) ||
   Object.keys(Deno.env.toObject()).find((k) => /bright/i.test(k)) || "";
 const TOKEN = nomSecret ? Deno.env.get(nomSecret)! : "";
-const DATASET = "gd_lkaxegm826bjpoo9m5";
+const DATASET_PAGES = "gd_lkaxegm826bjpoo9m5";
+const DATASET_GROUPES = "gd_lz11l67o2cb3r0lkj3"; // groupes Facebook publics (sources de catégorie « Groupe »)
+let CLE = "flux_comptes";
 const API = "https://api.brightdata.com/datasets/v3";
 // sujets CIE / SODECI : marques, électricité, eau, factures, compteurs, coupures
 const SUJET = /\bcie\b|sodeci|électricit|electricit|(coupure|pas|plus|sans) de courant|délestage|delestage|coupures? d.eau|pénurie d.eau|penurie d.eau|factures? d.(eau|électricité|electricite)|compteur|cash ?power|robinet/i;
 
 const etat = async (v: Record<string, unknown>) => {
-  const [a] = await sql`select valeur from public.parametres where cle = 'flux_comptes'`;
+  const [a] = await sql`select valeur from public.parametres where cle = ${CLE}`;
   const n = { ...(a ? JSON.parse(a.valeur) : {}), ...v };
-  await sql`insert into public.parametres(cle, valeur) values ('flux_comptes', ${JSON.stringify(n)}) on conflict (cle) do update set valeur = excluded.valeur`;
+  await sql`insert into public.parametres(cle, valeur) values (${CLE}, ${JSON.stringify(n)}) on conflict (cle) do update set valeur = excluded.valeur`;
   return n;
 };
 const incident = (t: string) =>
@@ -36,7 +38,12 @@ Deno.serve(async (req) => {
   try {
     const [{ valeur: jeton }] = await sql`select valeur from prive.cles where nom = 'jeton_envoi'`;
     if (req.headers.get("x-jeton") !== jeton) return new Response("refusé", { status: 403 });
-    const etape = new URL(req.url).searchParams.get("etape") || "recevoir";
+    const q = new URL(req.url).searchParams;
+    const etape = q.get("etape") || "recevoir";
+    // ?groupes=1 : même collecte pour les groupes Facebook publics suivis (état séparé dans parametres.flux_groupes)
+    const G = q.get("groupes") === "1";
+    CLE = G ? "flux_groupes" : "flux_comptes";
+    const DATASET = G ? DATASET_GROUPES : DATASET_PAGES;
     if (etape === "diag") return Response.json({ ok: true, secret_trouve: !!TOKEN, nom_secret: nomSecret || null });
     if (!TOKEN) {
       await etat({ statut: "erreur", erreur: "jeton Bright Data introuvable dans les secrets", le: new Date().toISOString() });
@@ -45,15 +52,22 @@ Deno.serve(async (req) => {
     }
     const H = { Authorization: "Bearer " + TOKEN, "Content-Type": "application/json" };
     const sources = await sql`select id, nom, url, categorie, marque::text marque, plateforme from public.sources_suivies
-      where actif and plateforme = 'Facebook' and url is not null order by id`;
+      where actif and plateforme = 'Facebook' and url is not null
+        and (categorie = 'Groupe') = ${G} order by id`;
 
     if (etape === "lancer") {
       const debut = new Date(Date.now() - 3 * 864e5);
       const d = `${String(debut.getUTCMonth() + 1).padStart(2, "0")}-${String(debut.getUTCDate()).padStart(2, "0")}-${debut.getUTCFullYear()}`;
       const r = await fetch(`${API}/trigger?dataset_id=${DATASET}&include_errors=true`, {
-        method: "POST", headers: H, body: JSON.stringify(sources.map((s) => ({ url: s.url, num_of_posts: 5, start_date: d }))) });
-      const t = await r.text();
-      if (!r.ok) {
+        method: "POST", headers: H, body: JSON.stringify(sources.map((s) => G ? { url: s.url, num_of_posts: 60, start_date: d } : { url: s.url, num_of_posts: 5, start_date: d })) });
+      let t = await r.text(); let ok = r.ok;
+      if (!ok && G && r.status === 400) {
+        // le jeu « groupes » peut refuser les champs facultatifs : on relance avec l'adresse seule
+        const r2 = await fetch(`${API}/trigger?dataset_id=${DATASET}&include_errors=true`, { method: "POST", headers: H, body: JSON.stringify(sources.map((s) => ({ url: s.url }))) });
+        t = await r2.text();
+        ok = r2.ok;
+      }
+      if (!ok) {
         await etat({ statut: "erreur", erreur: "lancement " + r.status + " " + t.slice(0, 150), le: new Date().toISOString() });
         await incident("Collecte des comptes suivis : lancement refusé (" + r.status + " " + t.slice(0, 150) + ")");
         return Response.json({ ok: false, statut: r.status, erreur: t.slice(0, 300) });
@@ -64,7 +78,7 @@ Deno.serve(async (req) => {
     }
 
     // recevoir
-    const [p] = await sql`select valeur from public.parametres where cle = 'flux_comptes'`;
+    const [p] = await sql`select valeur from public.parametres where cle = ${CLE}`;
     const e = p ? JSON.parse(p.valeur) : {};
     if (!e.snapshot || e.statut !== "lancé") return Response.json({ ok: true, rien: "aucune collecte en attente", statut: e.statut });
     const pr = await (await fetch(`${API}/progress/${e.snapshot}`, { headers: H })).json();
@@ -88,7 +102,7 @@ Deno.serve(async (req) => {
     const pa: number[] = [];
     for (const it of items) {
       if (it.error || it.error_code || !it.url) { err++; continue; }
-      const src = sources.find((s) => [it.input?.url, it.page_url, it.user_url].some((u) => u && cleSource(u) === cleSource(s.url)))
+      const src = sources.find((s) => [it.input?.url, it.group_url, it.page_url, it.user_url].some((u) => u && cleSource(u) === cleSource(s.url)))
         || sources.find((s) => it.input?.url && propre(it.input.url) === propre(s.url));
       if (!src) { err++; continue; }
       const le = it.date_posted ? new Date(it.date_posted) : null;
@@ -99,7 +113,7 @@ Deno.serve(async (req) => {
       const lien = String(it.url).replace(/(web|m)\.facebook\.com/, "www.facebook.com");
       // déjà connue (même lien, ou même compte et même début de texte reçu par l'ancien flux)
       const [deja] = await sql`select 1 from public.publications where lien = ${lien}
-          or (auteur = ${src.nom} and ${texte} <> '' and left(texte, 80) = left(${texte}, 80)) limit 1`;
+          or ((auteur = ${src.nom} or ${G}) and ${texte} <> '' and left(texte, 80) = left(${texte}, 80)) limit 1`;
       const [deja2] = await sql`select 1 from public.a_classer where lien = ${lien} limit 1`;
       if (deja || deja2) continue;
       if (src.categorie === "officiel" && src.marque) {
@@ -131,7 +145,7 @@ Deno.serve(async (req) => {
         }
       } else {
         const r = await sql`insert into public.a_classer(source, plateforme, auteur, texte, lien, publiee_le, image)
-          values (${src.nom}, 'Facebook', ${src.nom}, ${texte.slice(0, 1500) || null}, ${lien}, ${le}, ${img}) on conflict (lien) do nothing returning id`;
+          values (${src.nom}, 'Facebook', ${G ? (it.user_username_raw || src.nom) : src.nom}, ${texte.slice(0, 1500) || null}, ${lien}, ${le}, ${img}) on conflict (lien) do nothing returning id`;
         if (r.length) acl++;
       }
     }
