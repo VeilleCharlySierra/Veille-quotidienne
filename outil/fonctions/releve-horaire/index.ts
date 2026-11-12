@@ -17,6 +17,28 @@ async function acteur(nom: string, input: unknown, plafond: number): Promise<any
   const j = await r.json();
   return Array.isArray(j) ? j : [];
 }
+// Secours Bright Data (décision du 12/11 : compte Apify bloqué) : utilisé quand l'outil Apify échoue pour Facebook ou TikTok.
+const BD = Deno.env.get("BRIGHTDATA_TOKEN") || "";
+async function brightData(dataset: string, urls: string[]): Promise<any[]> {
+  const H = { Authorization: "Bearer " + BD, "Content-Type": "application/json" };
+  const r = await fetch(`https://api.brightdata.com/datasets/v3/scrape?dataset_id=${dataset}&include_errors=true`, {
+    method: "POST", headers: H, body: JSON.stringify({ input: urls.map((url) => ({ url })) }), signal: AbortSignal.timeout(70000) });
+  const t = await r.text();
+  if (r.status === 202) {
+    // collecte plus longue : on attend le résultat (70 s au plus)
+    const snap = JSON.parse(t).snapshot_id;
+    for (let i = 0; i < 7; i++) {
+      await new Promise((ok) => setTimeout(ok, 10000));
+      const pr = await (await fetch(`https://api.brightdata.com/datasets/v3/progress/${snap}`, { headers: H })).json();
+      if (pr.status === "ready") return await (await fetch(`https://api.brightdata.com/datasets/v3/snapshot/${snap}?format=json`, { headers: H })).json();
+      if (pr.status === "failed") throw new Error("Bright Data : collecte en échec");
+    }
+    throw new Error("Bright Data : pas de résultat en 70 s");
+  }
+  if (!r.ok) throw new Error("Bright Data " + r.status + " " + t.slice(0, 150));
+  const j = t.trim().startsWith("[") ? JSON.parse(t) : t.trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
+  return Array.isArray(j) ? j : [];
+}
 const n = (v: unknown) => (typeof v === "number" && isFinite(v) ? Math.round(v) : null);
 const idTweet = (u: string) => (u.match(/status\/(\d+)/) || [])[1] || "";
 const idTiktok = (u: string) => (u.match(/video\/(\d+)/) || [])[1] || "";
@@ -60,7 +82,16 @@ Deno.serve(async (req) => {
               com: n(o.commentsCount ?? o.comments ?? o.total_comment_count), part: n(o.sharesCount ?? o.shares),
               vues: n(o.viewsCount ?? o.videoViewCount ?? o.videoPostViewCount) });
           }
-        } catch (e) { erreurs.push("Facebook : " + (e as Error).message); }
+        } catch (e) {
+          if (!BD) { erreurs.push("Facebook : " + (e as Error).message); return; }
+          try {
+            const it = await brightData("gd_lyclm1571iy3mv57zw", fb.map((p) => p.lien));
+            for (const p of fb) {
+              const o = it.find((x) => !x.error && [x.url, x.input?.url].some((u) => u && propre(u) === propre(p.lien)));
+              if (o) res.push({ id: p.id, jaime: n(o.likes), com: n(o.num_comments), part: n(o.num_shares), vues: n(o.video_view_count ?? o.play_count) });
+            }
+          } catch (e2) { erreurs.push("Facebook : " + (e as Error).message.slice(0, 120) + " ; secours Bright Data : " + (e2 as Error).message); }
+        }
       })(),
       (async () => {
         if (!tk.length) return;
@@ -70,7 +101,16 @@ Deno.serve(async (req) => {
             const o = it.find((x) => String(x.id) === idTiktok(p.lien));
             if (o) res.push({ id: p.id, jaime: n(o.diggCount), com: n(o.commentCount), part: n(o.shareCount), vues: n(o.playCount) });
           }
-        } catch (e) { erreurs.push("TikTok : " + (e as Error).message); }
+        } catch (e) {
+          if (!BD) { erreurs.push("TikTok : " + (e as Error).message); return; }
+          try {
+            const it = await brightData("gd_lu702nij2f790tmv9h", tk.map((p) => p.lien));
+            for (const p of tk) {
+              const o = it.find((x) => !x.error && (String(x.post_id) === idTiktok(p.lien) || (x.input?.url && idTiktok(x.input.url) === idTiktok(p.lien))));
+              if (o) res.push({ id: p.id, jaime: n(o.digg_count ?? o.likes), com: n(o.comment_count), part: n(o.share_count), vues: n(o.play_count) });
+            }
+          } catch (e2) { erreurs.push("TikTok : " + (e as Error).message.slice(0, 120) + " ; secours Bright Data : " + (e2 as Error).message); }
+        }
       })(),
       (async () => {
         if (!xx.length) return;
