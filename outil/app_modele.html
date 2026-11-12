@@ -209,6 +209,7 @@ td .del{background:none;border:0;color:var(--bad);cursor:pointer;font-weight:700
   <div id="bordc" class="grid">
     <div class="small" id="pertxt"></div>
     <div class="grid g4" id="kpis"></div>
+    <div class="grid g2" id="sensint"></div>
     <div class="panel" id="evo"><h3>Évolution sur la période</h3><div id="evosvg"></div><p class="note">Publications par jour. Les jours sans veille apparaissent vides.</p></div>
     <div class="grid g2">
       <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
@@ -469,8 +470,9 @@ function bord(){
  $('#kpis').innerHTML=`<div class="panel kpi"><span class="l">Publications</span><span class="v">${nf(n)}</span><span class="s">${M}</span></div>
  <div class="panel kpi"><span class="l">Publications négatives</span><span class="v">${neg==null?'–':neg+' %'}</span><span class="s">${rows.filter(r=>r.sentiment==='Négatif').length} sur ${rows.length}</span></div>
  <div class="panel kpi"><span class="l">Interactions</span><span class="v">${nf(rows.reduce((t,r)=>t+inter(r),0))}</span><span class="s">j'aime, commentaires, partages</span></div>
- <div class="panel kpi"><span class="l">Points d'attention</span><span class="v">${A.filter(t=>t.actif).length+D.themes_att.filter(t=>t.marque===M).length}</span><span class="s">en cours</span></div>
+ <div class="panel kpi"><span class="l">Points d'attention</span><span class="v">${A.filter(t=>t.actif).length}</span><span class="s">publications en cours${D.themes_att.filter(t=>t.marque===M).length?' · '+D.themes_att.filter(t=>t.marque===M).length+' thématique(s) en alerte':''}</span></div>
  <div class="panel kpi"><span class="l">Thème dominant</span><span class="v" style="font-size:1.15rem;padding-block:6px">${ths[0]?esc(ths[0][0]):'–'}</span><span class="s">${ths[0]?Math.round(100*ths[0][1]/rows.length)+' % des publications':''}</span></div>`;
+ sensInter(rows);
  $('#evo').hidden=a===b;
  if(a!==b){const days=[];for(let d=new Date(a+'T12:00:00Z');iso(d)<=b;d.setUTCDate(d.getUTCDate()+1))days.push(iso(d));
   const W=900,H=220,pl=34,pb=26,pt=24;const val=dd=>{const s=D.serie.find(x=>x.jour===dd);return s&&s[M]?s[M].n:null};
@@ -512,6 +514,18 @@ const TRL=['dernières 24 heures','de 24 à 48 heures avant','de 48 à 72 heures
 function inTr(r){const b=REF.getTime()-T*86400000,a=b-86400000;return r.t.getTime()>a&&r.t.getTime()<=b}
 let T=0;let attLinks=new Set();
 // affichage : les 20 premiers mots du texte (décision du 12/11)
+// Sens des publications et interactions par réseau (tableau de bord, période choisie)
+function sensInter(rows){const N=rows.length,c={Positif:0,Neutre:0,'Négatif':0};rows.forEach(r=>{if(c[r.sentiment]!=null)c[r.sentiment]++});
+ const col={Positif:'var(--good)',Neutre:'var(--neutral)','Négatif':'var(--bad)'},T=Object.values(c).reduce((a,b)=>a+b,0)||1;
+ let a0=-Math.PI/2,sl='';Object.entries(c).forEach(([k,v])=>{if(!v)return;const a1=a0+2*Math.PI*v/T,lg=(a1-a0)>Math.PI?1:0;
+  sl+=v===T?`<circle cx="60" cy="60" r="56" style="fill:${col[k]}"/>`:`<path d="M60 60 L${60+56*Math.cos(a0)} ${60+56*Math.sin(a0)} A56 56 0 ${lg} 1 ${60+56*Math.cos(a1)} ${60+56*Math.sin(a1)} Z" style="fill:${col[k]};stroke:var(--panel);stroke-width:2"/>`;a0=a1});
+ const leg=Object.entries(c).map(([k,v])=>`<div style="display:grid;grid-template-columns:14px 1fr auto auto;gap:10px;align-items:center;margin:6px 0"><span style="width:14px;height:14px;border-radius:3px;background:${col[k]}"></span><span>${k}</span><b style="font-variant-numeric:tabular-nums">${(100*v/T).toFixed(1).replace('.',',')} %</b><span class="small">${v} publication${v>1?'s':''}</span></div>`).join('');
+ const s=k=>rows.reduce((t,r)=>t+(+r[k]||0),0),pf={};rows.forEach(r=>{const p=r.pf||'Autre';pf[p]=pf[p]||{i:0,n:0};pf[p].i+=inter(r);pf[p].n++});
+ const P=Object.entries(pf).sort((x,y)=>y[1].i-x[1].i),mx=Math.max(1,...P.map(x=>x[1].i));
+ const box=(v,l)=>`<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px"><div style="font-size:1.25rem;font-weight:700;font-variant-numeric:tabular-nums">${nf(v)}</div><div class="small">${l}</div></div>`;
+ $('#sensint').innerHTML=`<div class="panel"><h3>Sens des publications</h3>${N?`<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><svg viewBox="0 0 120 120" width="140" height="140" role="img" aria-label="Répartition des sentiments">${sl}</svg><div style="flex:1;min-width:200px">${leg}</div></div>`:'<p class="small">Aucune publication sur la période.</p>'}</div>
+ <div class="panel"><h3>Interactions</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px">${box(s('jaime'),'j’aime')}${box(s('com'),'commentaires')}${box(s('part'),'partages')}${box(s('vues'),'vues')}</div>
+ <p class="small" style="margin:12px 0 4px;text-transform:uppercase;letter-spacing:.04em;font-weight:600">Par réseau</p>${P.map(([k,v])=>`<div style="display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;margin:6px 0"><span>${esc(k)}</span><span style="height:10px;border-radius:5px;background:var(--soft);overflow:hidden"><span style="display:block;height:100%;width:${(100*v.i/mx).toFixed(1)}%;background:var(--brand)"></span></span><span class="small" style="font-variant-numeric:tabular-nums">${nf(v.i)} · ${v.n} pub.</span></div>`).join('')||'<p class="small">–</p>'}</div>`}
 function m20(t){const w=String(t||'').trim().split(/\s+/).filter(Boolean);return w.length>20?w.slice(0,20).join(' ')+' …':w.join(' ')}
 function dk(r){const m=/(\d\d)\/(\d\d) (\d\d)h(\d\d)/.exec(r.remontee||'');return m?m[2]+m[1]+m[3]+m[4]:''}
 function pubSel(){const q=$('#q').value.toLowerCase(),p=$('#fp').value,t=$('#ft').value,l=$('#fl').value,mi=+$('#fi').value,so=$('#fs').value;
